@@ -26,20 +26,30 @@ import sys
 import urllib.request
 
 # ─── Constants ─────────────────────────────────────────────────────────────
-# Webhook URL is env-var-driven with a placeholder default. Set
-# CALIBRATION_KIT_WEBHOOK_URL to the real Worker URL after deployment.
+# Webhook URL is env-var-driven. The default is the deployed Worker URL.
+# If you're running a self-hosted Worker, set CALIBRATION_KIT_WEBHOOK_URL.
 
 WEBHOOK_URL = os.environ.get(
     "CALIBRATION_KIT_WEBHOOK_URL",
-    "https://calibration-kit-federation.example.workers.dev"
+    "https://calibration-kit-federation.charlesdvaught-hash.workers.dev"
 )
 REGISTER_URL = WEBHOOK_URL.rstrip("/") + "/register"
+
+# Detect undeployed webhook
+_PLACEHOLDER_MARKER = "example.workers.dev"
 
 
 # ─── Registration ───────────────────────────────────────────────────────────
 
 def register(license_key: str, github_username: str, dry_run: bool = False) -> bool:
     """Send registration to the Worker's /register endpoint."""
+    if _PLACEHOLDER_MARKER in WEBHOOK_URL:
+        print("  ERROR: The registration webhook is not deployed yet.")
+        print("  The developer needs to deploy the Cloudflare Worker before")
+        print("  registration can work. Contact them for manual access.")
+        print(f"  (Webhook URL is still a placeholder: {WEBHOOK_URL})")
+        return False
+
     payload = {
         "license_key": license_key,
         "github_username": github_username,
