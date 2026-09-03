@@ -1,0 +1,19 @@
+# Planner-Coder Calibration Kit -- Python dependencies
+#
+# Install with:  pip install -r requirements.txt
+#
+# llama-cpp-python is the inference engine for local GGUF models.
+# numpy is used for entropy trajectory computation (logit sorting, probability
+# normalization, Shannon entropy calculation).
+#
+# If you have a GPU, install llama-cpp-python with hardware acceleration for
+# 3-5x faster calibration. See: https://github.com/abetlen/llama-cpp-python#installation
+#
+#   Windows (NVIDIA):  set CMAKE_ARGS="-DGGML_CUDA=on" && pip install llama-cpp-python
+#   Linux (NVIDIA):    CMAKE_ARGS="-DGGML_CUDA=on" pip install llama-cpp-python
+#   Linux (CPU only):  pip install llama-cpp-python
+#
+# CPU-only works but calibration runs ~2-3x slower.
+
+llama-cpp-python>=0.3.35
+numpy>=1.24

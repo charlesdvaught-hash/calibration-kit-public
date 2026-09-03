@@ -1,0 +1,18 @@
+Initial public release: docs, examples, and registration tool
+
+Public-facing repo for the Local Model Calibration Kit. Contains:
+- README with full method description, tradeoff table, and niche targeting
+- Two example calibration analyses (Granite 4.1 3B, Qwen3-4B-Instruct)
+- METHODOLOGY.md with full knob reference
+- CORE_MODEL_CONFIGS.md with verified sampling configs
+- LICENSE.md (source-available EULA with grant-back clause)
+- register.py for buyers to get private source repo access
+- requirements.txt
+
+Source code (_calibrate_pipeline.py, export_playbook.py, federation.py,
+etc.) lives in the private calibration-kit repo. Buyers get access
+via register.py after purchasing on AgentMart.
+
+Generated with [Devin](https://devin.ai)
+
+Co-Authored-By: Devin <158243242+devin-ai-integration[bot]@users.noreply.github.com>
