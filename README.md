@@ -149,31 +149,20 @@ updates by pulling from the private repo you're invited to when you run
 
 ## Quickstart
 
-This public repo contains the docs, examples, and registration tool. The
-calibration source code lives in a separate private repo — you get access
-after purchasing.
-
 ```bash
-# 1. Purchase the kit on AgentMart ($4.99 USDC)
-#    You'll receive a license key (bak_...)
-
-# 2. Register for source access (run once — invites you to the private repo)
-python register.py --license-key bak_YOUR_KEY --github-user YOUR_USERNAME
-
-# 3. Accept the GitHub invite (check your email or GitHub notifications)
-
-# 4. Clone the source repo
-git clone https://github.com/charlesdvaught-hash/calibration-kit.git
-cd calibration-kit
+# 1. Install dependencies
 pip install -r requirements.txt
 
-# 5. Calibrate your model
+# 2. Register for repo updates (run once — invites you to the private repo)
+python register.py --license-key bak_YOUR_KEY --github-user YOUR_USERNAME
+
+# 3. Calibrate your model
 python _calibrate_pipeline.py --model your-model.gguf
 
-# 6. Export the analysis
+# 4. Export the analysis
 python export_playbook.py --profile _calibration_profile_<label>.json --output AgentAnalysis.md
 
-# 7. Drop AgentAnalysis.md into your project root
+# 5. Drop AgentAnalysis.md into your project root
 #    Your agent reads it automatically.
 ```
 

@@ -117,4 +117,4 @@ To re-calibrate:
 
 ---
 
-Generated with [Local Model Calibration Kit](https://github.com/charlesdvaught-hash/calibration-kit)
+Generated with [Local Model Calibration Kit](https://github.com/charlesdvaught-hash/calibration-kit-public)

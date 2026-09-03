@@ -1,6 +1,8 @@
-# Core Model Configs — Downloads Inventory
+# Core Model Configs — Verified Sampling Configurations
 
-Verified sampling configurations for every GGUF model in `C:\Users\charl\Downloads\`.
+Verified sampling configurations for common GGUF models used with the
+Calibration Kit. Each entry is double-checked against the HuggingFace
+model card or official docs.
 
 Each entry is double-checked against the HuggingFace model card or official docs.
 Fine-tunes inherit their base model's guidance unless the fine-tune card overrides.
@@ -245,7 +247,7 @@ Dense 3B model. Card generation example uses `model.generate(**input_tokens, max
 
 ### granite-3b-thinkingcap — INHERITED (user fine-tune)
 
-**Source:** User's fine-tune of Granite-4.1-3B (the `granite-4.1-3b-Q5_K_M.gguf` in Downloads).
+**Source:** Fine-tune of Granite-4.1-3B (`granite-4.1-3b-Q5_K_M.gguf`).
 
 Inherits Granite 4.1-3B's config (temp=0, greedy). The fair benchmark used temp=0.0, top_p=1.0, top_k=0.
 
@@ -515,7 +517,7 @@ The fair benchmark log explicitly states: "mini-agi-4b: Ran with Qwen3 preset (t
 
 **Sweet spot: temp=0.0 (greedy).** This is 13 percentage points better than the Qwen3-family preset. The model appears to be a Qwen3-4B base fine-tune (4B params, Q8_0 quant at 3.99 GB), but it performs best with deterministic decoding — unlike Qwen3 instruct models which warn against greedy.
 
-**Note:** The `_miniagi_assess.py` script was specifically written to test Mini-AGI at temp=0.0 against the same tasks Granite failed (stack_class, text_stats, math_eval). The earlier run results file (`_miniagi_results.jsonl`) is not present in the benchmarks directory, but the log confirms the 72%/8-of-12 figure.
+**Note:** The `_miniagi_assess.py` script was specifically written to test Mini-AGI at temp=0.0 against the same tasks Granite failed (stack_class, text_stats, math_eval). The earlier run results file (`_miniagi_results.jsonl`) is not present in the kit directory, but the log confirms the 72%/8-of-12 figure.
 
 **GGUFs covered:**
 - `Mini-AGI-4B.Q8_0.gguf`
