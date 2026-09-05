@@ -192,8 +192,8 @@ signal.
 
 - Python 3.10+
 - `llama-cpp-python` and `numpy` (see `requirements.txt`)
-- A GGUF model — **3-8B recommended and tested**. Larger models may work
-  but are untested. The calibration method assumes the model fails often
+- A GGUF model — **2-8B recommended and tested**. Larger models have stronger signals according to the research- but are beyond my current capability to test.
+- The calibration method assumes the model fails often
   enough to measure failure patterns; very competent models may not
   produce enough signal.
 - A GPU is recommended but not required. Works on NVIDIA CUDA, AMD ROCm,
@@ -219,10 +219,9 @@ for verified configs.
 
 ## Pricing
 
-**$59.99, one time** — with launch pricing for early buyers (see the store
-page for the current early-bird discount). That buys the kit and
+**$59.99, one time** — with launch pricing for early buyers (currently  50%- less than $30 to test every model you own or run through Ollama). That buys the kit and
 collaborator access to the private repository, so updates arrive with
-`git pull`. No subscription, no seats, no usage metering.
+`git pull`. No subscription, no seats, no usage metering. 
 
 **[Buy it here →](https://buy.polar.sh/polar_cl_oPEsqZL29Nvuo6oX0GRF1DHDXgE75NOFAmy7V3oAjcU)**
 
