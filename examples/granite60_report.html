@@ -1,0 +1,1019 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>granite — calibration report</title><style>.rp{color-scheme:light;--surface:#fcfcfb;--plane:#f9f9f7;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;--grid:#e1e0d9;--axis:#c3c2b7;--border:rgba(11,11,11,0.10);--s1:#2a78d6;--s2:#eb6834;--good:#0ca30c;--warning:#fab219;--critical:#d03b3b;--band:rgba(137,135,129,0.13)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .rp{color-scheme:dark;--surface:#1a1a19;--plane:#0d0d0d;--ink:#ffffff;--ink2:#c3c2b7;--muted:#898781;--grid:#2c2c2a;--axis:#383835;--border:rgba(255,255,255,0.10);--s1:#3987e5;--s2:#d95926;--good:#0ca30c;--warning:#fab219;--critical:#d03b3b;--band:rgba(137,135,129,0.16)}}
+:root[data-theme="dark"] .rp{color-scheme:dark;--surface:#1a1a19;--plane:#0d0d0d;--ink:#ffffff;--ink2:#c3c2b7;--muted:#898781;--grid:#2c2c2a;--axis:#383835;--border:rgba(255,255,255,0.10);--s1:#3987e5;--s2:#d95926;--good:#0ca30c;--warning:#fab219;--critical:#d03b3b;--band:rgba(137,135,129,0.16)}
+
+*{box-sizing:border-box}
+.rp{background:var(--plane);color:var(--ink);
+ font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;
+ margin:0;padding:32px 20px 72px}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:26px;line-height:1.25;margin:0 0 6px;letter-spacing:-.01em}
+h2{font-size:18px;margin:44px 0 10px;letter-spacing:-.005em}
+h3{font-size:15px;margin:22px 0 6px}
+p{margin:0 0 12px;color:var(--ink2)}
+.sub{color:var(--muted);font-size:13px;margin-bottom:26px}
+code{font:13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;
+ background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1px 5px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+ padding:20px 22px;margin:16px 0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;margin:22px 0 6px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.tile .k{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.tile .v{font-size:25px;line-height:1.15;margin-top:5px;color:var(--ink)}
+.tile .n{font-size:12px;color:var(--muted);margin-top:3px}
+.verdict{border-left:3px solid var(--critical);padding-left:14px}
+.verdict.ok{border-left-color:var(--good)}
+.rule{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--s1);
+ border-radius:12px;padding:6px 22px 6px 20px;margin:16px 0}
+.rule ol{margin:14px 0;padding-left:20px}
+.rule li{margin:0 0 11px;color:var(--ink2)}
+.lead{border:1px solid var(--border);border-radius:12px;background:var(--surface);
+ padding:16px 18px;margin:12px 0}
+.lead .t{font-weight:600;color:var(--ink);font-family:ui-monospace,Menlo,monospace;font-size:14px}
+.lead .nx{margin-top:9px;padding-top:9px;border-top:1px solid var(--border);
+ font-size:13.5px;color:var(--ink2)}
+figure{margin:18px 0 6px}
+figcaption{font-size:13px;color:var(--muted);margin-bottom:8px}
+.plot{overflow-x:auto}
+svg{width:100%;height:auto;display:block;min-width:520px}
+.grid{stroke:var(--grid);stroke-width:1}
+.axis,.zero{stroke:var(--axis);stroke-width:1}
+.zero{stroke-width:1.5}
+.tick{font-size:11px;fill:var(--muted)}
+.axtitle{font-size:12px;fill:var(--muted)}
+.rowlbl{font-size:12.5px;fill:var(--ink2)}
+.rowsub{font-size:11px;fill:var(--muted)}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.vallbl{font-size:12px;fill:var(--ink2)}
+.inbar{fill:var(--surface)}
+.usablelbl{fill:var(--good)}
+.bandlbl{font-size:11px;fill:var(--muted)}
+.band{fill:var(--band)}
+.dot{opacity:.8}.dot:hover{opacity:1}
+.dot.s1{fill:var(--s1)}.dot.s2{fill:var(--s2)}
+.meanmark{stroke-width:2}
+.meanmark.s1{stroke:var(--s1)}.meanmark.s2{stroke:var(--s2)}
+.meanlbl{font-size:11.5px}
+.s1t{fill:var(--s1)}.s2t{fill:var(--s2)}
+.stem{stroke:var(--axis);stroke-width:2}
+.eff{fill:var(--s1);stroke:var(--surface);stroke-width:2}
+.eff.usable{fill:var(--good)}
+.bar{fill:var(--s1)}
+.bar.best{fill:var(--s1)}
+.sm{margin:14px 0}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:10px 0}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);color:var(--ink2)}
+th{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+details{margin:14px 0}
+summary{cursor:pointer;color:var(--ink2);font-size:13.5px}
+.legend{display:flex;gap:18px;font-size:12.5px;color:var(--ink2);margin:2px 0 4px}
+.legend span{display:flex;align-items:center;gap:7px}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+.foot{margin-top:52px;padding-top:18px;border-top:1px solid var(--border);
+ font-size:12.5px;color:var(--muted)}
+</style></head><body class="rp"><div class="wrap"><h1>granite — calibration report</h1>
+<p class="sub">2026-09-05 12:24 · pipeline 2026.09.05 · seed ? · 60 probe generations · 24 repair attempts</p>
+<div class="card"><strong>Scope: this file.</strong> <code>granite-4.1-3b-Q5_K_M.gguf</code><p style="margin:8px 0 0">Everything below was measured on this model, at this size, at this quantization. Quantization changes the logit distribution and every signal here is a property of that distribution — a different quant of the same weights is a different organism and needs its own run. None of it is claimed to transfer to another model.</p></div>
+<div class="tiles">
+<div class="tile"><div class="k">Entropy signal</div><div class="v">none</div><div class="n">p=0.151</div></div>
+<div class="tile"><div class="k">Effect seen</div><div class="v">d=-0.55</div><div class="n">detectable: d≥1.06</div></div>
+<div class="tile"><div class="k">Failures</div><div class="v">8</div><div class="n">of 60 generations</div></div>
+<div class="tile"><div class="k">Recoverable</div><div class="v">4<span style="font-size:15px;color:var(--muted)"> / 8</span></div><div class="n">by any strategy tested</div></div>
+</div>
+<h2>The rule</h2>
+<p>Implementable as written. Every number below was measured on this model, on this run.</p>
+<div class="rule"><ol>
+<li><strong>Do not gate generation on entropy.</strong> No entropy statistic separates this model's correct from incorrect output well enough to act on, so an entropy gate costs compute and buys nothing.</li>
+<li>On a failed generation, repair in this order: <code>skeleton_fill → test_retry</code>. This ordering is greedy set cover over what actually recovered failures in this run, not a preference — <code>skeleton_fill</code> alone recovered 3 of 8.</li>
+<li>When the failure is a <strong>logic</strong> error, route to <code>test_retry</code> first (1/4, 25%), ahead of skeleton_fill 25%, temp_retry 0%.</li>
+<li>When the failure is an <strong>assertion</strong> error, route to <code>test_retry</code> first (2/3, 67%), ahead of skeleton_fill 67%, temp_retry 0%.</li>
+<li>When the failure is a <strong>syntax</strong> error, nothing recovered it. All 3 strategies scored 0 of 1. Don't spend retries here — escalate or drop the task.</li>
+<li>Stop after the ordered chain. 4 of 8 failures were recoverable by <em>any</em> strategy tested; the remaining 4 were not recovered by any of them, so further retries on those are spend without evidence behind it.</li>
+</ol></div>
+<h2>Where to cut, and what it costs</h2>
+<p>One signal, one curve. What changes is where you cut it and what you do with each side. Fitted and scored across cross-validation folds on 60 unique generations (8 failures) — each number is what the rule did on records its own fold never saw. Pick one row; they are three settings of the same dial, not three rules to stack.</p>
+<div class="card"><strong>Catch wrong</strong> — regenerate when <code>margin_mean &le; 0.9688</code>. Chosen in 4 of 5 folds; only readable once the generation is complete, so the tokens are already spent when it fires.
+<div class="tiles">
+<div class="tile"><div class="k">Failures caught</div><div class="v">80%</div><div class="n">of all failing generations</div></div>
+<div class="tile"><div class="k">Correct work lost</div><div class="v">41%</div><div class="n">regenerated needlessly</div></div>
+<div class="tile"><div class="k">Net tokens</div><div class="v">-95,210</div><div class="n">per 1000 generations (-71.6%)</div></div>
+</div>
+<p style="margin:10px 0 0;font-size:13px">Per 1000 generations: 106.7 doomed runs aborted early, 357.9 correct ones thrown away and regenerated. Token counts are this run's own.</p>
+</div>
+<div class="card"><strong>Trust right</strong> — ship untested when <code>margin_mean &gt; 0.9665</code>. Chosen in 2 of 5 folds; only readable once the generation is complete, so the tokens are already spent when it fires.
+<div class="tiles">
+<div class="tile"><div class="k">Output covered</div><div class="v">76%</div><div class="n">shipped without testing</div></div>
+<div class="tile"><div class="k">Purity</div><div class="v">93.0%</div><div class="n">of what ships is correct</div></div>
+<div class="tile"><div class="k">Defects shipped</div><div class="v">53.5</div><div class="n">per 1000 generations</div></div>
+</div>
+<p style="margin:10px 0 0;font-size:13px">This saves test execution, not generation tokens — the generation is already paid for by the time any signal can be read. Worth it when the test suite is expensive or latency matters more than compute. The defect count is the price.</p>
+</div>
+<div class="card"><strong>Both</strong> — one cut point, not two, on <code>margin_mean</code>. Chosen in 2 of 5 folds; only readable once the generation is complete, so the tokens are already spent when it fires.
+<p style="margin:8px 0 0">The fit put both cut points at the same value, so there is no undecided band: every generation lands in trust or in bail. That makes this row the same single threshold as the two above, read from both sides — not a third, richer rule.</p>
+<table><thead><tr><th>Zone</th><th>Condition</th><th>What to do</th><th class="num">Share of output</th></tr></thead><tbody>
+<tr><td>Trust</td><td><code>margin_mean &gt; 0.9688</code></td><td>ship untested — 71.9% correct</td><td class="num">58%</td></tr>
+<tr><td>Band</td><td>between the two</td><td>test it — the signal cannot decide</td><td class="num">0%</td></tr>
+<tr><td>Bail</td><td><code>margin_mean &le; 0.9688</code></td><td>regenerate — catches 60% of all failures</td><td class="num">42%</td></tr>
+</tbody></table>
+<p style="margin:6px 0 0;font-size:13px">Net -45,638 tokens per 1000 generations from the bail zone (-34.3% of baseline).</p>
+<p style="margin:8px 0 0;font-size:13px">Ship the trust zone untested, regenerate the bail zone, test the band between them. Both cut points come from one fit on one signal, ordered so the zones cannot overlap. The band is what the signal cannot decide — the honest residue, not a gap in the analysis.</p>
+</div>
+<div class="card verdict"><strong>No operating point here pays for itself in tokens.</strong> The best of them still nets -45,638 tokens per 1000 generations. That is not a flaw in the rule — this run's winning signal is only readable once a generation is complete, so aborting saves nothing that was not already spent, while every wrongly flagged generation pays for a full replacement. Use these rules to spend less on <em>testing</em>, or to decide what to ship, not to spend fewer tokens.</div>
+<h2>Does entropy predict correctness here?</h2>
+<div class="legend"><span><i class="sw" style="background:var(--s1)"></i>Correct</span><span><i class="sw" style="background:var(--s2)"></i>Incorrect</span></div>
+<figure><figcaption>Every probe generation, placed by its max_entropy. Vertical marks are group means.</figcaption><div class="plot"><svg viewBox="0 0 720 250" role="img" aria-label="max_entropy for correct vs incorrect generations" preserveAspectRatio="xMidYMid meet">
+<line x1="255.9" y1="18.0" x2="255.9" y2="206.0" class="grid"/>
+<text x="255.9" y="226.0" text-anchor="middle" class="tick">0.5</text>
+<line x1="435.5" y1="18.0" x2="435.5" y2="206.0" class="grid"/>
+<text x="435.5" y="226.0" text-anchor="middle" class="tick">1</text>
+<line x1="615.1" y1="18.0" x2="615.1" y2="206.0" class="grid"/>
+<text x="615.1" y="226.0" text-anchor="middle" class="tick">1.5</text>
+<text x="396.0" y="242.0" text-anchor="middle" class="axtitle">max_entropy</text>
+<text x="84.0" y="68.0" text-anchor="end" class="rowlbl">Correct</text>
+<text x="84.0" y="84.0" text-anchor="end" class="rowsub">n=52</text>
+<circle cx="128.1" cy="59.9" r="4" class="dot s1"><title>max_entropy = 0.1443 (correct)</title></circle>
+<circle cx="132.5" cy="66.1" r="4" class="dot s1"><title>max_entropy = 0.1564 (correct)</title></circle>
+<circle cx="173.0" cy="64.2" r="4" class="dot s1"><title>max_entropy = 0.2692 (correct)</title></circle>
+<circle cx="175.4" cy="62.2" r="4" class="dot s1"><title>max_entropy = 0.2758 (correct)</title></circle>
+<circle cx="218.8" cy="60.2" r="4" class="dot s1"><title>max_entropy = 0.3967 (correct)</title></circle>
+<circle cx="230.4" cy="66.5" r="4" class="dot s1"><title>max_entropy = 0.4291 (correct)</title></circle>
+<circle cx="238.4" cy="64.5" r="4" class="dot s1"><title>max_entropy = 0.4514 (correct)</title></circle>
+<circle cx="252.5" cy="62.6" r="4" class="dot s1"><title>max_entropy = 0.4904 (correct)</title></circle>
+<circle cx="255.7" cy="60.6" r="4" class="dot s1"><title>max_entropy = 0.4994 (correct)</title></circle>
+<circle cx="260.0" cy="66.9" r="4" class="dot s1"><title>max_entropy = 0.5114 (correct)</title></circle>
+<circle cx="291.9" cy="64.9" r="4" class="dot s1"><title>max_entropy = 0.6003 (correct)</title></circle>
+<circle cx="304.3" cy="62.9" r="4" class="dot s1"><title>max_entropy = 0.6347 (correct)</title></circle>
+<circle cx="306.6" cy="61.0" r="4" class="dot s1"><title>max_entropy = 0.6412 (correct)</title></circle>
+<circle cx="311.1" cy="67.2" r="4" class="dot s1"><title>max_entropy = 0.6535 (correct)</title></circle>
+<circle cx="312.7" cy="65.3" r="4" class="dot s1"><title>max_entropy = 0.6580 (correct)</title></circle>
+<circle cx="315.3" cy="63.3" r="4" class="dot s1"><title>max_entropy = 0.6653 (correct)</title></circle>
+<circle cx="319.0" cy="61.3" r="4" class="dot s1"><title>max_entropy = 0.6757 (correct)</title></circle>
+<circle cx="319.6" cy="67.6" r="4" class="dot s1"><title>max_entropy = 0.6774 (correct)</title></circle>
+<circle cx="320.4" cy="65.6" r="4" class="dot s1"><title>max_entropy = 0.6796 (correct)</title></circle>
+<circle cx="321.4" cy="63.7" r="4" class="dot s1"><title>max_entropy = 0.6824 (correct)</title></circle>
+<circle cx="322.4" cy="61.7" r="4" class="dot s1"><title>max_entropy = 0.6852 (correct)</title></circle>
+<circle cx="323.6" cy="68.0" r="4" class="dot s1"><title>max_entropy = 0.6885 (correct)</title></circle>
+<circle cx="324.2" cy="66.0" r="4" class="dot s1"><title>max_entropy = 0.6901 (correct)</title></circle>
+<circle cx="324.8" cy="64.0" r="4" class="dot s1"><title>max_entropy = 0.6919 (correct)</title></circle>
+<circle cx="325.9" cy="62.1" r="4" class="dot s1"><title>max_entropy = 0.6948 (correct)</title></circle>
+<circle cx="326.1" cy="60.1" r="4" class="dot s1"><title>max_entropy = 0.6955 (correct)</title></circle>
+<circle cx="329.0" cy="66.4" r="4" class="dot s1"><title>max_entropy = 0.7035 (correct)</title></circle>
+<circle cx="331.4" cy="64.4" r="4" class="dot s1"><title>max_entropy = 0.7101 (correct)</title></circle>
+<circle cx="343.9" cy="62.4" r="4" class="dot s1"><title>max_entropy = 0.7451 (correct)</title></circle>
+<circle cx="347.1" cy="60.5" r="4" class="dot s1"><title>max_entropy = 0.7538 (correct)</title></circle>
+<circle cx="348.8" cy="66.7" r="4" class="dot s1"><title>max_entropy = 0.7587 (correct)</title></circle>
+<circle cx="354.8" cy="64.7" r="4" class="dot s1"><title>max_entropy = 0.7754 (correct)</title></circle>
+<circle cx="358.0" cy="62.8" r="4" class="dot s1"><title>max_entropy = 0.7843 (correct)</title></circle>
+<circle cx="365.7" cy="60.8" r="4" class="dot s1"><title>max_entropy = 0.8057 (correct)</title></circle>
+<circle cx="371.9" cy="67.1" r="4" class="dot s1"><title>max_entropy = 0.8229 (correct)</title></circle>
+<circle cx="379.2" cy="65.1" r="4" class="dot s1"><title>max_entropy = 0.8433 (correct)</title></circle>
+<circle cx="387.5" cy="63.1" r="4" class="dot s1"><title>max_entropy = 0.8665 (correct)</title></circle>
+<circle cx="411.3" cy="61.2" r="4" class="dot s1"><title>max_entropy = 0.9327 (correct)</title></circle>
+<circle cx="464.2" cy="67.4" r="4" class="dot s1"><title>max_entropy = 1.0800 (correct)</title></circle>
+<circle cx="464.2" cy="65.5" r="4" class="dot s1"><title>max_entropy = 1.0800 (correct)</title></circle>
+<circle cx="469.4" cy="63.5" r="4" class="dot s1"><title>max_entropy = 1.0944 (correct)</title></circle>
+<circle cx="485.0" cy="61.5" r="4" class="dot s1"><title>max_entropy = 1.1380 (correct)</title></circle>
+<circle cx="485.6" cy="67.8" r="4" class="dot s1"><title>max_entropy = 1.1394 (correct)</title></circle>
+<circle cx="499.2" cy="65.8" r="4" class="dot s1"><title>max_entropy = 1.1775 (correct)</title></circle>
+<circle cx="504.5" cy="63.9" r="4" class="dot s1"><title>max_entropy = 1.1922 (correct)</title></circle>
+<circle cx="510.2" cy="61.9" r="4" class="dot s1"><title>max_entropy = 1.2080 (correct)</title></circle>
+<circle cx="512.6" cy="59.9" r="4" class="dot s1"><title>max_entropy = 1.2147 (correct)</title></circle>
+<circle cx="523.8" cy="66.2" r="4" class="dot s1"><title>max_entropy = 1.2458 (correct)</title></circle>
+<circle cx="531.6" cy="64.2" r="4" class="dot s1"><title>max_entropy = 1.2676 (correct)</title></circle>
+<circle cx="619.4" cy="62.3" r="4" class="dot s1"><title>max_entropy = 1.5121 (correct)</title></circle>
+<circle cx="629.2" cy="60.3" r="4" class="dot s1"><title>max_entropy = 1.5393 (correct)</title></circle>
+<circle cx="630.8" cy="66.6" r="4" class="dot s1"><title>max_entropy = 1.5437 (correct)</title></circle>
+<line x1="361.4" y1="34.0" x2="361.4" y2="94.0" class="meanmark s1"/>
+<text x="361.4" y="28.0" text-anchor="middle" class="meanlbl s1t">mean 0.794</text>
+<text x="84.0" y="150.0" text-anchor="end" class="rowlbl">Incorrect</text>
+<text x="84.0" y="166.0" text-anchor="end" class="rowsub">n=8</text>
+<circle cx="325.1" cy="131.0" r="4" class="dot s2"><title>max_entropy = 0.6928 (incorrect)</title></circle>
+<circle cx="358.5" cy="153.8" r="4" class="dot s2"><title>max_entropy = 0.7856 (incorrect)</title></circle>
+<circle cx="361.8" cy="146.7" r="4" class="dot s2"><title>max_entropy = 0.7948 (incorrect)</title></circle>
+<circle cx="370.0" cy="139.5" r="4" class="dot s2"><title>max_entropy = 0.8177 (incorrect)</title></circle>
+<circle cx="412.2" cy="132.3" r="4" class="dot s2"><title>max_entropy = 0.9352 (incorrect)</title></circle>
+<circle cx="449.3" cy="155.2" r="4" class="dot s2"><title>max_entropy = 1.0384 (incorrect)</title></circle>
+<circle cx="467.6" cy="148.0" r="4" class="dot s2"><title>max_entropy = 1.0893 (incorrect)</title></circle>
+<circle cx="663.9" cy="140.8" r="4" class="dot s2"><title>max_entropy = 1.6358 (incorrect)</title></circle>
+<line x1="426.0" y1="116.0" x2="426.0" y2="176.0" class="meanmark s2"/>
+<text x="426.0" y="110.0" text-anchor="middle" class="meanlbl s2t">mean 0.974</text>
+</svg></div></figure>
+<p>Correct generations averaged max_entropy 0.794; incorrect ones 0.974. The groups are shifted, not merely overlapping — this is the separation the rule above is built on.</p>
+<p>A permutation test puts that difference at p=0.1511, against an alpha of 0.05. Reshuffling which generations were labelled correct reproduces a gap this large routinely.</p>
+<p>Across 146 candidate statistics the largest effect was <code>plateau_start_quartile</code> at d=-1.327 (high=bad), and it does not survive correction for the number tested.</p>
+<p>4 of 8 failures were recoverable by at least one repair strategy. Recovery is measured directly — break it, repair it, re-run the tests — so these counts do not depend on any of the statistical argument above.</p>
+<div class="card verdict"><strong>Power: underpowered.</strong> This run could only reliably detect an effect of d&gt;=1.06; the effect it saw was d=-0.55. That means this run cannot tell &#x27;no entropy signal&#x27; apart from &#x27;too few failures to see one&#x27;. Re-running with --repeats 4 (this run used 1) would give ~80% power on an effect that size.</div>
+<h2>Every candidate signal, corrected</h2>
+<p>All 146 numeric statistics were tested against the same pass/fail outcome, so raw p-values are corrected with Benjamini-Hochberg FDR. A statistic is called usable only if its adjusted p clears 0.05 <em>and</em> |d| ≥ 0.2. The shaded band is what this run was too small to detect at all.</p>
+<figure><div class="plot"><svg viewBox="0 0 720 3876" role="img" aria-label="Effect size per candidate signal against the run&#x27;s detection limit" preserveAspectRatio="xMidYMid meet">
+<rect x="251.1" y="22.0" width="317.7" height="3810.0" class="band"/>
+<text x="410.0" y="16.0" text-anchor="middle" class="bandlbl">too small for this run to detect  (|d| &lt; 1.06)</text>
+<line x1="260.6" y1="22.0" x2="260.6" y2="3834.0" class="grid"/>
+<text x="260.6" y="3852.0" text-anchor="middle" class="tick">-1</text>
+<line x1="410.0" y1="22.0" x2="410.0" y2="3834.0" class="grid"/>
+<text x="410.0" y="3852.0" text-anchor="middle" class="tick">0</text>
+<line x1="559.4" y1="22.0" x2="559.4" y2="3834.0" class="grid"/>
+<text x="559.4" y="3852.0" text-anchor="middle" class="tick">1</text>
+<line x1="410.0" y1="22.0" x2="410.0" y2="3834.0" class="zero"/>
+<text x="176.0" y="3866.0" text-anchor="start" class="axtitle">← higher on incorrect</text>
+<text x="410.0" y="3866.0" text-anchor="middle" class="axtitle">Cohen&#x27;s d</text>
+<text x="644.0" y="3866.0" text-anchor="end" class="axtitle">higher on correct →</text>
+<text x="162.0" y="51.0" text-anchor="end" class="rowlbl mono">plateau_start_quartile</text>
+<line x1="410.0" y1="47.0" x2="211.7" y2="47.0" class="stem"/>
+<circle cx="211.7" cy="47.0" r="5" class="eff"><title>plateau_start_quartile: d=-1.327, p=0.0162, adjusted p=0.1478 — not usable</title></circle>
+<text x="199.7" y="51.0" text-anchor="end" class="vallbl">-1.33</text>
+<text x="162.0" y="77.0" text-anchor="end" class="rowlbl mono">margin_mean</text>
+<line x1="410.0" y1="73.0" x2="593.8" y2="73.0" class="stem"/>
+<circle cx="593.8" cy="73.0" r="5" class="eff"><title>margin_mean: d=+1.230, p=0.0009, adjusted p=0.0584 — not usable</title></circle>
+<text x="605.8" y="77.0" text-anchor="start" class="vallbl">+1.23</text>
+<text x="162.0" y="103.0" text-anchor="end" class="rowlbl mono">mass1_mean</text>
+<line x1="410.0" y1="99.0" x2="587.4" y2="99.0" class="stem"/>
+<circle cx="587.4" cy="99.0" r="5" class="eff"><title>mass1_mean: d=+1.187, p=0.0014, adjusted p=0.0584 — not usable</title></circle>
+<text x="599.4" y="103.0" text-anchor="start" class="vallbl">+1.19</text>
+<text x="162.0" y="129.0" text-anchor="end" class="rowlbl mono">phi_mean</text>
+<line x1="410.0" y1="125.0" x2="587.4" y2="125.0" class="stem"/>
+<circle cx="587.4" cy="125.0" r="5" class="eff"><title>phi_mean: d=+1.187, p=0.0014, adjusted p=0.0584 — not usable</title></circle>
+<text x="599.4" y="129.0" text-anchor="start" class="vallbl">+1.19</text>
+<text x="162.0" y="155.0" text-anchor="end" class="rowlbl mono">surprisal_mean</text>
+<line x1="410.0" y1="151.0" x2="235.3" y2="151.0" class="stem"/>
+<circle cx="235.3" cy="151.0" r="5" class="eff"><title>surprisal_mean: d=-1.169, p=0.0016, adjusted p=0.0584 — not usable</title></circle>
+<text x="223.3" y="155.0" text-anchor="end" class="vallbl">-1.17</text>
+<text x="162.0" y="181.0" text-anchor="end" class="rowlbl mono">mass5_f10_max</text>
+<line x1="410.0" y1="177.0" x2="584.4" y2="177.0" class="stem"/>
+<circle cx="584.4" cy="177.0" r="5" class="eff"><title>mass5_f10_max: d=+1.167, p=0.0043, adjusted p=0.0698 — not usable</title></circle>
+<text x="596.4" y="181.0" text-anchor="start" class="vallbl">+1.17</text>
+<text x="162.0" y="207.0" text-anchor="end" class="rowlbl mono">kl_uniform_mean</text>
+<line x1="410.0" y1="203.0" x2="577.2" y2="203.0" class="stem"/>
+<circle cx="577.2" cy="203.0" r="5" class="eff"><title>kl_uniform_mean: d=+1.119, p=0.0029, adjusted p=0.0584 — not usable</title></circle>
+<text x="589.2" y="207.0" text-anchor="start" class="vallbl">+1.12</text>
+<text x="162.0" y="233.0" text-anchor="end" class="rowlbl mono">mean_entropy</text>
+<line x1="410.0" y1="229.0" x2="242.8" y2="229.0" class="stem"/>
+<circle cx="242.8" cy="229.0" r="5" class="eff"><title>mean_entropy: d=-1.119, p=0.0029, adjusted p=0.0584 — not usable</title></circle>
+<text x="230.8" y="233.0" text-anchor="end" class="vallbl">-1.12</text>
+<text x="162.0" y="259.0" text-anchor="end" class="rowlbl mono">full_ent_mean</text>
+<line x1="410.0" y1="255.0" x2="242.9" y2="255.0" class="stem"/>
+<circle cx="242.9" cy="255.0" r="5" class="eff"><title>full_ent_mean: d=-1.118, p=0.0029, adjusted p=0.0584 — not usable</title></circle>
+<text x="230.9" y="259.0" text-anchor="end" class="vallbl">-1.12</text>
+<text x="162.0" y="285.0" text-anchor="end" class="rowlbl mono">margin_std</text>
+<line x1="410.0" y1="281.0" x2="243.5" y2="281.0" class="stem"/>
+<circle cx="243.5" cy="281.0" r="5" class="eff"><title>margin_std: d=-1.114, p=0.0032, adjusted p=0.0584 — not usable</title></circle>
+<text x="231.5" y="285.0" text-anchor="end" class="vallbl">-1.11</text>
+<text x="162.0" y="311.0" text-anchor="end" class="rowlbl mono">kl_step_mean</text>
+<line x1="410.0" y1="307.0" x2="566.3" y2="307.0" class="stem"/>
+<circle cx="566.3" cy="307.0" r="5" class="eff"><title>kl_step_mean: d=+1.046, p=0.0049, adjusted p=0.0715 — not usable</title></circle>
+<text x="578.3" y="311.0" text-anchor="start" class="vallbl">+1.05</text>
+<text x="162.0" y="337.0" text-anchor="end" class="rowlbl mono">mass1_std</text>
+<line x1="410.0" y1="333.0" x2="255.5" y2="333.0" class="stem"/>
+<circle cx="255.5" cy="333.0" r="5" class="eff"><title>mass1_std: d=-1.034, p=0.0068, adjusted p=0.0903 — not usable</title></circle>
+<text x="243.5" y="337.0" text-anchor="end" class="vallbl">-1.03</text>
+<text x="162.0" y="363.0" text-anchor="end" class="rowlbl mono">q3</text>
+<line x1="410.0" y1="359.0" x2="260.4" y2="359.0" class="stem"/>
+<circle cx="260.4" cy="359.0" r="5" class="eff"><title>q3: d=-1.001, p=0.0100, adjusted p=0.1123 — not usable</title></circle>
+<text x="248.4" y="363.0" text-anchor="end" class="vallbl">-1.00</text>
+<text x="162.0" y="389.0" text-anchor="end" class="rowlbl mono">surprisal_std</text>
+<line x1="410.0" y1="385.0" x2="264.1" y2="385.0" class="stem"/>
+<circle cx="264.1" cy="385.0" r="5" class="eff"><title>surprisal_std: d=-0.976, p=0.0097, adjusted p=0.1123 — not usable</title></circle>
+<text x="252.1" y="389.0" text-anchor="end" class="vallbl">-0.98</text>
+<text x="162.0" y="415.0" text-anchor="end" class="rowlbl mono">spike_token_idx</text>
+<line x1="410.0" y1="411.0" x2="265.0" y2="411.0" class="stem"/>
+<circle cx="265.0" cy="411.0" r="5" class="eff"><title>spike_token_idx: d=-0.970, p=0.0131, adjusted p=0.1366 — not usable</title></circle>
+<text x="253.0" y="415.0" text-anchor="end" class="vallbl">-0.97</text>
+<text x="162.0" y="441.0" text-anchor="end" class="rowlbl mono">kl_step_std</text>
+<line x1="410.0" y1="437.0" x2="274.6" y2="437.0" class="stem"/>
+<circle cx="274.6" cy="437.0" r="5" class="eff"><title>kl_step_std: d=-0.906, p=0.0146, adjusted p=0.1421 — not usable</title></circle>
+<text x="262.6" y="441.0" text-anchor="end" class="vallbl">-0.91</text>
+<text x="162.0" y="467.0" text-anchor="end" class="rowlbl mono">kl_uniform_std</text>
+<line x1="410.0" y1="463.0" x2="276.7" y2="463.0" class="stem"/>
+<circle cx="276.7" cy="463.0" r="5" class="eff"><title>kl_uniform_std: d=-0.892, p=0.0186, adjusted p=0.1525 — not usable</title></circle>
+<text x="264.7" y="467.0" text-anchor="end" class="vallbl">-0.89</text>
+<text x="162.0" y="493.0" text-anchor="end" class="rowlbl mono">full_ent_std</text>
+<line x1="410.0" y1="489.0" x2="276.9" y2="489.0" class="stem"/>
+<circle cx="276.9" cy="489.0" r="5" class="eff"><title>full_ent_std: d=-0.891, p=0.0188, adjusted p=0.1525 — not usable</title></circle>
+<text x="264.9" y="493.0" text-anchor="end" class="vallbl">-0.89</text>
+<text x="162.0" y="519.0" text-anchor="end" class="rowlbl mono">osc_rate</text>
+<line x1="410.0" y1="515.0" x2="540.0" y2="515.0" class="stem"/>
+<circle cx="540.0" cy="515.0" r="5" class="eff"><title>osc_rate: d=+0.870, p=0.0213, adjusted p=0.1637 — not usable</title></circle>
+<text x="552.0" y="519.0" text-anchor="start" class="vallbl">+0.87</text>
+<text x="162.0" y="545.0" text-anchor="end" class="rowlbl mono">kl_step_early_vs_rest</text>
+<line x1="410.0" y1="541.0" x2="281.3" y2="541.0" class="stem"/>
+<circle cx="281.3" cy="541.0" r="5" class="eff"><title>kl_step_early_vs_rest: d=-0.861, p=0.0241, adjusted p=0.1759 — not usable</title></circle>
+<text x="269.3" y="545.0" text-anchor="end" class="vallbl">-0.86</text>
+<text x="162.0" y="571.0" text-anchor="end" class="rowlbl mono">kl_cent_late_minus_early</text>
+<line x1="410.0" y1="567.0" x2="291.9" y2="567.0" class="stem"/>
+<circle cx="291.9" cy="567.0" r="5" class="eff"><title>kl_cent_late_minus_early: d=-0.790, p=0.0371, adjusted p=0.2526 — not usable</title></circle>
+<text x="279.9" y="571.0" text-anchor="end" class="vallbl">-0.79</text>
+<text x="162.0" y="597.0" text-anchor="end" class="rowlbl mono">margin_f10_mean</text>
+<line x1="410.0" y1="593.0" x2="525.2" y2="593.0" class="stem"/>
+<circle cx="525.2" cy="593.0" r="5" class="eff"><title>margin_f10_mean: d=+0.771, p=0.0396, adjusted p=0.2526 — not usable</title></circle>
+<text x="537.2" y="597.0" text-anchor="start" class="vallbl">+0.77</text>
+<text x="162.0" y="623.0" text-anchor="end" class="rowlbl mono">mono_down_frac</text>
+<line x1="410.0" y1="619.0" x2="296.6" y2="619.0" class="stem"/>
+<circle cx="296.6" cy="619.0" r="5" class="eff"><title>mono_down_frac: d=-0.759, p=0.0398, adjusted p=0.2526 — not usable</title></circle>
+<text x="284.6" y="623.0" text-anchor="end" class="vallbl">-0.76</text>
+<text x="162.0" y="649.0" text-anchor="end" class="rowlbl mono">mass20_late_minus_early</text>
+<line x1="410.0" y1="645.0" x2="522.5" y2="645.0" class="stem"/>
+<circle cx="522.5" cy="645.0" r="5" class="eff"><title>mass20_late_minus_early: d=+0.753, p=0.0612, adjusted p=0.2553 — not usable</title></circle>
+<text x="534.5" y="649.0" text-anchor="start" class="vallbl">+0.75</text>
+<text x="162.0" y="675.0" text-anchor="end" class="rowlbl mono">tail_mass_late_minus_early</text>
+<line x1="410.0" y1="671.0" x2="297.5" y2="671.0" class="stem"/>
+<circle cx="297.5" cy="671.0" r="5" class="eff"><title>tail_mass_late_minus_early: d=-0.753, p=0.0612, adjusted p=0.2553 — not usable</title></circle>
+<text x="285.5" y="675.0" text-anchor="end" class="vallbl">-0.75</text>
+<text x="162.0" y="701.0" text-anchor="end" class="rowlbl mono">spike_height</text>
+<line x1="410.0" y1="697.0" x2="521.8" y2="697.0" class="stem"/>
+<circle cx="521.8" cy="697.0" r="5" class="eff"><title>spike_height: d=+0.748, p=0.0474, adjusted p=0.2553 — not usable</title></circle>
+<text x="533.8" y="701.0" text-anchor="start" class="vallbl">+0.75</text>
+<text x="162.0" y="727.0" text-anchor="end" class="rowlbl mono">spike_quartile</text>
+<line x1="410.0" y1="723.0" x2="298.2" y2="723.0" class="stem"/>
+<circle cx="298.2" cy="723.0" r="5" class="eff"><title>spike_quartile: d=-0.748, p=0.0593, adjusted p=0.2553 — not usable</title></circle>
+<text x="286.2" y="727.0" text-anchor="end" class="vallbl">-0.75</text>
+<text x="162.0" y="753.0" text-anchor="end" class="rowlbl mono">mass1_f10_mean</text>
+<line x1="410.0" y1="749.0" x2="520.6" y2="749.0" class="stem"/>
+<circle cx="520.6" cy="749.0" r="5" class="eff"><title>mass1_f10_mean: d=+0.740, p=0.0479, adjusted p=0.2553 — not usable</title></circle>
+<text x="532.6" y="753.0" text-anchor="start" class="vallbl">+0.74</text>
+<text x="162.0" y="779.0" text-anchor="end" class="rowlbl mono">phi_first10_mean</text>
+<line x1="410.0" y1="775.0" x2="520.6" y2="775.0" class="stem"/>
+<circle cx="520.6" cy="775.0" r="5" class="eff"><title>phi_first10_mean: d=+0.740, p=0.0479, adjusted p=0.2553 — not usable</title></circle>
+<text x="532.6" y="779.0" text-anchor="start" class="vallbl">+0.74</text>
+<text x="162.0" y="805.0" text-anchor="end" class="rowlbl mono">surprisal_f10_mean</text>
+<line x1="410.0" y1="801.0" x2="302.4" y2="801.0" class="stem"/>
+<circle cx="302.4" cy="801.0" r="5" class="eff"><title>surprisal_f10_mean: d=-0.720, p=0.0540, adjusted p=0.2553 — not usable</title></circle>
+<text x="290.4" y="805.0" text-anchor="end" class="vallbl">-0.72</text>
+<text x="162.0" y="831.0" text-anchor="end" class="rowlbl mono">q1</text>
+<line x1="410.0" y1="827.0" x2="303.5" y2="827.0" class="stem"/>
+<circle cx="303.5" cy="827.0" r="5" class="eff"><title>q1: d=-0.713, p=0.0601, adjusted p=0.2553 — not usable</title></circle>
+<text x="291.5" y="831.0" text-anchor="end" class="vallbl">-0.71</text>
+<text x="162.0" y="857.0" text-anchor="end" class="rowlbl mono">head_entropy</text>
+<line x1="410.0" y1="853.0" x2="303.6" y2="853.0" class="stem"/>
+<circle cx="303.6" cy="853.0" r="5" class="eff"><title>head_entropy: d=-0.712, p=0.0601, adjusted p=0.2553 — not usable</title></circle>
+<text x="291.6" y="857.0" text-anchor="end" class="vallbl">-0.71</text>
+<text x="162.0" y="883.0" text-anchor="end" class="rowlbl mono">first10_mean</text>
+<line x1="410.0" y1="879.0" x2="303.7" y2="879.0" class="stem"/>
+<circle cx="303.7" cy="879.0" r="5" class="eff"><title>first10_mean: d=-0.711, p=0.0595, adjusted p=0.2553 — not usable</title></circle>
+<text x="291.7" y="883.0" text-anchor="end" class="vallbl">-0.71</text>
+<text x="162.0" y="909.0" text-anchor="end" class="rowlbl mono">full_ent_f10_mean</text>
+<line x1="410.0" y1="905.0" x2="303.7" y2="905.0" class="stem"/>
+<circle cx="303.7" cy="905.0" r="5" class="eff"><title>full_ent_f10_mean: d=-0.711, p=0.0595, adjusted p=0.2553 — not usable</title></circle>
+<text x="291.7" y="909.0" text-anchor="end" class="vallbl">-0.71</text>
+<text x="162.0" y="935.0" text-anchor="end" class="rowlbl mono">kl_uniform_f10_mean</text>
+<line x1="410.0" y1="931.0" x2="516.3" y2="931.0" class="stem"/>
+<circle cx="516.3" cy="931.0" r="5" class="eff"><title>kl_uniform_f10_mean: d=+0.711, p=0.0595, adjusted p=0.2553 — not usable</title></circle>
+<text x="528.3" y="935.0" text-anchor="start" class="vallbl">+0.71</text>
+<text x="162.0" y="961.0" text-anchor="end" class="rowlbl mono">surprisal_f10_max</text>
+<line x1="410.0" y1="957.0" x2="311.2" y2="957.0" class="stem"/>
+<circle cx="311.2" cy="957.0" r="5" class="eff"><title>surprisal_f10_max: d=-0.661, p=0.0850, adjusted p=0.3135 — not usable</title></circle>
+<text x="299.2" y="961.0" text-anchor="end" class="vallbl">-0.66</text>
+<text x="162.0" y="987.0" text-anchor="end" class="rowlbl mono">margin_min</text>
+<line x1="410.0" y1="983.0" x2="507.4" y2="983.0" class="stem"/>
+<circle cx="507.4" cy="983.0" r="5" class="eff"><title>margin_min: d=+0.652, p=0.0826, adjusted p=0.3135 — not usable</title></circle>
+<text x="519.4" y="987.0" text-anchor="start" class="vallbl">+0.65</text>
+<text x="162.0" y="1013.0" text-anchor="end" class="rowlbl mono">total_variation</text>
+<line x1="410.0" y1="1009.0" x2="312.7" y2="1009.0" class="stem"/>
+<circle cx="312.7" cy="1009.0" r="5" class="eff"><title>total_variation: d=-0.651, p=0.0859, adjusted p=0.3135 — not usable</title></circle>
+<text x="300.7" y="1013.0" text-anchor="end" class="vallbl">-0.65</text>
+<text x="162.0" y="1039.0" text-anchor="end" class="rowlbl mono">mass20_min</text>
+<line x1="410.0" y1="1035.0" x2="507.1" y2="1035.0" class="stem"/>
+<circle cx="507.1" cy="1035.0" r="5" class="eff"><title>mass20_min: d=+0.650, p=0.0759, adjusted p=0.2995 — not usable</title></circle>
+<text x="519.1" y="1039.0" text-anchor="start" class="vallbl">+0.65</text>
+<text x="162.0" y="1065.0" text-anchor="end" class="rowlbl mono">tail_mass_max</text>
+<line x1="410.0" y1="1061.0" x2="312.9" y2="1061.0" class="stem"/>
+<circle cx="312.9" cy="1061.0" r="5" class="eff"><title>tail_mass_max: d=-0.650, p=0.0759, adjusted p=0.2995 — not usable</title></circle>
+<text x="300.9" y="1065.0" text-anchor="end" class="vallbl">-0.65</text>
+<text x="162.0" y="1091.0" text-anchor="end" class="rowlbl mono">q4</text>
+<line x1="410.0" y1="1087.0" x2="319.1" y2="1087.0" class="stem"/>
+<circle cx="319.1" cy="1087.0" r="5" class="eff"><title>q4: d=-0.608, p=0.0996, adjusted p=0.3547 — not usable</title></circle>
+<text x="307.1" y="1091.0" text-anchor="end" class="vallbl">-0.61</text>
+<text x="162.0" y="1117.0" text-anchor="end" class="rowlbl mono">mass1_min</text>
+<line x1="410.0" y1="1113.0" x2="498.9" y2="1113.0" class="stem"/>
+<circle cx="498.9" cy="1113.0" r="5" class="eff"><title>mass1_min: d=+0.595, p=0.1166, adjusted p=0.3869 — not usable</title></circle>
+<text x="510.9" y="1117.0" text-anchor="start" class="vallbl">+0.59</text>
+<text x="162.0" y="1143.0" text-anchor="end" class="rowlbl mono">first10_std</text>
+<line x1="410.0" y1="1139.0" x2="323.0" y2="1139.0" class="stem"/>
+<circle cx="323.0" cy="1139.0" r="5" class="eff"><title>first10_std: d=-0.582, p=0.1344, adjusted p=0.4085 — not usable</title></circle>
+<text x="311.0" y="1143.0" text-anchor="end" class="vallbl">-0.58</text>
+<text x="162.0" y="1169.0" text-anchor="end" class="rowlbl mono">spike_relative_pos</text>
+<line x1="410.0" y1="1165.0" x2="324.1" y2="1165.0" class="stem"/>
+<circle cx="324.1" cy="1165.0" r="5" class="eff"><title>spike_relative_pos: d=-0.575, p=0.1303, adjusted p=0.4085 — not usable</title></circle>
+<text x="312.1" y="1169.0" text-anchor="end" class="vallbl">-0.57</text>
+<text x="162.0" y="1195.0" text-anchor="end" class="rowlbl mono">first10_max</text>
+<line x1="410.0" y1="1191.0" x2="324.4" y2="1191.0" class="stem"/>
+<circle cx="324.4" cy="1191.0" r="5" class="eff"><title>first10_max: d=-0.573, p=0.1409, adjusted p=0.4085 — not usable</title></circle>
+<text x="312.4" y="1195.0" text-anchor="end" class="vallbl">-0.57</text>
+<text x="162.0" y="1221.0" text-anchor="end" class="rowlbl mono">full_ent_f10_max</text>
+<line x1="410.0" y1="1217.0" x2="324.4" y2="1217.0" class="stem"/>
+<circle cx="324.4" cy="1217.0" r="5" class="eff"><title>full_ent_f10_max: d=-0.573, p=0.1409, adjusted p=0.4085 — not usable</title></circle>
+<text x="312.4" y="1221.0" text-anchor="end" class="vallbl">-0.57</text>
+<text x="162.0" y="1247.0" text-anchor="end" class="rowlbl mono">surprisal_max</text>
+<line x1="410.0" y1="1243.0" x2="324.5" y2="1243.0" class="stem"/>
+<circle cx="324.5" cy="1243.0" r="5" class="eff"><title>surprisal_max: d=-0.572, p=0.1354, adjusted p=0.4085 — not usable</title></circle>
+<text x="312.5" y="1247.0" text-anchor="end" class="vallbl">-0.57</text>
+<text x="162.0" y="1273.0" text-anchor="end" class="rowlbl mono">trend_rho</text>
+<line x1="410.0" y1="1269.0" x2="493.1" y2="1269.0" class="stem"/>
+<circle cx="493.1" cy="1269.0" r="5" class="eff"><title>trend_rho: d=+0.556, p=0.1501, adjusted p=0.4085 — not usable</title></circle>
+<text x="505.1" y="1273.0" text-anchor="start" class="vallbl">+0.56</text>
+<text x="162.0" y="1299.0" text-anchor="end" class="rowlbl mono">full_ent_max</text>
+<line x1="410.0" y1="1295.0" x2="327.5" y2="1295.0" class="stem"/>
+<circle cx="327.5" cy="1295.0" r="5" class="eff"><title>full_ent_max: d=-0.552, p=0.1506, adjusted p=0.4085 — not usable</title></circle>
+<text x="315.5" y="1299.0" text-anchor="end" class="vallbl">-0.55</text>
+<text x="162.0" y="1325.0" text-anchor="end" class="rowlbl mono">kl_uniform_min</text>
+<line x1="410.0" y1="1321.0" x2="492.3" y2="1321.0" class="stem"/>
+<circle cx="492.3" cy="1321.0" r="5" class="eff"><title>kl_uniform_min: d=+0.551, p=0.1511, adjusted p=0.4085 — not usable</title></circle>
+<text x="504.3" y="1325.0" text-anchor="start" class="vallbl">+0.55</text>
+<text x="162.0" y="1351.0" text-anchor="end" class="rowlbl mono">max_entropy</text>
+<line x1="410.0" y1="1347.0" x2="327.7" y2="1347.0" class="stem"/>
+<circle cx="327.7" cy="1347.0" r="5" class="eff"><title>max_entropy: d=-0.551, p=0.1511, adjusted p=0.4085 — not usable</title></circle>
+<text x="315.7" y="1351.0" text-anchor="end" class="vallbl">-0.55</text>
+<text x="162.0" y="1377.0" text-anchor="end" class="rowlbl mono">n_semantic</text>
+<line x1="410.0" y1="1373.0" x2="337.7" y2="1373.0" class="stem"/>
+<circle cx="337.7" cy="1373.0" r="5" class="eff"><title>n_semantic: d=-0.484, p=0.2108, adjusted p=0.5496 — not usable</title></circle>
+<text x="325.7" y="1377.0" text-anchor="end" class="vallbl">-0.48</text>
+<text x="162.0" y="1403.0" text-anchor="end" class="rowlbl mono">n_tokens</text>
+<line x1="410.0" y1="1399.0" x2="337.7" y2="1399.0" class="stem"/>
+<circle cx="337.7" cy="1399.0" r="5" class="eff"><title>n_tokens: d=-0.484, p=0.2108, adjusted p=0.5496 — not usable</title></circle>
+<text x="325.7" y="1403.0" text-anchor="end" class="vallbl">-0.48</text>
+<text x="162.0" y="1429.0" text-anchor="end" class="rowlbl mono">mass20_std</text>
+<line x1="410.0" y1="1425.0" x2="338.0" y2="1425.0" class="stem"/>
+<circle cx="338.0" cy="1425.0" r="5" class="eff"><title>mass20_std: d=-0.482, p=0.1148, adjusted p=0.3869 — not usable</title></circle>
+<text x="326.0" y="1429.0" text-anchor="end" class="vallbl">-0.48</text>
+<text x="162.0" y="1455.0" text-anchor="end" class="rowlbl mono">tail_mass_std</text>
+<line x1="410.0" y1="1451.0" x2="338.0" y2="1451.0" class="stem"/>
+<circle cx="338.0" cy="1451.0" r="5" class="eff"><title>tail_mass_std: d=-0.482, p=0.1148, adjusted p=0.3869 — not usable</title></circle>
+<text x="326.0" y="1455.0" text-anchor="end" class="vallbl">-0.48</text>
+<text x="162.0" y="1481.0" text-anchor="end" class="rowlbl mono">q2</text>
+<line x1="410.0" y1="1477.0" x2="348.1" y2="1477.0" class="stem"/>
+<circle cx="348.1" cy="1477.0" r="5" class="eff"><title>q2: d=-0.414, p=0.2863, adjusted p=0.7207 — not usable</title></circle>
+<text x="336.1" y="1481.0" text-anchor="end" class="vallbl">-0.41</text>
+<text x="162.0" y="1507.0" text-anchor="end" class="rowlbl mono">kl_cent_slope</text>
+<line x1="410.0" y1="1503.0" x2="348.6" y2="1503.0" class="stem"/>
+<circle cx="348.6" cy="1503.0" r="5" class="eff"><title>kl_cent_slope: d=-0.411, p=0.2715, adjusted p=0.6954 — not usable</title></circle>
+<text x="336.6" y="1507.0" text-anchor="end" class="vallbl">-0.41</text>
+<text x="162.0" y="1533.0" text-anchor="end" class="rowlbl mono">kl_step_late_minus_early</text>
+<line x1="410.0" y1="1529.0" x2="468.0" y2="1529.0" class="stem"/>
+<circle cx="468.0" cy="1529.0" r="5" class="eff"><title>kl_step_late_minus_early: d=+0.388, p=0.3137, adjusted p=0.7633 — not usable</title></circle>
+<text x="480.0" y="1533.0" text-anchor="start" class="vallbl">+0.39</text>
+<text x="162.0" y="1559.0" text-anchor="end" class="rowlbl mono">kl_cent_f5_mean</text>
+<line x1="410.0" y1="1555.0" x2="465.4" y2="1555.0" class="stem"/>
+<circle cx="465.4" cy="1555.0" r="5" class="eff"><title>kl_cent_f5_mean: d=+0.371, p=0.3434, adjusted p=0.8219 — not usable</title></circle>
+<text x="477.4" y="1559.0" text-anchor="start" class="vallbl">+0.37</text>
+<text x="162.0" y="1585.0" text-anchor="end" class="rowlbl mono">mass5_slope</text>
+<line x1="410.0" y1="1581.0" x2="462.8" y2="1581.0" class="stem"/>
+<circle cx="462.8" cy="1581.0" r="5" class="eff"><title>mass5_slope: d=+0.353, p=0.1426, adjusted p=0.4085 — not usable</title></circle>
+<text x="474.8" y="1585.0" text-anchor="start" class="vallbl">+0.35</text>
+<text x="162.0" y="1611.0" text-anchor="end" class="rowlbl mono">mass5_late_minus_early</text>
+<line x1="410.0" y1="1607.0" x2="458.9" y2="1607.0" class="stem"/>
+<circle cx="458.9" cy="1607.0" r="5" class="eff"><title>mass5_late_minus_early: d=+0.327, p=0.3135, adjusted p=0.7633 — not usable</title></circle>
+<text x="470.9" y="1611.0" text-anchor="start" class="vallbl">+0.33</text>
+<text x="162.0" y="1637.0" text-anchor="end" class="rowlbl mono">early_slope</text>
+<line x1="410.0" y1="1633.0" x2="362.3" y2="1633.0" class="stem"/>
+<circle cx="362.3" cy="1633.0" r="5" class="eff"><title>early_slope: d=-0.319, p=0.4126, adjusted p=0.9268 — not usable</title></circle>
+<text x="350.3" y="1637.0" text-anchor="end" class="vallbl">-0.32</text>
+<text x="162.0" y="1663.0" text-anchor="end" class="rowlbl mono">full_ent_slope</text>
+<line x1="410.0" y1="1659.0" x2="362.3" y2="1659.0" class="stem"/>
+<circle cx="362.3" cy="1659.0" r="5" class="eff"><title>full_ent_slope: d=-0.319, p=0.4126, adjusted p=0.9268 — not usable</title></circle>
+<text x="350.3" y="1663.0" text-anchor="end" class="vallbl">-0.32</text>
+<text x="162.0" y="1689.0" text-anchor="end" class="rowlbl mono">kl_uniform_slope</text>
+<line x1="410.0" y1="1685.0" x2="457.7" y2="1685.0" class="stem"/>
+<circle cx="457.7" cy="1685.0" r="5" class="eff"><title>kl_uniform_slope: d=+0.319, p=0.4126, adjusted p=0.9268 — not usable</title></circle>
+<text x="469.7" y="1689.0" text-anchor="start" class="vallbl">+0.32</text>
+<text x="162.0" y="1715.0" text-anchor="end" class="rowlbl mono">q_slope</text>
+<line x1="410.0" y1="1711.0" x2="457.2" y2="1711.0" class="stem"/>
+<circle cx="457.2" cy="1711.0" r="5" class="eff"><title>q_slope: d=+0.316, p=0.4121, adjusted p=0.9268 — not usable</title></circle>
+<text x="469.2" y="1715.0" text-anchor="start" class="vallbl">+0.32</text>
+<text x="162.0" y="1741.0" text-anchor="end" class="rowlbl mono">kl_cent_std</text>
+<line x1="410.0" y1="1737.0" x2="456.3" y2="1737.0" class="stem"/>
+<circle cx="456.3" cy="1737.0" r="5" class="eff"><title>kl_cent_std: d=+0.310, p=0.4227, adjusted p=0.9351 — not usable</title></circle>
+<text x="468.3" y="1741.0" text-anchor="start" class="vallbl">+0.31</text>
+<text x="162.0" y="1767.0" text-anchor="end" class="rowlbl mono">q_range</text>
+<line x1="410.0" y1="1763.0" x2="364.4" y2="1763.0" class="stem"/>
+<circle cx="364.4" cy="1763.0" r="5" class="eff"><title>q_range: d=-0.305, p=0.4308, adjusted p=0.9388 — not usable</title></circle>
+<text x="352.4" y="1767.0" text-anchor="end" class="vallbl">-0.30</text>
+<text x="162.0" y="1793.0" text-anchor="end" class="rowlbl mono">margin_early_vs_rest</text>
+<line x1="410.0" y1="1789.0" x2="452.7" y2="1789.0" class="stem"/>
+<circle cx="452.7" cy="1789.0" r="5" class="eff"><title>margin_early_vs_rest: d=+0.286, p=0.4670, adjusted p=1.0000 — not usable</title></circle>
+<text x="464.7" y="1793.0" text-anchor="start" class="vallbl">+0.29</text>
+<text x="162.0" y="1819.0" text-anchor="end" class="rowlbl mono">q_curvature</text>
+<line x1="410.0" y1="1815.0" x2="449.2" y2="1815.0" class="stem"/>
+<circle cx="449.2" cy="1815.0" r="5" class="eff"><title>q_curvature: d=+0.262, p=0.4735, adjusted p=1.0000 — not usable</title></circle>
+<text x="461.2" y="1819.0" text-anchor="start" class="vallbl">+0.26</text>
+<text x="162.0" y="1845.0" text-anchor="end" class="rowlbl mono">mass1_early_vs_rest</text>
+<line x1="410.0" y1="1841.0" x2="449.2" y2="1841.0" class="stem"/>
+<circle cx="449.2" cy="1841.0" r="5" class="eff"><title>mass1_early_vs_rest: d=+0.262, p=0.5002, adjusted p=1.0000 — not usable</title></circle>
+<text x="461.2" y="1845.0" text-anchor="start" class="vallbl">+0.26</text>
+<text x="162.0" y="1871.0" text-anchor="end" class="rowlbl mono">kl_step_slope</text>
+<line x1="410.0" y1="1867.0" x2="372.6" y2="1867.0" class="stem"/>
+<circle cx="372.6" cy="1867.0" r="5" class="eff"><title>kl_step_slope: d=-0.250, p=0.5001, adjusted p=1.0000 — not usable</title></circle>
+<text x="360.6" y="1871.0" text-anchor="end" class="vallbl">-0.25</text>
+<text x="162.0" y="1897.0" text-anchor="end" class="rowlbl mono">mass20_mean</text>
+<line x1="410.0" y1="1893.0" x2="446.5" y2="1893.0" class="stem"/>
+<circle cx="446.5" cy="1893.0" r="5" class="eff"><title>mass20_mean: d=+0.244, p=0.5042, adjusted p=1.0000 — not usable</title></circle>
+<text x="458.5" y="1897.0" text-anchor="start" class="vallbl">+0.24</text>
+<text x="162.0" y="1923.0" text-anchor="end" class="rowlbl mono">tail_mass_mean</text>
+<line x1="410.0" y1="1919.0" x2="373.5" y2="1919.0" class="stem"/>
+<circle cx="373.5" cy="1919.0" r="5" class="eff"><title>tail_mass_mean: d=-0.244, p=0.5042, adjusted p=1.0000 — not usable</title></circle>
+<text x="361.5" y="1923.0" text-anchor="end" class="vallbl">-0.24</text>
+<text x="162.0" y="1949.0" text-anchor="end" class="rowlbl mono">kl_step_f10_max</text>
+<line x1="410.0" y1="1945.0" x2="373.7" y2="1945.0" class="stem"/>
+<circle cx="373.7" cy="1945.0" r="5" class="eff"><title>kl_step_f10_max: d=-0.243, p=0.7488, adjusted p=1.0000 — not usable</title></circle>
+<text x="361.7" y="1949.0" text-anchor="end" class="vallbl">-0.24</text>
+<text x="162.0" y="1975.0" text-anchor="end" class="rowlbl mono">surprisal_early_vs_rest</text>
+<line x1="410.0" y1="1971.0" x2="374.3" y2="1971.0" class="stem"/>
+<circle cx="374.3" cy="1971.0" r="5" class="eff"><title>surprisal_early_vs_rest: d=-0.239, p=0.5381, adjusted p=1.0000 — not usable</title></circle>
+<text x="362.3" y="1975.0" text-anchor="end" class="vallbl">-0.24</text>
+<text x="162.0" y="2001.0" text-anchor="end" class="rowlbl mono">q1_over_mean</text>
+<line x1="410.0" y1="1997.0" x2="443.9" y2="1997.0" class="stem"/>
+<circle cx="443.9" cy="1997.0" r="5" class="eff"><title>q1_over_mean: d=+0.227, p=0.5566, adjusted p=1.0000 — not usable</title></circle>
+<text x="455.9" y="2001.0" text-anchor="start" class="vallbl">+0.23</text>
+<text x="162.0" y="2027.0" text-anchor="end" class="rowlbl mono">margin_f5_mean</text>
+<line x1="410.0" y1="2023.0" x2="443.3" y2="2023.0" class="stem"/>
+<circle cx="443.3" cy="2023.0" r="5" class="eff"><title>margin_f5_mean: d=+0.223, p=0.6211, adjusted p=1.0000 — not usable</title></circle>
+<text x="455.3" y="2027.0" text-anchor="start" class="vallbl">+0.22</text>
+<text x="162.0" y="2053.0" text-anchor="end" class="rowlbl mono">mass1_slope</text>
+<line x1="410.0" y1="2049.0" x2="443.2" y2="2049.0" class="stem"/>
+<circle cx="443.2" cy="2049.0" r="5" class="eff"><title>mass1_slope: d=+0.222, p=0.5705, adjusted p=1.0000 — not usable</title></circle>
+<text x="455.2" y="2053.0" text-anchor="start" class="vallbl">+0.22</text>
+<text x="162.0" y="2079.0" text-anchor="end" class="rowlbl mono">early_vs_rest</text>
+<line x1="410.0" y1="2075.0" x2="378.3" y2="2075.0" class="stem"/>
+<circle cx="378.3" cy="2075.0" r="5" class="eff"><title>early_vs_rest: d=-0.212, p=0.5807, adjusted p=1.0000 — not usable</title></circle>
+<text x="366.3" y="2079.0" text-anchor="end" class="vallbl">-0.21</text>
+<text x="162.0" y="2105.0" text-anchor="end" class="rowlbl mono">kl_uniform_early_vs_rest</text>
+<line x1="410.0" y1="2101.0" x2="441.7" y2="2101.0" class="stem"/>
+<circle cx="441.7" cy="2101.0" r="5" class="eff"><title>kl_uniform_early_vs_rest: d=+0.212, p=0.5807, adjusted p=1.0000 — not usable</title></circle>
+<text x="453.7" y="2105.0" text-anchor="start" class="vallbl">+0.21</text>
+<text x="162.0" y="2131.0" text-anchor="end" class="rowlbl mono">full_ent_early_vs_rest</text>
+<line x1="410.0" y1="2127.0" x2="378.5" y2="2127.0" class="stem"/>
+<circle cx="378.5" cy="2127.0" r="5" class="eff"><title>full_ent_early_vs_rest: d=-0.211, p=0.5813, adjusted p=1.0000 — not usable</title></circle>
+<text x="366.5" y="2131.0" text-anchor="end" class="vallbl">-0.21</text>
+<text x="162.0" y="2157.0" text-anchor="end" class="rowlbl mono">margin_slope</text>
+<line x1="410.0" y1="2153.0" x2="440.9" y2="2153.0" class="stem"/>
+<circle cx="440.9" cy="2153.0" r="5" class="eff"><title>margin_slope: d=+0.207, p=0.5970, adjusted p=1.0000 — not usable</title></circle>
+<text x="452.9" y="2157.0" text-anchor="start" class="vallbl">+0.21</text>
+<text x="162.0" y="2183.0" text-anchor="end" class="rowlbl mono">mass5_min</text>
+<line x1="410.0" y1="2179.0" x2="440.0" y2="2179.0" class="stem"/>
+<circle cx="440.0" cy="2179.0" r="5" class="eff"><title>mass5_min: d=+0.201, p=0.6551, adjusted p=1.0000 — not usable</title></circle>
+<text x="452.0" y="2183.0" text-anchor="start" class="vallbl">+0.20</text>
+<text x="162.0" y="2209.0" text-anchor="end" class="rowlbl mono">surprisal_slope</text>
+<line x1="410.0" y1="2205.0" x2="381.2" y2="2205.0" class="stem"/>
+<circle cx="381.2" cy="2205.0" r="5" class="eff"><title>surprisal_slope: d=-0.193, p=0.6244, adjusted p=1.0000 — not usable</title></circle>
+<text x="369.2" y="2209.0" text-anchor="end" class="vallbl">-0.19</text>
+<text x="162.0" y="2235.0" text-anchor="end" class="rowlbl mono">tail_entropy</text>
+<line x1="410.0" y1="2231.0" x2="381.5" y2="2231.0" class="stem"/>
+<circle cx="381.5" cy="2231.0" r="5" class="eff"><title>tail_entropy: d=-0.191, p=0.6440, adjusted p=1.0000 — not usable</title></circle>
+<text x="369.5" y="2235.0" text-anchor="end" class="vallbl">-0.19</text>
+<text x="162.0" y="2261.0" text-anchor="end" class="rowlbl mono">mass5_max</text>
+<line x1="410.0" y1="2257.0" x2="381.6" y2="2257.0" class="stem"/>
+<circle cx="381.6" cy="2257.0" r="5" class="eff"><title>mass5_max: d=-0.190, p=0.8928, adjusted p=1.0000 — not usable</title></circle>
+<text x="369.6" y="2261.0" text-anchor="end" class="vallbl">-0.19</text>
+<text x="162.0" y="2287.0" text-anchor="end" class="rowlbl mono">mass1_first</text>
+<line x1="410.0" y1="2283.0" x2="381.8" y2="2283.0" class="stem"/>
+<circle cx="381.8" cy="2283.0" r="5" class="eff"><title>mass1_first: d=-0.189, p=0.9602, adjusted p=1.0000 — not usable</title></circle>
+<text x="369.8" y="2287.0" text-anchor="end" class="vallbl">-0.19</text>
+<text x="162.0" y="2313.0" text-anchor="end" class="rowlbl mono">phi_first</text>
+<line x1="410.0" y1="2309.0" x2="381.8" y2="2309.0" class="stem"/>
+<circle cx="381.8" cy="2309.0" r="5" class="eff"><title>phi_first: d=-0.189, p=0.9602, adjusted p=1.0000 — not usable</title></circle>
+<text x="369.8" y="2313.0" text-anchor="end" class="vallbl">-0.19</text>
+<text x="162.0" y="2339.0" text-anchor="end" class="rowlbl mono">surprisal_first</text>
+<line x1="410.0" y1="2335.0" x2="438.2" y2="2335.0" class="stem"/>
+<circle cx="438.2" cy="2335.0" r="5" class="eff"><title>surprisal_first: d=+0.189, p=0.9602, adjusted p=1.0000 — not usable</title></circle>
+<text x="450.2" y="2339.0" text-anchor="start" class="vallbl">+0.19</text>
+<text x="162.0" y="2365.0" text-anchor="end" class="rowlbl mono">margin_first</text>
+<line x1="410.0" y1="2361.0" x2="381.8" y2="2361.0" class="stem"/>
+<circle cx="381.8" cy="2361.0" r="5" class="eff"><title>margin_first: d=-0.189, p=0.9640, adjusted p=1.0000 — not usable</title></circle>
+<text x="369.8" y="2365.0" text-anchor="end" class="vallbl">-0.19</text>
+<text x="162.0" y="2391.0" text-anchor="end" class="rowlbl mono">mass20_early_vs_rest</text>
+<line x1="410.0" y1="2387.0" x2="382.5" y2="2387.0" class="stem"/>
+<circle cx="382.5" cy="2387.0" r="5" class="eff"><title>mass20_early_vs_rest: d=-0.184, p=0.6126, adjusted p=1.0000 — not usable</title></circle>
+<text x="370.5" y="2391.0" text-anchor="end" class="vallbl">-0.18</text>
+<text x="162.0" y="2417.0" text-anchor="end" class="rowlbl mono">tail_mass_early_vs_rest</text>
+<line x1="410.0" y1="2413.0" x2="437.5" y2="2413.0" class="stem"/>
+<circle cx="437.5" cy="2413.0" r="5" class="eff"><title>tail_mass_early_vs_rest: d=+0.184, p=0.6126, adjusted p=1.0000 — not usable</title></circle>
+<text x="449.5" y="2417.0" text-anchor="start" class="vallbl">+0.18</text>
+<text x="162.0" y="2443.0" text-anchor="end" class="rowlbl mono">mass20_slope</text>
+<line x1="410.0" y1="2439.0" x2="437.5" y2="2439.0" class="stem"/>
+<circle cx="437.5" cy="2439.0" r="5" class="eff"><title>mass20_slope: d=+0.184, p=0.6916, adjusted p=1.0000 — not usable</title></circle>
+<text x="449.5" y="2443.0" text-anchor="start" class="vallbl">+0.18</text>
+<text x="162.0" y="2469.0" text-anchor="end" class="rowlbl mono">tail_mass_slope</text>
+<line x1="410.0" y1="2465.0" x2="382.5" y2="2465.0" class="stem"/>
+<circle cx="382.5" cy="2465.0" r="5" class="eff"><title>tail_mass_slope: d=-0.184, p=0.6916, adjusted p=1.0000 — not usable</title></circle>
+<text x="370.5" y="2469.0" text-anchor="end" class="vallbl">-0.18</text>
+<text x="162.0" y="2495.0" text-anchor="end" class="rowlbl mono">mass1_f5_mean</text>
+<line x1="410.0" y1="2491.0" x2="436.7" y2="2491.0" class="stem"/>
+<circle cx="436.7" cy="2491.0" r="5" class="eff"><title>mass1_f5_mean: d=+0.179, p=0.6183, adjusted p=1.0000 — not usable</title></circle>
+<text x="448.7" y="2495.0" text-anchor="start" class="vallbl">+0.18</text>
+<text x="162.0" y="2521.0" text-anchor="end" class="rowlbl mono">margin_max</text>
+<line x1="410.0" y1="2517.0" x2="383.7" y2="2517.0" class="stem"/>
+<circle cx="383.7" cy="2517.0" r="5" class="eff"><title>margin_max: d=-0.176, p=0.8813, adjusted p=1.0000 — not usable</title></circle>
+<text x="371.7" y="2521.0" text-anchor="end" class="vallbl">-0.18</text>
+<text x="162.0" y="2547.0" text-anchor="end" class="rowlbl mono">late_vs_early_half</text>
+<line x1="410.0" y1="2543.0" x2="383.8" y2="2543.0" class="stem"/>
+<circle cx="383.8" cy="2543.0" r="5" class="eff"><title>late_vs_early_half: d=-0.175, p=0.6472, adjusted p=1.0000 — not usable</title></circle>
+<text x="371.8" y="2547.0" text-anchor="end" class="vallbl">-0.17</text>
+<text x="162.0" y="2573.0" text-anchor="end" class="rowlbl mono">surprisal_f5_mean</text>
+<line x1="410.0" y1="2569.0" x2="384.0" y2="2569.0" class="stem"/>
+<circle cx="384.0" cy="2569.0" r="5" class="eff"><title>surprisal_f5_mean: d=-0.174, p=0.6271, adjusted p=1.0000 — not usable</title></circle>
+<text x="372.0" y="2573.0" text-anchor="end" class="vallbl">-0.17</text>
+<text x="162.0" y="2599.0" text-anchor="end" class="rowlbl mono">first3_mean</text>
+<line x1="410.0" y1="2595.0" x2="435.7" y2="2595.0" class="stem"/>
+<circle cx="435.7" cy="2595.0" r="5" class="eff"><title>first3_mean: d=+0.172, p=0.9597, adjusted p=1.0000 — not usable</title></circle>
+<text x="447.7" y="2599.0" text-anchor="start" class="vallbl">+0.17</text>
+<text x="162.0" y="2625.0" text-anchor="end" class="rowlbl mono">first_to_max_ratio</text>
+<line x1="410.0" y1="2621.0" x2="435.7" y2="2621.0" class="stem"/>
+<circle cx="435.7" cy="2621.0" r="5" class="eff"><title>first_to_max_ratio: d=+0.172, p=0.9761, adjusted p=1.0000 — not usable</title></circle>
+<text x="447.7" y="2625.0" text-anchor="start" class="vallbl">+0.17</text>
+<text x="162.0" y="2651.0" text-anchor="end" class="rowlbl mono">first_token_entropy</text>
+<line x1="410.0" y1="2647.0" x2="435.6" y2="2647.0" class="stem"/>
+<circle cx="435.6" cy="2647.0" r="5" class="eff"><title>first_token_entropy: d=+0.171, p=0.9595, adjusted p=1.0000 — not usable</title></circle>
+<text x="447.6" y="2651.0" text-anchor="start" class="vallbl">+0.17</text>
+<text x="162.0" y="2677.0" text-anchor="end" class="rowlbl mono">full_ent_first</text>
+<line x1="410.0" y1="2673.0" x2="435.6" y2="2673.0" class="stem"/>
+<circle cx="435.6" cy="2673.0" r="5" class="eff"><title>full_ent_first: d=+0.171, p=0.9595, adjusted p=1.0000 — not usable</title></circle>
+<text x="447.6" y="2677.0" text-anchor="start" class="vallbl">+0.17</text>
+<text x="162.0" y="2703.0" text-anchor="end" class="rowlbl mono">kl_uniform_first</text>
+<line x1="410.0" y1="2699.0" x2="384.4" y2="2699.0" class="stem"/>
+<circle cx="384.4" cy="2699.0" r="5" class="eff"><title>kl_uniform_first: d=-0.171, p=0.9595, adjusted p=1.0000 — not usable</title></circle>
+<text x="372.4" y="2703.0" text-anchor="end" class="vallbl">-0.17</text>
+<text x="162.0" y="2729.0" text-anchor="end" class="rowlbl mono">kl_uniform_max</text>
+<line x1="410.0" y1="2725.0" x2="384.7" y2="2725.0" class="stem"/>
+<circle cx="384.7" cy="2725.0" r="5" class="eff"><title>kl_uniform_max: d=-0.169, p=0.8817, adjusted p=1.0000 — not usable</title></circle>
+<text x="372.7" y="2729.0" text-anchor="end" class="vallbl">-0.17</text>
+<text x="162.0" y="2755.0" text-anchor="end" class="rowlbl mono">full_ent_min</text>
+<line x1="410.0" y1="2751.0" x2="435.1" y2="2751.0" class="stem"/>
+<circle cx="435.1" cy="2751.0" r="5" class="eff"><title>full_ent_min: d=+0.168, p=0.8817, adjusted p=1.0000 — not usable</title></circle>
+<text x="447.1" y="2755.0" text-anchor="start" class="vallbl">+0.17</text>
+<text x="162.0" y="2781.0" text-anchor="end" class="rowlbl mono">mass1_max</text>
+<line x1="410.0" y1="2777.0" x2="384.9" y2="2777.0" class="stem"/>
+<circle cx="384.9" cy="2777.0" r="5" class="eff"><title>mass1_max: d=-0.168, p=0.8817, adjusted p=1.0000 — not usable</title></circle>
+<text x="372.9" y="2781.0" text-anchor="end" class="vallbl">-0.17</text>
+<text x="162.0" y="2807.0" text-anchor="end" class="rowlbl mono">surprisal_min</text>
+<line x1="410.0" y1="2803.0" x2="435.1" y2="2803.0" class="stem"/>
+<circle cx="435.1" cy="2803.0" r="5" class="eff"><title>surprisal_min: d=+0.168, p=0.8820, adjusted p=1.0000 — not usable</title></circle>
+<text x="447.1" y="2807.0" text-anchor="start" class="vallbl">+0.17</text>
+<text x="162.0" y="2833.0" text-anchor="end" class="rowlbl mono">kl_step_max</text>
+<line x1="410.0" y1="2829.0" x2="384.9" y2="2829.0" class="stem"/>
+<circle cx="384.9" cy="2829.0" r="5" class="eff"><title>kl_step_max: d=-0.168, p=0.8840, adjusted p=1.0000 — not usable</title></circle>
+<text x="372.9" y="2833.0" text-anchor="end" class="vallbl">-0.17</text>
+<text x="162.0" y="2859.0" text-anchor="end" class="rowlbl mono">n_spikes</text>
+<line x1="410.0" y1="2855.0" x2="435.0" y2="2855.0" class="stem"/>
+<circle cx="435.0" cy="2855.0" r="5" class="eff"><title>n_spikes: d=+0.167, p=0.8213, adjusted p=1.0000 — not usable</title></circle>
+<text x="447.0" y="2859.0" text-anchor="start" class="vallbl">+0.17</text>
+<text x="162.0" y="2885.0" text-anchor="end" class="rowlbl mono">full_ent_late_minus_early</text>
+<line x1="410.0" y1="2881.0" x2="385.3" y2="2881.0" class="stem"/>
+<circle cx="385.3" cy="2881.0" r="5" class="eff"><title>full_ent_late_minus_early: d=-0.165, p=0.6660, adjusted p=1.0000 — not usable</title></circle>
+<text x="373.3" y="2885.0" text-anchor="end" class="vallbl">-0.17</text>
+<text x="162.0" y="2911.0" text-anchor="end" class="rowlbl mono">kl_uniform_late_minus_early</text>
+<line x1="410.0" y1="2907.0" x2="434.5" y2="2907.0" class="stem"/>
+<circle cx="434.5" cy="2907.0" r="5" class="eff"><title>kl_uniform_late_minus_early: d=+0.164, p=0.6679, adjusted p=1.0000 — not usable</title></circle>
+<text x="446.5" y="2911.0" text-anchor="start" class="vallbl">+0.16</text>
+<text x="162.0" y="2937.0" text-anchor="end" class="rowlbl mono">kl_step_f5_mean</text>
+<line x1="410.0" y1="2933.0" x2="434.1" y2="2933.0" class="stem"/>
+<circle cx="434.1" cy="2933.0" r="5" class="eff"><title>kl_step_f5_mean: d=+0.161, p=0.6784, adjusted p=1.0000 — not usable</title></circle>
+<text x="446.1" y="2937.0" text-anchor="start" class="vallbl">+0.16</text>
+<text x="162.0" y="2963.0" text-anchor="end" class="rowlbl mono">q_monotone_down</text>
+<line x1="410.0" y1="2959.0" x2="386.5" y2="2959.0" class="stem"/>
+<circle cx="386.5" cy="2959.0" r="5" class="eff"><title>q_monotone_down: d=-0.157, p=0.7616, adjusted p=1.0000 — not usable</title></circle>
+<text x="374.5" y="2963.0" text-anchor="end" class="vallbl">-0.16</text>
+<text x="162.0" y="2989.0" text-anchor="end" class="rowlbl mono">q4_over_mean</text>
+<line x1="410.0" y1="2985.0" x2="386.8" y2="2985.0" class="stem"/>
+<circle cx="386.8" cy="2985.0" r="5" class="eff"><title>q4_over_mean: d=-0.155, p=0.6951, adjusted p=1.0000 — not usable</title></circle>
+<text x="374.8" y="2989.0" text-anchor="end" class="vallbl">-0.15</text>
+<text x="162.0" y="3015.0" text-anchor="end" class="rowlbl mono">kl_cent_f10_max</text>
+<line x1="410.0" y1="3011.0" x2="387.1" y2="3011.0" class="stem"/>
+<circle cx="387.1" cy="3011.0" r="5" class="eff"><title>kl_cent_f10_max: d=-0.153, p=0.7143, adjusted p=1.0000 — not usable</title></circle>
+<text x="375.1" y="3015.0" text-anchor="end" class="vallbl">-0.15</text>
+<text x="162.0" y="3041.0" text-anchor="end" class="rowlbl mono">mass5_f5_mean</text>
+<line x1="410.0" y1="3037.0" x2="388.5" y2="3037.0" class="stem"/>
+<circle cx="388.5" cy="3037.0" r="5" class="eff"><title>mass5_f5_mean: d=-0.144, p=0.8753, adjusted p=1.0000 — not usable</title></circle>
+<text x="376.5" y="3041.0" text-anchor="end" class="vallbl">-0.14</text>
+<text x="162.0" y="3067.0" text-anchor="end" class="rowlbl mono">first5_mean</text>
+<line x1="410.0" y1="3063.0" x2="389.5" y2="3063.0" class="stem"/>
+<circle cx="389.5" cy="3063.0" r="5" class="eff"><title>first5_mean: d=-0.137, p=0.6587, adjusted p=1.0000 — not usable</title></circle>
+<text x="377.5" y="3067.0" text-anchor="end" class="vallbl">-0.14</text>
+<text x="162.0" y="3093.0" text-anchor="end" class="rowlbl mono">full_ent_f5_mean</text>
+<line x1="410.0" y1="3089.0" x2="389.5" y2="3089.0" class="stem"/>
+<circle cx="389.5" cy="3089.0" r="5" class="eff"><title>full_ent_f5_mean: d=-0.137, p=0.6587, adjusted p=1.0000 — not usable</title></circle>
+<text x="377.5" y="3093.0" text-anchor="end" class="vallbl">-0.14</text>
+<text x="162.0" y="3119.0" text-anchor="end" class="rowlbl mono">kl_uniform_f5_mean</text>
+<line x1="410.0" y1="3115.0" x2="430.5" y2="3115.0" class="stem"/>
+<circle cx="430.5" cy="3115.0" r="5" class="eff"><title>kl_uniform_f5_mean: d=+0.137, p=0.6587, adjusted p=1.0000 — not usable</title></circle>
+<text x="442.5" y="3119.0" text-anchor="start" class="vallbl">+0.14</text>
+<text x="162.0" y="3145.0" text-anchor="end" class="rowlbl mono">q_early_drop</text>
+<line x1="410.0" y1="3141.0" x2="391.5" y2="3141.0" class="stem"/>
+<circle cx="391.5" cy="3141.0" r="5" class="eff"><title>q_early_drop: d=-0.124, p=0.7576, adjusted p=1.0000 — not usable</title></circle>
+<text x="379.5" y="3145.0" text-anchor="end" class="vallbl">-0.12</text>
+<text x="162.0" y="3171.0" text-anchor="end" class="rowlbl mono">mass5_std</text>
+<line x1="410.0" y1="3167.0" x2="393.3" y2="3167.0" class="stem"/>
+<circle cx="393.3" cy="3167.0" r="5" class="eff"><title>mass5_std: d=-0.112, p=0.7969, adjusted p=1.0000 — not usable</title></circle>
+<text x="381.3" y="3171.0" text-anchor="end" class="vallbl">-0.11</text>
+<text x="162.0" y="3197.0" text-anchor="end" class="rowlbl mono">mass5_mean</text>
+<line x1="410.0" y1="3193.0" x2="426.6" y2="3193.0" class="stem"/>
+<circle cx="426.6" cy="3193.0" r="5" class="eff"><title>mass5_mean: d=+0.111, p=0.8055, adjusted p=1.0000 — not usable</title></circle>
+<text x="438.6" y="3197.0" text-anchor="start" class="vallbl">+0.11</text>
+<text x="162.0" y="3223.0" text-anchor="end" class="rowlbl mono">mass5_early_vs_rest</text>
+<line x1="410.0" y1="3219.0" x2="394.2" y2="3219.0" class="stem"/>
+<circle cx="394.2" cy="3219.0" r="5" class="eff"><title>mass5_early_vs_rest: d=-0.106, p=0.8274, adjusted p=1.0000 — not usable</title></circle>
+<text x="382.2" y="3223.0" text-anchor="end" class="vallbl">-0.11</text>
+<text x="162.0" y="3249.0" text-anchor="end" class="rowlbl mono">path_ratio</text>
+<line x1="410.0" y1="3245.0" x2="394.2" y2="3245.0" class="stem"/>
+<circle cx="394.2" cy="3245.0" r="5" class="eff"><title>path_ratio: d=-0.106, p=0.8331, adjusted p=1.0000 — not usable</title></circle>
+<text x="382.2" y="3249.0" text-anchor="end" class="vallbl">-0.11</text>
+<text x="162.0" y="3275.0" text-anchor="end" class="rowlbl mono">kl_step_f10_mean</text>
+<line x1="410.0" y1="3271.0" x2="425.7" y2="3271.0" class="stem"/>
+<circle cx="425.7" cy="3271.0" r="5" class="eff"><title>kl_step_f10_mean: d=+0.105, p=0.7797, adjusted p=1.0000 — not usable</title></circle>
+<text x="437.7" y="3275.0" text-anchor="start" class="vallbl">+0.10</text>
+<text x="162.0" y="3301.0" text-anchor="end" class="rowlbl mono">mass1_late_minus_early</text>
+<line x1="410.0" y1="3297.0" x2="425.1" y2="3297.0" class="stem"/>
+<circle cx="425.1" cy="3297.0" r="5" class="eff"><title>mass1_late_minus_early: d=+0.101, p=0.7940, adjusted p=1.0000 — not usable</title></circle>
+<text x="437.1" y="3301.0" text-anchor="start" class="vallbl">+0.10</text>
+<text x="162.0" y="3327.0" text-anchor="end" class="rowlbl mono">osc_sign_changes</text>
+<line x1="410.0" y1="3323.0" x2="395.2" y2="3323.0" class="stem"/>
+<circle cx="395.2" cy="3323.0" r="5" class="eff"><title>osc_sign_changes: d=-0.099, p=0.8073, adjusted p=1.0000 — not usable</title></circle>
+<text x="383.2" y="3327.0" text-anchor="end" class="vallbl">-0.10</text>
+<text x="162.0" y="3353.0" text-anchor="end" class="rowlbl mono">mass20_f5_mean</text>
+<line x1="410.0" y1="3349.0" x2="396.0" y2="3349.0" class="stem"/>
+<circle cx="396.0" cy="3349.0" r="5" class="eff"><title>mass20_f5_mean: d=-0.094, p=0.9630, adjusted p=1.0000 — not usable</title></circle>
+<text x="384.0" y="3353.0" text-anchor="end" class="vallbl">-0.09</text>
+<text x="162.0" y="3379.0" text-anchor="end" class="rowlbl mono">tail_mass_f5_mean</text>
+<line x1="410.0" y1="3375.0" x2="424.0" y2="3375.0" class="stem"/>
+<circle cx="424.0" cy="3375.0" r="5" class="eff"><title>tail_mass_f5_mean: d=+0.094, p=0.9630, adjusted p=1.0000 — not usable</title></circle>
+<text x="436.0" y="3379.0" text-anchor="start" class="vallbl">+0.09</text>
+<text x="162.0" y="3405.0" text-anchor="end" class="rowlbl mono">surprisal_late_minus_early</text>
+<line x1="410.0" y1="3401.0" x2="397.4" y2="3401.0" class="stem"/>
+<circle cx="397.4" cy="3401.0" r="5" class="eff"><title>surprisal_late_minus_early: d=-0.084, p=0.8271, adjusted p=1.0000 — not usable</title></circle>
+<text x="385.4" y="3405.0" text-anchor="end" class="vallbl">-0.08</text>
+<text x="162.0" y="3431.0" text-anchor="end" class="rowlbl mono">kl_cent_max</text>
+<line x1="410.0" y1="3427.0" x2="399.1" y2="3427.0" class="stem"/>
+<circle cx="399.1" cy="3427.0" r="5" class="eff"><title>kl_cent_max: d=-0.073, p=0.8814, adjusted p=1.0000 — not usable</title></circle>
+<text x="387.1" y="3431.0" text-anchor="end" class="vallbl">-0.07</text>
+<text x="162.0" y="3457.0" text-anchor="end" class="rowlbl mono">margin_late_minus_early</text>
+<line x1="410.0" y1="3453.0" x2="419.9" y2="3453.0" class="stem"/>
+<circle cx="419.9" cy="3453.0" r="5" class="eff"><title>margin_late_minus_early: d=+0.066, p=0.8646, adjusted p=1.0000 — not usable</title></circle>
+<text x="431.9" y="3457.0" text-anchor="start" class="vallbl">+0.07</text>
+<text x="162.0" y="3483.0" text-anchor="end" class="rowlbl mono">kl_cent_early_vs_rest</text>
+<line x1="410.0" y1="3479.0" x2="419.4" y2="3479.0" class="stem"/>
+<circle cx="419.4" cy="3479.0" r="5" class="eff"><title>kl_cent_early_vs_rest: d=+0.063, p=0.8730, adjusted p=1.0000 — not usable</title></circle>
+<text x="431.4" y="3483.0" text-anchor="start" class="vallbl">+0.06</text>
+<text x="162.0" y="3509.0" text-anchor="end" class="rowlbl mono">kl_cent_mean</text>
+<line x1="410.0" y1="3505.0" x2="401.3" y2="3505.0" class="stem"/>
+<circle cx="401.3" cy="3505.0" r="5" class="eff"><title>kl_cent_mean: d=-0.058, p=0.8779, adjusted p=1.0000 — not usable</title></circle>
+<text x="389.3" y="3509.0" text-anchor="end" class="vallbl">-0.06</text>
+<text x="162.0" y="3535.0" text-anchor="end" class="rowlbl mono">mass20_f10_mean</text>
+<line x1="410.0" y1="3531.0" x2="403.3" y2="3531.0" class="stem"/>
+<circle cx="403.3" cy="3531.0" r="5" class="eff"><title>mass20_f10_mean: d=-0.045, p=0.9967, adjusted p=1.0000 — not usable</title></circle>
+<text x="391.3" y="3535.0" text-anchor="end" class="vallbl">-0.04</text>
+<text x="162.0" y="3561.0" text-anchor="end" class="rowlbl mono">tail_mass_f10_mean</text>
+<line x1="410.0" y1="3557.0" x2="416.7" y2="3557.0" class="stem"/>
+<circle cx="416.7" cy="3557.0" r="5" class="eff"><title>tail_mass_f10_mean: d=+0.045, p=0.9967, adjusted p=1.0000 — not usable</title></circle>
+<text x="428.7" y="3561.0" text-anchor="start" class="vallbl">+0.04</text>
+<text x="162.0" y="3587.0" text-anchor="end" class="rowlbl mono">q_argmax</text>
+<line x1="410.0" y1="3583.0" x2="416.7" y2="3583.0" class="stem"/>
+<circle cx="416.7" cy="3583.0" r="5" class="eff"><title>q_argmax: d=+0.045, p=1.0000, adjusted p=1.0000 — not usable</title></circle>
+<text x="428.7" y="3587.0" text-anchor="start" class="vallbl">+0.04</text>
+<text x="162.0" y="3613.0" text-anchor="end" class="rowlbl mono">kl_uniform_f10_max</text>
+<line x1="410.0" y1="3609.0" x2="416.4" y2="3609.0" class="stem"/>
+<circle cx="416.4" cy="3609.0" r="5" class="eff"><title>kl_uniform_f10_max: d=+0.043, p=0.9317, adjusted p=1.0000 — not usable</title></circle>
+<text x="428.4" y="3613.0" text-anchor="start" class="vallbl">+0.04</text>
+<text x="162.0" y="3639.0" text-anchor="end" class="rowlbl mono">mass5_first</text>
+<line x1="410.0" y1="3635.0" x2="405.1" y2="3635.0" class="stem"/>
+<circle cx="405.1" cy="3635.0" r="5" class="eff"><title>mass5_first: d=-0.033, p=0.9501, adjusted p=1.0000 — not usable</title></circle>
+<text x="393.1" y="3639.0" text-anchor="end" class="vallbl">-0.03</text>
+<text x="162.0" y="3665.0" text-anchor="end" class="rowlbl mono">mass20_first</text>
+<line x1="410.0" y1="3661.0" x2="414.0" y2="3661.0" class="stem"/>
+<circle cx="414.0" cy="3661.0" r="5" class="eff"><title>mass20_first: d=+0.027, p=0.9642, adjusted p=1.0000 — not usable</title></circle>
+<text x="426.0" y="3665.0" text-anchor="start" class="vallbl">+0.03</text>
+<text x="162.0" y="3691.0" text-anchor="end" class="rowlbl mono">tail_mass_first</text>
+<line x1="410.0" y1="3687.0" x2="406.0" y2="3687.0" class="stem"/>
+<circle cx="406.0" cy="3687.0" r="5" class="eff"><title>tail_mass_first: d=-0.027, p=0.9642, adjusted p=1.0000 — not usable</title></circle>
+<text x="394.0" y="3691.0" text-anchor="end" class="vallbl">-0.03</text>
+<text x="162.0" y="3717.0" text-anchor="end" class="rowlbl mono">tail_mass_f10_max</text>
+<line x1="410.0" y1="3713.0" x2="406.3" y2="3713.0" class="stem"/>
+<circle cx="406.3" cy="3713.0" r="5" class="eff"><title>tail_mass_f10_max: d=-0.025, p=0.9945, adjusted p=1.0000 — not usable</title></circle>
+<text x="394.3" y="3717.0" text-anchor="end" class="vallbl">-0.03</text>
+<text x="162.0" y="3743.0" text-anchor="end" class="rowlbl mono">mass1_f10_max</text>
+<line x1="410.0" y1="3739.0" x2="413.3" y2="3739.0" class="stem"/>
+<circle cx="413.3" cy="3739.0" r="5" class="eff"><title>mass1_f10_max: d=+0.022, p=0.9624, adjusted p=1.0000 — not usable</title></circle>
+<text x="425.3" y="3743.0" text-anchor="start" class="vallbl">+0.02</text>
+<text x="162.0" y="3769.0" text-anchor="end" class="rowlbl mono">mass5_f10_mean</text>
+<line x1="410.0" y1="3765.0" x2="407.8" y2="3765.0" class="stem"/>
+<circle cx="407.8" cy="3765.0" r="5" class="eff"><title>mass5_f10_mean: d=-0.015, p=0.9973, adjusted p=1.0000 — not usable</title></circle>
+<text x="395.8" y="3769.0" text-anchor="end" class="vallbl">-0.01</text>
+<text x="162.0" y="3795.0" text-anchor="end" class="rowlbl mono">margin_f10_max</text>
+<line x1="410.0" y1="3791.0" x2="407.9" y2="3791.0" class="stem"/>
+<circle cx="407.9" cy="3791.0" r="5" class="eff"><title>margin_f10_max: d=-0.014, p=0.9742, adjusted p=1.0000 — not usable</title></circle>
+<text x="395.9" y="3795.0" text-anchor="end" class="vallbl">-0.01</text>
+<text x="162.0" y="3821.0" text-anchor="end" class="rowlbl mono">kl_cent_f10_mean</text>
+<line x1="410.0" y1="3817.0" x2="411.0" y2="3817.0" class="stem"/>
+<circle cx="411.0" cy="3817.0" r="5" class="eff"><title>kl_cent_f10_mean: d=+0.007, p=0.9898, adjusted p=1.0000 — not usable</title></circle>
+<text x="423.0" y="3821.0" text-anchor="start" class="vallbl">+0.01</text>
+</svg></div></figure>
+<details><summary>Table view — all signals</summary><table><thead><tr><th>Signal</th><th>Direction</th><th class="num">d</th><th class="num">p</th><th class="num">p adjusted</th><th>Usable</th></tr></thead><tbody>
+<tr><td><code>margin_mean</code></td><td>high=good</td><td class="num">+1.230</td><td class="num">0.0009</td><td class="num">0.0584</td><td>no</td></tr>
+<tr><td><code>mass1_mean</code></td><td>high=good</td><td class="num">+1.187</td><td class="num">0.0014</td><td class="num">0.0584</td><td>no</td></tr>
+<tr><td><code>phi_mean</code></td><td>high=good</td><td class="num">+1.187</td><td class="num">0.0014</td><td class="num">0.0584</td><td>no</td></tr>
+<tr><td><code>surprisal_mean</code></td><td>high=bad</td><td class="num">-1.169</td><td class="num">0.0016</td><td class="num">0.0584</td><td>no</td></tr>
+<tr><td><code>full_ent_mean</code></td><td>high=bad</td><td class="num">-1.118</td><td class="num">0.0029</td><td class="num">0.0584</td><td>no</td></tr>
+<tr><td><code>kl_uniform_mean</code></td><td>high=good</td><td class="num">+1.119</td><td class="num">0.0029</td><td class="num">0.0584</td><td>no</td></tr>
+<tr><td><code>mean_entropy</code></td><td>high=bad</td><td class="num">-1.119</td><td class="num">0.0029</td><td class="num">0.0584</td><td>no</td></tr>
+<tr><td><code>margin_std</code></td><td>high=bad</td><td class="num">-1.114</td><td class="num">0.0032</td><td class="num">0.0584</td><td>no</td></tr>
+<tr><td><code>mass5_f10_max</code></td><td>high=good</td><td class="num">+1.167</td><td class="num">0.0043</td><td class="num">0.0698</td><td>no</td></tr>
+<tr><td><code>kl_step_mean</code></td><td>high=good</td><td class="num">+1.046</td><td class="num">0.0049</td><td class="num">0.0715</td><td>no</td></tr>
+<tr><td><code>mass1_std</code></td><td>high=bad</td><td class="num">-1.034</td><td class="num">0.0068</td><td class="num">0.0903</td><td>no</td></tr>
+<tr><td><code>surprisal_std</code></td><td>high=bad</td><td class="num">-0.976</td><td class="num">0.0097</td><td class="num">0.1123</td><td>no</td></tr>
+<tr><td><code>q3</code></td><td>high=bad</td><td class="num">-1.001</td><td class="num">0.0100</td><td class="num">0.1123</td><td>no</td></tr>
+<tr><td><code>spike_token_idx</code></td><td>high=bad</td><td class="num">-0.970</td><td class="num">0.0131</td><td class="num">0.1366</td><td>no</td></tr>
+<tr><td><code>kl_step_std</code></td><td>high=bad</td><td class="num">-0.906</td><td class="num">0.0146</td><td class="num">0.1421</td><td>no</td></tr>
+<tr><td><code>plateau_start_quartile</code></td><td>high=bad</td><td class="num">-1.327</td><td class="num">0.0162</td><td class="num">0.1478</td><td>no</td></tr>
+<tr><td><code>kl_uniform_std</code></td><td>high=bad</td><td class="num">-0.892</td><td class="num">0.0186</td><td class="num">0.1525</td><td>no</td></tr>
+<tr><td><code>full_ent_std</code></td><td>high=bad</td><td class="num">-0.891</td><td class="num">0.0188</td><td class="num">0.1525</td><td>no</td></tr>
+<tr><td><code>osc_rate</code></td><td>high=good</td><td class="num">+0.870</td><td class="num">0.0213</td><td class="num">0.1637</td><td>no</td></tr>
+<tr><td><code>kl_step_early_vs_rest</code></td><td>high=bad</td><td class="num">-0.861</td><td class="num">0.0241</td><td class="num">0.1759</td><td>no</td></tr>
+<tr><td><code>kl_cent_late_minus_early</code></td><td>high=bad</td><td class="num">-0.790</td><td class="num">0.0371</td><td class="num">0.2526</td><td>no</td></tr>
+<tr><td><code>margin_f10_mean</code></td><td>high=good</td><td class="num">+0.771</td><td class="num">0.0396</td><td class="num">0.2526</td><td>no</td></tr>
+<tr><td><code>mono_down_frac</code></td><td>high=bad</td><td class="num">-0.759</td><td class="num">0.0398</td><td class="num">0.2526</td><td>no</td></tr>
+<tr><td><code>spike_height</code></td><td>high=good</td><td class="num">+0.748</td><td class="num">0.0474</td><td class="num">0.2553</td><td>no</td></tr>
+<tr><td><code>mass1_f10_mean</code></td><td>high=good</td><td class="num">+0.740</td><td class="num">0.0479</td><td class="num">0.2553</td><td>no</td></tr>
+<tr><td><code>phi_first10_mean</code></td><td>high=good</td><td class="num">+0.740</td><td class="num">0.0479</td><td class="num">0.2553</td><td>no</td></tr>
+<tr><td><code>surprisal_f10_mean</code></td><td>high=bad</td><td class="num">-0.720</td><td class="num">0.0540</td><td class="num">0.2553</td><td>no</td></tr>
+<tr><td><code>spike_quartile</code></td><td>high=bad</td><td class="num">-0.748</td><td class="num">0.0593</td><td class="num">0.2553</td><td>no</td></tr>
+<tr><td><code>first10_mean</code></td><td>high=bad</td><td class="num">-0.711</td><td class="num">0.0595</td><td class="num">0.2553</td><td>no</td></tr>
+<tr><td><code>full_ent_f10_mean</code></td><td>high=bad</td><td class="num">-0.711</td><td class="num">0.0595</td><td class="num">0.2553</td><td>no</td></tr>
+<tr><td><code>kl_uniform_f10_mean</code></td><td>high=good</td><td class="num">+0.711</td><td class="num">0.0595</td><td class="num">0.2553</td><td>no</td></tr>
+<tr><td><code>head_entropy</code></td><td>high=bad</td><td class="num">-0.712</td><td class="num">0.0601</td><td class="num">0.2553</td><td>no</td></tr>
+<tr><td><code>q1</code></td><td>high=bad</td><td class="num">-0.713</td><td class="num">0.0601</td><td class="num">0.2553</td><td>no</td></tr>
+<tr><td><code>mass20_late_minus_early</code></td><td>high=good</td><td class="num">+0.753</td><td class="num">0.0612</td><td class="num">0.2553</td><td>no</td></tr>
+<tr><td><code>tail_mass_late_minus_early</code></td><td>high=bad</td><td class="num">-0.753</td><td class="num">0.0612</td><td class="num">0.2553</td><td>no</td></tr>
+<tr><td><code>mass20_min</code></td><td>high=good</td><td class="num">+0.650</td><td class="num">0.0759</td><td class="num">0.2995</td><td>no</td></tr>
+<tr><td><code>tail_mass_max</code></td><td>high=bad</td><td class="num">-0.650</td><td class="num">0.0759</td><td class="num">0.2995</td><td>no</td></tr>
+<tr><td><code>margin_min</code></td><td>high=good</td><td class="num">+0.652</td><td class="num">0.0826</td><td class="num">0.3135</td><td>no</td></tr>
+<tr><td><code>surprisal_f10_max</code></td><td>high=bad</td><td class="num">-0.661</td><td class="num">0.0850</td><td class="num">0.3135</td><td>no</td></tr>
+<tr><td><code>total_variation</code></td><td>high=bad</td><td class="num">-0.651</td><td class="num">0.0859</td><td class="num">0.3135</td><td>no</td></tr>
+<tr><td><code>q4</code></td><td>high=bad</td><td class="num">-0.608</td><td class="num">0.0996</td><td class="num">0.3547</td><td>no</td></tr>
+<tr><td><code>mass20_std</code></td><td>high=bad</td><td class="num">-0.482</td><td class="num">0.1148</td><td class="num">0.3869</td><td>no</td></tr>
+<tr><td><code>tail_mass_std</code></td><td>high=bad</td><td class="num">-0.482</td><td class="num">0.1148</td><td class="num">0.3869</td><td>no</td></tr>
+<tr><td><code>mass1_min</code></td><td>high=good</td><td class="num">+0.595</td><td class="num">0.1166</td><td class="num">0.3869</td><td>no</td></tr>
+<tr><td><code>spike_relative_pos</code></td><td>high=bad</td><td class="num">-0.575</td><td class="num">0.1303</td><td class="num">0.4085</td><td>no</td></tr>
+<tr><td><code>first10_std</code></td><td>high=bad</td><td class="num">-0.582</td><td class="num">0.1344</td><td class="num">0.4085</td><td>no</td></tr>
+<tr><td><code>surprisal_max</code></td><td>high=bad</td><td class="num">-0.572</td><td class="num">0.1354</td><td class="num">0.4085</td><td>no</td></tr>
+<tr><td><code>first10_max</code></td><td>high=bad</td><td class="num">-0.573</td><td class="num">0.1409</td><td class="num">0.4085</td><td>no</td></tr>
+<tr><td><code>full_ent_f10_max</code></td><td>high=bad</td><td class="num">-0.573</td><td class="num">0.1409</td><td class="num">0.4085</td><td>no</td></tr>
+<tr><td><code>mass5_slope</code></td><td>high=good</td><td class="num">+0.353</td><td class="num">0.1426</td><td class="num">0.4085</td><td>no</td></tr>
+<tr><td><code>trend_rho</code></td><td>high=good</td><td class="num">+0.556</td><td class="num">0.1501</td><td class="num">0.4085</td><td>no</td></tr>
+<tr><td><code>full_ent_max</code></td><td>high=bad</td><td class="num">-0.552</td><td class="num">0.1506</td><td class="num">0.4085</td><td>no</td></tr>
+<tr><td><code>kl_uniform_min</code></td><td>high=good</td><td class="num">+0.551</td><td class="num">0.1511</td><td class="num">0.4085</td><td>no</td></tr>
+<tr><td><code>max_entropy</code></td><td>high=bad</td><td class="num">-0.551</td><td class="num">0.1511</td><td class="num">0.4085</td><td>no</td></tr>
+<tr><td><code>n_semantic</code></td><td>high=bad</td><td class="num">-0.484</td><td class="num">0.2108</td><td class="num">0.5496</td><td>no</td></tr>
+<tr><td><code>n_tokens</code></td><td>high=bad</td><td class="num">-0.484</td><td class="num">0.2108</td><td class="num">0.5496</td><td>no</td></tr>
+<tr><td><code>kl_cent_slope</code></td><td>high=bad</td><td class="num">-0.411</td><td class="num">0.2715</td><td class="num">0.6954</td><td>no</td></tr>
+<tr><td><code>q2</code></td><td>high=bad</td><td class="num">-0.414</td><td class="num">0.2863</td><td class="num">0.7207</td><td>no</td></tr>
+<tr><td><code>mass5_late_minus_early</code></td><td>high=good</td><td class="num">+0.327</td><td class="num">0.3135</td><td class="num">0.7633</td><td>no</td></tr>
+<tr><td><code>kl_step_late_minus_early</code></td><td>high=good</td><td class="num">+0.388</td><td class="num">0.3137</td><td class="num">0.7633</td><td>no</td></tr>
+<tr><td><code>kl_cent_f5_mean</code></td><td>high=good</td><td class="num">+0.371</td><td class="num">0.3434</td><td class="num">0.8219</td><td>no</td></tr>
+<tr><td><code>q_slope</code></td><td>high=good</td><td class="num">+0.316</td><td class="num">0.4121</td><td class="num">0.9268</td><td>no</td></tr>
+<tr><td><code>early_slope</code></td><td>high=bad</td><td class="num">-0.319</td><td class="num">0.4126</td><td class="num">0.9268</td><td>no</td></tr>
+<tr><td><code>full_ent_slope</code></td><td>high=bad</td><td class="num">-0.319</td><td class="num">0.4126</td><td class="num">0.9268</td><td>no</td></tr>
+<tr><td><code>kl_uniform_slope</code></td><td>high=good</td><td class="num">+0.319</td><td class="num">0.4126</td><td class="num">0.9268</td><td>no</td></tr>
+<tr><td><code>kl_cent_std</code></td><td>high=good</td><td class="num">+0.310</td><td class="num">0.4227</td><td class="num">0.9351</td><td>no</td></tr>
+<tr><td><code>q_range</code></td><td>high=bad</td><td class="num">-0.305</td><td class="num">0.4308</td><td class="num">0.9388</td><td>no</td></tr>
+<tr><td><code>margin_early_vs_rest</code></td><td>high=good</td><td class="num">+0.286</td><td class="num">0.4670</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>q_curvature</code></td><td>high=good</td><td class="num">+0.262</td><td class="num">0.4735</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>kl_step_slope</code></td><td>high=bad</td><td class="num">-0.250</td><td class="num">0.5001</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass1_early_vs_rest</code></td><td>high=good</td><td class="num">+0.262</td><td class="num">0.5002</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass20_mean</code></td><td>high=good</td><td class="num">+0.244</td><td class="num">0.5042</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>tail_mass_mean</code></td><td>high=bad</td><td class="num">-0.244</td><td class="num">0.5042</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>surprisal_early_vs_rest</code></td><td>high=bad</td><td class="num">-0.239</td><td class="num">0.5381</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>q1_over_mean</code></td><td>high=good</td><td class="num">+0.227</td><td class="num">0.5566</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass1_slope</code></td><td>high=good</td><td class="num">+0.222</td><td class="num">0.5705</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>early_vs_rest</code></td><td>high=bad</td><td class="num">-0.212</td><td class="num">0.5807</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>kl_uniform_early_vs_rest</code></td><td>high=good</td><td class="num">+0.212</td><td class="num">0.5807</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>full_ent_early_vs_rest</code></td><td>high=bad</td><td class="num">-0.211</td><td class="num">0.5813</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>margin_slope</code></td><td>high=good</td><td class="num">+0.207</td><td class="num">0.5970</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass20_early_vs_rest</code></td><td>high=bad</td><td class="num">-0.184</td><td class="num">0.6126</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>tail_mass_early_vs_rest</code></td><td>high=good</td><td class="num">+0.184</td><td class="num">0.6126</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass1_f5_mean</code></td><td>high=good</td><td class="num">+0.179</td><td class="num">0.6183</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>margin_f5_mean</code></td><td>high=good</td><td class="num">+0.223</td><td class="num">0.6211</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>surprisal_slope</code></td><td>high=bad</td><td class="num">-0.193</td><td class="num">0.6244</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>surprisal_f5_mean</code></td><td>high=bad</td><td class="num">-0.174</td><td class="num">0.6271</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>tail_entropy</code></td><td>high=bad</td><td class="num">-0.191</td><td class="num">0.6440</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>late_vs_early_half</code></td><td>high=bad</td><td class="num">-0.175</td><td class="num">0.6472</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass5_min</code></td><td>high=good</td><td class="num">+0.201</td><td class="num">0.6551</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>first5_mean</code></td><td>high=bad</td><td class="num">-0.137</td><td class="num">0.6587</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>full_ent_f5_mean</code></td><td>high=bad</td><td class="num">-0.137</td><td class="num">0.6587</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>kl_uniform_f5_mean</code></td><td>high=good</td><td class="num">+0.137</td><td class="num">0.6587</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>full_ent_late_minus_early</code></td><td>high=bad</td><td class="num">-0.165</td><td class="num">0.6660</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>kl_uniform_late_minus_early</code></td><td>high=good</td><td class="num">+0.164</td><td class="num">0.6679</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>kl_step_f5_mean</code></td><td>high=good</td><td class="num">+0.161</td><td class="num">0.6784</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass20_slope</code></td><td>high=good</td><td class="num">+0.184</td><td class="num">0.6916</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>tail_mass_slope</code></td><td>high=bad</td><td class="num">-0.184</td><td class="num">0.6916</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>q4_over_mean</code></td><td>high=bad</td><td class="num">-0.155</td><td class="num">0.6951</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>kl_cent_f10_max</code></td><td>high=bad</td><td class="num">-0.153</td><td class="num">0.7143</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>kl_step_f10_max</code></td><td>high=bad</td><td class="num">-0.243</td><td class="num">0.7488</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>q_early_drop</code></td><td>high=bad</td><td class="num">-0.124</td><td class="num">0.7576</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>q_monotone_down</code></td><td>high=bad</td><td class="num">-0.157</td><td class="num">0.7616</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>kl_step_f10_mean</code></td><td>high=good</td><td class="num">+0.105</td><td class="num">0.7797</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass1_late_minus_early</code></td><td>high=good</td><td class="num">+0.101</td><td class="num">0.7940</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass5_std</code></td><td>high=bad</td><td class="num">-0.112</td><td class="num">0.7969</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass5_mean</code></td><td>high=good</td><td class="num">+0.111</td><td class="num">0.8055</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>osc_sign_changes</code></td><td>high=bad</td><td class="num">-0.099</td><td class="num">0.8073</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>n_spikes</code></td><td>high=good</td><td class="num">+0.167</td><td class="num">0.8213</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>surprisal_late_minus_early</code></td><td>high=bad</td><td class="num">-0.084</td><td class="num">0.8271</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass5_early_vs_rest</code></td><td>high=bad</td><td class="num">-0.106</td><td class="num">0.8274</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>path_ratio</code></td><td>high=bad</td><td class="num">-0.106</td><td class="num">0.8331</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>margin_late_minus_early</code></td><td>high=good</td><td class="num">+0.066</td><td class="num">0.8646</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>kl_cent_early_vs_rest</code></td><td>high=good</td><td class="num">+0.063</td><td class="num">0.8730</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass5_f5_mean</code></td><td>high=bad</td><td class="num">-0.144</td><td class="num">0.8753</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>kl_cent_mean</code></td><td>high=bad</td><td class="num">-0.058</td><td class="num">0.8779</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>margin_max</code></td><td>high=bad</td><td class="num">-0.176</td><td class="num">0.8813</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>kl_cent_max</code></td><td>high=bad</td><td class="num">-0.073</td><td class="num">0.8814</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>full_ent_min</code></td><td>high=good</td><td class="num">+0.168</td><td class="num">0.8817</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>kl_uniform_max</code></td><td>high=bad</td><td class="num">-0.169</td><td class="num">0.8817</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass1_max</code></td><td>high=bad</td><td class="num">-0.168</td><td class="num">0.8817</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>surprisal_min</code></td><td>high=good</td><td class="num">+0.168</td><td class="num">0.8820</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>kl_step_max</code></td><td>high=bad</td><td class="num">-0.168</td><td class="num">0.8840</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass5_max</code></td><td>high=bad</td><td class="num">-0.190</td><td class="num">0.8928</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>kl_uniform_f10_max</code></td><td>high=good</td><td class="num">+0.043</td><td class="num">0.9317</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass5_first</code></td><td>high=bad</td><td class="num">-0.033</td><td class="num">0.9501</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>first_token_entropy</code></td><td>high=good</td><td class="num">+0.171</td><td class="num">0.9595</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>full_ent_first</code></td><td>high=good</td><td class="num">+0.171</td><td class="num">0.9595</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>kl_uniform_first</code></td><td>high=bad</td><td class="num">-0.171</td><td class="num">0.9595</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>first3_mean</code></td><td>high=good</td><td class="num">+0.172</td><td class="num">0.9597</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass1_first</code></td><td>high=bad</td><td class="num">-0.189</td><td class="num">0.9602</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>phi_first</code></td><td>high=bad</td><td class="num">-0.189</td><td class="num">0.9602</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>surprisal_first</code></td><td>high=good</td><td class="num">+0.189</td><td class="num">0.9602</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass1_f10_max</code></td><td>high=good</td><td class="num">+0.022</td><td class="num">0.9624</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass20_f5_mean</code></td><td>high=bad</td><td class="num">-0.094</td><td class="num">0.9630</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>tail_mass_f5_mean</code></td><td>high=good</td><td class="num">+0.094</td><td class="num">0.9630</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>margin_first</code></td><td>high=bad</td><td class="num">-0.189</td><td class="num">0.9640</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass20_first</code></td><td>high=good</td><td class="num">+0.027</td><td class="num">0.9642</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>tail_mass_first</code></td><td>high=bad</td><td class="num">-0.027</td><td class="num">0.9642</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>margin_f10_max</code></td><td>high=bad</td><td class="num">-0.014</td><td class="num">0.9742</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>first_to_max_ratio</code></td><td>high=good</td><td class="num">+0.172</td><td class="num">0.9761</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>kl_cent_f10_mean</code></td><td>high=good</td><td class="num">+0.007</td><td class="num">0.9898</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>tail_mass_f10_max</code></td><td>high=bad</td><td class="num">-0.025</td><td class="num">0.9945</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass20_f10_mean</code></td><td>high=bad</td><td class="num">-0.045</td><td class="num">0.9967</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>tail_mass_f10_mean</code></td><td>high=good</td><td class="num">+0.045</td><td class="num">0.9967</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>mass5_f10_mean</code></td><td>high=bad</td><td class="num">-0.015</td><td class="num">0.9973</td><td class="num">1.0000</td><td>no</td></tr>
+<tr><td><code>q_argmax</code></td><td>high=good</td><td class="num">+0.045</td><td class="num">1.0000</td><td class="num">1.0000</td><td>no</td></tr>
+</tbody></table></details>
+<h2>Which set of signals covers the most failures</h2>
+<p>Not run: needs ~12+ failures to cross-validate a combination (8 present). Raise --repeats.</p>
+<h2>What repairs failures</h2>
+<p>Direct measurement, not correlation: each failed generation was re-attempted with every strategy and re-tested. Nothing in this section depends on the entropy question above.</p>
+<figure><div class="plot"><svg viewBox="0 0 720 146" role="img" aria-label="Failures recovered by each repair strategy" preserveAspectRatio="xMidYMid meet">
+<line x1="176.0" y1="16.0" x2="176.0" y2="108.0" class="grid"/>
+<text x="176.0" y="126.0" text-anchor="middle" class="tick">0</text>
+<line x1="313.3" y1="16.0" x2="313.3" y2="108.0" class="grid"/>
+<text x="313.3" y="126.0" text-anchor="middle" class="tick">1</text>
+<line x1="450.7" y1="16.0" x2="450.7" y2="108.0" class="grid"/>
+<text x="450.7" y="126.0" text-anchor="middle" class="tick">2</text>
+<line x1="588.0" y1="16.0" x2="588.0" y2="108.0" class="grid"/>
+<text x="588.0" y="126.0" text-anchor="middle" class="tick">3</text>
+<text x="382.0" y="140.0" text-anchor="middle" class="axtitle">failures recovered (of 8)</text>
+<text x="162.0" y="34.0" text-anchor="end" class="rowlbl mono">skeleton_fill</text>
+<rect x="176.0" y="21.0" width="412.0" height="18" rx="4" class="bar"><title>skeleton_fill: recovered 3 of 8 failures, 1 of them recovered by nothing else</title></rect>
+<text x="578.0" y="34.0" text-anchor="end" class="vallbl inbar">3 (38%) · 1 only here</text>
+<text x="162.0" y="64.0" text-anchor="end" class="rowlbl mono">test_retry</text>
+<rect x="176.0" y="51.0" width="412.0" height="18" rx="4" class="bar"><title>test_retry: recovered 3 of 8 failures, 1 of them recovered by nothing else</title></rect>
+<text x="578.0" y="64.0" text-anchor="end" class="vallbl inbar">3 (38%) · 1 only here</text>
+<text x="162.0" y="94.0" text-anchor="end" class="rowlbl mono">temp_retry</text>
+<text x="186.0" y="94.0" text-anchor="start" class="vallbl">0 (0%)</text>
+</svg></div></figure>
+<h3>Routing by error type</h3>
+<figure class="sm"><figcaption>logic errors</figcaption><div class="plot"><svg viewBox="0 0 720 110" role="img" aria-label="Recovery rate by strategy for logic errors" preserveAspectRatio="xMidYMid meet"><line x1="293.0" y1="12.0" x2="293.0" y2="86.0" class="grid"/><text x="293.0" y="102.0" text-anchor="middle" class="tick">25%</text><line x1="410.0" y1="12.0" x2="410.0" y2="86.0" class="grid"/><text x="410.0" y="102.0" text-anchor="middle" class="tick">50%</text><line x1="527.0" y1="12.0" x2="527.0" y2="86.0" class="grid"/><text x="527.0" y="102.0" text-anchor="middle" class="tick">75%</text><line x1="644.0" y1="12.0" x2="644.0" y2="86.0" class="grid"/><text x="644.0" y="102.0" text-anchor="middle" class="tick">100%</text><text x="162.0" y="27.0" text-anchor="end" class="rowlbl mono">skeleton_fill</text><rect x="176.0" y="16.0" width="117.0" height="14" rx="4" class="bar best"><title>skeleton_fill on logic errors: 1/4 recovered (25%)</title></rect><text x="303.0" y="27.0" text-anchor="start" class="vallbl">1/4</text><text x="162.0" y="51.0" text-anchor="end" class="rowlbl mono">test_retry</text><rect x="176.0" y="40.0" width="117.0" height="14" rx="4" class="bar best"><title>test_retry on logic errors: 1/4 recovered (25%)</title></rect><text x="303.0" y="51.0" text-anchor="start" class="vallbl">1/4</text><text x="162.0" y="75.0" text-anchor="end" class="rowlbl mono">temp_retry</text><text x="186.0" y="75.0" text-anchor="start" class="vallbl">0/4</text></svg></div></figure><figure class="sm"><figcaption>assertion errors</figcaption><div class="plot"><svg viewBox="0 0 720 110" role="img" aria-label="Recovery rate by strategy for assertion errors" preserveAspectRatio="xMidYMid meet"><line x1="293.0" y1="12.0" x2="293.0" y2="86.0" class="grid"/><text x="293.0" y="102.0" text-anchor="middle" class="tick">25%</text><line x1="410.0" y1="12.0" x2="410.0" y2="86.0" class="grid"/><text x="410.0" y="102.0" text-anchor="middle" class="tick">50%</text><line x1="527.0" y1="12.0" x2="527.0" y2="86.0" class="grid"/><text x="527.0" y="102.0" text-anchor="middle" class="tick">75%</text><line x1="644.0" y1="12.0" x2="644.0" y2="86.0" class="grid"/><text x="644.0" y="102.0" text-anchor="middle" class="tick">100%</text><text x="162.0" y="27.0" text-anchor="end" class="rowlbl mono">skeleton_fill</text><rect x="176.0" y="16.0" width="313.6" height="14" rx="4" class="bar best"><title>skeleton_fill on assertion errors: 2/3 recovered (67%)</title></rect><text x="499.6" y="27.0" text-anchor="start" class="vallbl">2/3</text><text x="162.0" y="51.0" text-anchor="end" class="rowlbl mono">test_retry</text><rect x="176.0" y="40.0" width="313.6" height="14" rx="4" class="bar best"><title>test_retry on assertion errors: 2/3 recovered (67%)</title></rect><text x="499.6" y="51.0" text-anchor="start" class="vallbl">2/3</text><text x="162.0" y="75.0" text-anchor="end" class="rowlbl mono">temp_retry</text><text x="186.0" y="75.0" text-anchor="start" class="vallbl">0/3</text></svg></div></figure><figure class="sm"><figcaption>syntax errors</figcaption><div class="plot"><svg viewBox="0 0 720 110" role="img" aria-label="Recovery rate by strategy for syntax errors" preserveAspectRatio="xMidYMid meet"><line x1="293.0" y1="12.0" x2="293.0" y2="86.0" class="grid"/><text x="293.0" y="102.0" text-anchor="middle" class="tick">25%</text><line x1="410.0" y1="12.0" x2="410.0" y2="86.0" class="grid"/><text x="410.0" y="102.0" text-anchor="middle" class="tick">50%</text><line x1="527.0" y1="12.0" x2="527.0" y2="86.0" class="grid"/><text x="527.0" y="102.0" text-anchor="middle" class="tick">75%</text><line x1="644.0" y1="12.0" x2="644.0" y2="86.0" class="grid"/><text x="644.0" y="102.0" text-anchor="middle" class="tick">100%</text><text x="162.0" y="27.0" text-anchor="end" class="rowlbl mono">skeleton_fill</text><text x="186.0" y="27.0" text-anchor="start" class="vallbl">0/1</text><text x="162.0" y="51.0" text-anchor="end" class="rowlbl mono">temp_retry</text><text x="186.0" y="51.0" text-anchor="start" class="vallbl">0/1</text><text x="162.0" y="75.0" text-anchor="end" class="rowlbl mono">test_retry</text><text x="186.0" y="75.0" text-anchor="start" class="vallbl">0/1</text></svg></div></figure>
+<h2>What shows promise</h2>
+<p>Leads, not findings. Each one names the run that would settle it.</p>
+<div class="lead"><div class="t">margin_mean</div><p style="margin:7px 0 0">d=+1.230, raw p=0.0009, adjusted p=0.0584. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">mass1_mean</div><p style="margin:7px 0 0">d=+1.187, raw p=0.0014, adjusted p=0.0584. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">phi_mean</div><p style="margin:7px 0 0">d=+1.187, raw p=0.0014, adjusted p=0.0584. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">surprisal_mean</div><p style="margin:7px 0 0">d=-1.169, raw p=0.0016, adjusted p=0.0584. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">full_ent_mean</div><p style="margin:7px 0 0">d=-1.118, raw p=0.0029, adjusted p=0.0584. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">kl_uniform_mean</div><p style="margin:7px 0 0">d=+1.119, raw p=0.0029, adjusted p=0.0584. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">mean_entropy</div><p style="margin:7px 0 0">d=-1.119, raw p=0.0029, adjusted p=0.0584. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">margin_std</div><p style="margin:7px 0 0">d=-1.114, raw p=0.0032, adjusted p=0.0584. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">mass5_f10_max</div><p style="margin:7px 0 0">d=+1.167, raw p=0.0043, adjusted p=0.0698. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">kl_step_mean</div><p style="margin:7px 0 0">d=+1.046, raw p=0.0049, adjusted p=0.0715. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">mass1_std</div><p style="margin:7px 0 0">d=-1.034, raw p=0.0068, adjusted p=0.0903. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">surprisal_std</div><p style="margin:7px 0 0">d=-0.976, raw p=0.0097, adjusted p=0.1123. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">q3</div><p style="margin:7px 0 0">d=-1.001, raw p=0.0100, adjusted p=0.1123. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">spike_token_idx</div><p style="margin:7px 0 0">d=-0.970, raw p=0.0131, adjusted p=0.1366. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">kl_step_std</div><p style="margin:7px 0 0">d=-0.906, raw p=0.0146, adjusted p=0.1421. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">plateau_start_quartile</div><p style="margin:7px 0 0">d=-1.327, raw p=0.0162, adjusted p=0.1478. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">kl_uniform_std</div><p style="margin:7px 0 0">d=-0.892, raw p=0.0186, adjusted p=0.1525. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">full_ent_std</div><p style="margin:7px 0 0">d=-0.891, raw p=0.0188, adjusted p=0.1525. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">osc_rate</div><p style="margin:7px 0 0">d=+0.870, raw p=0.0213, adjusted p=0.1637. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">kl_step_early_vs_rest</div><p style="margin:7px 0 0">d=-0.861, raw p=0.0241, adjusted p=0.1759. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">kl_cent_late_minus_early</div><p style="margin:7px 0 0">d=-0.790, raw p=0.0371, adjusted p=0.2526. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">margin_f10_mean</div><p style="margin:7px 0 0">d=+0.771, raw p=0.0396, adjusted p=0.2526. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">mono_down_frac</div><p style="margin:7px 0 0">d=-0.759, raw p=0.0398, adjusted p=0.2526. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">spike_height</div><p style="margin:7px 0 0">d=+0.748, raw p=0.0474, adjusted p=0.2553. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">mass1_f10_mean</div><p style="margin:7px 0 0">d=+0.740, raw p=0.0479, adjusted p=0.2553. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">phi_first10_mean</div><p style="margin:7px 0 0">d=+0.740, raw p=0.0479, adjusted p=0.2553. Clears p&lt;0.05 on its own but not after correcting for the 146 statistics tested against the same outcome. With that many tests, one or two hits at p&lt;0.05 is what noise looks like.</p><div class="nx"><strong>To settle it:</strong> Pre-register it: decide in advance to test this one statistic on a fresh run and report that result whichever way it goes. Re-scanning and picking the new winner is how the original mistake happened.</div></div>
+<div class="lead"><div class="t">More failures would settle the entropy question</div><p style="margin:7px 0 0">This run saw d=-0.55 and could only reliably detect d≥1.06. That gap is why the verdict is 'none' rather than 'no'.</p><div class="nx"><strong>To settle it:</strong> Re-run with <code>--repeats 4</code> (this run used 1). The run checkpoints after every generation, so it can be stopped and resumed.</div></div>
+<h2>Settings this run used</h2>
+<table><thead><tr><th>Parameter</th><th class="num">Value</th><th>Source</th></tr></thead><tbody>
+<tr><td><code>min_p</code></td><td class="num">0.0</td><td>registry (card-verified)</td></tr>
+<tr><td><code>presence_penalty</code></td><td class="num">0.0</td><td>registry (card-verified)</td></tr>
+<tr><td><code>repeat_penalty</code></td><td class="num">1.0</td><td>registry (card-verified)</td></tr>
+<tr><td><code>temp</code></td><td class="num">0.0</td><td>registry (card-verified)</td></tr>
+<tr><td><code>top_k</code></td><td class="num">0</td><td>registry (card-verified)</td></tr>
+<tr><td><code>top_p</code></td><td class="num">1.0</td><td>registry (card-verified)</td></tr>
+<tr><td><code>thinking</code></td><td class="num">False</td><td>registry (card-verified)</td></tr>
+</tbody></table>
+<p class="foot">Generated by the Local Model Calibration Kit. Raw records for every generation and repair attempt are in the run’s <code>_raw.jsonl</code>; <code>calibrate.py reanalyze</code> rebuilds this report from them without re-running the model.</p></div></body></html>

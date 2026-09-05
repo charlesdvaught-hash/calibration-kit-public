@@ -1,0 +1,2173 @@
+{
+  "sampling_independence": {
+    "n_probe_rows": 60,
+    "n_unique_generations": 60,
+    "pseudo_replication_factor": 1.0,
+    "deterministic": false
+  },
+  "model_label": "granite",
+  "calibration_date": "2026-09-05 12:24",
+  "n_probe_runs": 60,
+  "n_probe_rows_before_dedup": 60,
+  "n_failures": 8,
+  "n_intervention_runs": 24,
+  "entropy_direction": {
+    "direction": "none",
+    "raw_direction_before_gating": "high=bad",
+    "gate_reason": "difference is not distinguishable from chance (permutation p=0.151, needs p<0.05)",
+    "permutation_p": 0.1511,
+    "separation": 0.185,
+    "ok_mean_max_entropy": 0.7937,
+    "fail_mean_max_entropy": 0.9737,
+    "n_ok_samples": 52,
+    "n_fail_samples": 8,
+    "observed_effect_cohens_d": -0.551,
+    "min_detectable_effect_d": 1.063,
+    "power_verdict": "underpowered",
+    "power_note": "This run could only reliably detect an effect of d>=1.06; the effect it saw was d=-0.55. That means this run cannot tell 'no entropy signal' apart from 'too few failures to see one'. Re-running with --repeats 4 (this run used 1) would give ~80% power on an effect that size.",
+    "repeats_used": 1,
+    "repeats_for_80pct_power": 4,
+    "note": "high=bad means high entropy predicts failure -> bail early on high-entropy generations. high=good means high entropy predicts success -> verify high-entropy candidates first instead of bailing. none means entropy is not a usable signal for this model, which is a real and useful result, not a failed run. A direction is only reported when the difference survives a two-sided permutation test (p<0.05, 20000 resamples) AND exceeds a minimum separation of 0.08. raw_direction_before_gating is the unfiltered sign of the mean difference; it is recorded for transparency and must not be used as a finding."
+  },
+  "signal_coverage": {
+    "ran": false,
+    "reason": "needs ~12+ failures to cross-validate a combination (8 present). Raise --repeats."
+  },
+  "holdout_validation": {
+    "ran": false,
+    "reason": "not enough failures to split (6 train / 2 test). A held-out check needs roughly 30+ failures; raise --repeats."
+  },
+  "task_holdout_validation": {
+    "ran": true,
+    "n_tasks": 60,
+    "n_fail_tasks": 8,
+    "n_test_tasks": 18,
+    "n_test_fail_tasks": 2,
+    "n_train_failures": 6,
+    "n_test_failures": 2,
+    "selected_signal": "margin_mean",
+    "direction": "high=good",
+    "threshold_from_train": 0.9518,
+    "train_balanced_accuracy": 0.873,
+    "test_balanced_accuracy": 0.469,
+    "chance": 0.5,
+    "verdict": "did NOT transfer to unseen tasks \u2014 the signal may be detecting which task it is, not whether the answer is wrong",
+    "note": "The split is by task: every generation of a held-out task was excluded from selection and fitting. This is the check for 'does the signal apply to new questions', which record-level holdout cannot answer. With few failing tasks this number is low-power \u2014 a pass is meaningful, a fail means 'not proven', not 'proven false'. If a signal was selected on the full run, transfer_estimate also shows how often THAT signal separates unseen tasks over 300 random task splits \u2014 it answers 'does the discovered signal travel', which selection-based validation cannot answer at this scale."
+  },
+  "rule_recommendation": {
+    "bail": {
+      "available": true,
+      "signal": "margin_mean",
+      "signal_chosen_in_folds": 4,
+      "of_folds": 5,
+      "cross_validated": {
+        "recall": 0.8,
+        "fp_rate": 0.413,
+        "balanced_accuracy": 0.694
+      },
+      "rule": {
+        "signal": "margin_mean",
+        "threshold": 0.9688,
+        "flag_when": "below",
+        "recall": 0.875,
+        "fp_rate": 0.288
+      },
+      "economics": {
+        "avg_generation_tokens": 133.0,
+        "failure_rate": 0.133,
+        "signal_available": "final",
+        "tokens_if_aborted": 133.0,
+        "bail": {
+          "failures_aborted_per_1000": 106.7,
+          "correct_wrongly_aborted_per_1000": 357.9,
+          "tokens_saved": 0,
+          "tokens_wasted": 95210,
+          "net_tokens_per_1000": -95210,
+          "net_pct_of_baseline": -71.6
+        }
+      },
+      "availability": "final"
+    },
+    "trust": {
+      "available": true,
+      "signal": "margin_mean",
+      "signal_chosen_in_folds": 2,
+      "of_folds": 5,
+      "cross_validated": {
+        "coverage": 0.764,
+        "purity": 0.93,
+        "n_in_zone": 9.2
+      },
+      "rule": {
+        "signal": "margin_mean",
+        "threshold": 0.9665,
+        "trust_when": "above",
+        "coverage": 0.7,
+        "purity": 0.952,
+        "n_in_zone": 42
+      },
+      "economics": {
+        "avg_generation_tokens": 133.0,
+        "failure_rate": 0.133,
+        "signal_available": "final",
+        "tokens_if_aborted": 133.0,
+        "trust": {
+          "shipped_untested_per_1000": 764.0,
+          "defects_shipped_per_1000": 53.5,
+          "note": "Saves test execution, not generation tokens -- the generation is already paid for. Worth it when the test suite is expensive or when latency matters more than tokens. The defect count is the price."
+        }
+      },
+      "availability": "final"
+    },
+    "two_sided": {
+      "available": true,
+      "signal": "margin_mean",
+      "signal_chosen_in_folds": 2,
+      "of_folds": 5,
+      "cross_validated": {
+        "trust_coverage": 0.576,
+        "trust_purity": 0.719,
+        "bail_recall": 0.6,
+        "band_share": 0.0
+      },
+      "rule": {
+        "signal": "margin_mean",
+        "good_is_high": true,
+        "trust_threshold": 0.9688,
+        "bail_threshold": 0.9688,
+        "trust_coverage": 0.633,
+        "trust_purity": 0.974,
+        "bail_recall": 0.875,
+        "bail_precision": 0.318,
+        "band_share": 0.0
+      },
+      "note": "Ship the trust zone untested, regenerate the bail zone, test the band between them. Both cut points come from one fit on one signal, ordered so the zones cannot overlap. The band is what the signal cannot decide -- the honest residue, not a gap in the analysis.",
+      "economics": {
+        "avg_generation_tokens": 133.0,
+        "failure_rate": 0.133,
+        "signal_available": "final",
+        "tokens_if_aborted": 133.0,
+        "bail": {
+          "failures_aborted_per_1000": 80.0,
+          "correct_wrongly_aborted_per_1000": 171.6,
+          "tokens_saved": 0,
+          "tokens_wasted": 45638,
+          "net_tokens_per_1000": -45638,
+          "net_pct_of_baseline": -34.3
+        },
+        "trust": {
+          "shipped_untested_per_1000": 576.0,
+          "defects_shipped_per_1000": 161.9,
+          "note": "Saves test execution, not generation tokens -- the generation is already paid for. Worth it when the test suite is expensive or when latency matters more than tokens. The defect count is the price."
+        }
+      },
+      "availability": "final"
+    },
+    "best_for_compute": "two_sided",
+    "ran": true,
+    "n_unique_generations": 60,
+    "n_failures": 8,
+    "note": "Every threshold was fitted inside cross-validation folds and scored on records that fold never saw. `cross_validated` is what the rule does on unseen output from this model. `rule` is the same procedure fitted to all the data, for use."
+  },
+  "signal_scan": {
+    "n_signals_tested": 146,
+    "preregistered": null,
+    "alpha": 0.05,
+    "correction": "Benjamini-Hochberg FDR",
+    "best_surviving_signal": null,
+    "nominally_significant_but_not_surviving": [
+      "margin_mean",
+      "mass1_mean",
+      "phi_mean",
+      "surprisal_mean",
+      "full_ent_mean",
+      "kl_uniform_mean",
+      "mean_entropy",
+      "margin_std",
+      "mass5_f10_max",
+      "kl_step_mean",
+      "mass1_std",
+      "surprisal_std",
+      "q3",
+      "spike_token_idx",
+      "kl_step_std",
+      "plateau_start_quartile",
+      "kl_uniform_std",
+      "full_ent_std",
+      "osc_rate",
+      "kl_step_early_vs_rest",
+      "kl_cent_late_minus_early",
+      "margin_f10_mean",
+      "mono_down_frac",
+      "spike_height",
+      "mass1_f10_mean",
+      "phi_first10_mean"
+    ],
+    "signals": [
+      {
+        "signal": "margin_mean",
+        "cohens_d": 1.23,
+        "direction": "high=good",
+        "p_raw": 0.0009,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.0584,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "mass1_mean",
+        "cohens_d": 1.187,
+        "direction": "high=good",
+        "p_raw": 0.0014,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.0584,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "phi_mean",
+        "cohens_d": 1.187,
+        "direction": "high=good",
+        "p_raw": 0.0014,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.0584,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "surprisal_mean",
+        "cohens_d": -1.169,
+        "direction": "high=bad",
+        "p_raw": 0.0016,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.0584,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "full_ent_mean",
+        "cohens_d": -1.118,
+        "direction": "high=bad",
+        "p_raw": 0.0029,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.0584,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "kl_uniform_mean",
+        "cohens_d": 1.119,
+        "direction": "high=good",
+        "p_raw": 0.0029,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.0584,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "mean_entropy",
+        "cohens_d": -1.119,
+        "direction": "high=bad",
+        "p_raw": 0.0029,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.0584,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "margin_std",
+        "cohens_d": -1.114,
+        "direction": "high=bad",
+        "p_raw": 0.0032,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.0584,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "mass5_f10_max",
+        "cohens_d": 1.167,
+        "direction": "high=good",
+        "p_raw": 0.0043,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.0698,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "kl_step_mean",
+        "cohens_d": 1.046,
+        "direction": "high=good",
+        "p_raw": 0.0049,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.0715,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "mass1_std",
+        "cohens_d": -1.034,
+        "direction": "high=bad",
+        "p_raw": 0.0068,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.0903,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "surprisal_std",
+        "cohens_d": -0.976,
+        "direction": "high=bad",
+        "p_raw": 0.0097,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.1123,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "q3",
+        "cohens_d": -1.001,
+        "direction": "high=bad",
+        "p_raw": 0.01,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.1123,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "spike_token_idx",
+        "cohens_d": -0.97,
+        "direction": "high=bad",
+        "p_raw": 0.0131,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.1366,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "kl_step_std",
+        "cohens_d": -0.906,
+        "direction": "high=bad",
+        "p_raw": 0.0146,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.1421,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "plateau_start_quartile",
+        "cohens_d": -1.327,
+        "direction": "high=bad",
+        "p_raw": 0.0162,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.1478,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "kl_uniform_std",
+        "cohens_d": -0.892,
+        "direction": "high=bad",
+        "p_raw": 0.0186,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.1525,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "full_ent_std",
+        "cohens_d": -0.891,
+        "direction": "high=bad",
+        "p_raw": 0.0188,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.1525,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "osc_rate",
+        "cohens_d": 0.87,
+        "direction": "high=good",
+        "p_raw": 0.0213,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.1637,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "kl_step_early_vs_rest",
+        "cohens_d": -0.861,
+        "direction": "high=bad",
+        "p_raw": 0.0241,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.1759,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "kl_cent_late_minus_early",
+        "cohens_d": -0.79,
+        "direction": "high=bad",
+        "p_raw": 0.0371,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.2526,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "margin_f10_mean",
+        "cohens_d": 0.771,
+        "direction": "high=good",
+        "p_raw": 0.0396,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.2526,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "mono_down_frac",
+        "cohens_d": -0.759,
+        "direction": "high=bad",
+        "p_raw": 0.0398,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.2526,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "spike_height",
+        "cohens_d": 0.748,
+        "direction": "high=good",
+        "p_raw": 0.0474,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.2553,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "mass1_f10_mean",
+        "cohens_d": 0.74,
+        "direction": "high=good",
+        "p_raw": 0.0479,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.2553,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "phi_first10_mean",
+        "cohens_d": 0.74,
+        "direction": "high=good",
+        "p_raw": 0.0479,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.2553,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "surprisal_f10_mean",
+        "cohens_d": -0.72,
+        "direction": "high=bad",
+        "p_raw": 0.054,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.2553,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "spike_quartile",
+        "cohens_d": -0.748,
+        "direction": "high=bad",
+        "p_raw": 0.0593,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.2553,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first10_mean",
+        "cohens_d": -0.711,
+        "direction": "high=bad",
+        "p_raw": 0.0595,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.2553,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "full_ent_f10_mean",
+        "cohens_d": -0.711,
+        "direction": "high=bad",
+        "p_raw": 0.0595,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.2553,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_uniform_f10_mean",
+        "cohens_d": 0.711,
+        "direction": "high=good",
+        "p_raw": 0.0595,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.2553,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "head_entropy",
+        "cohens_d": -0.712,
+        "direction": "high=bad",
+        "p_raw": 0.0601,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.2553,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q1",
+        "cohens_d": -0.713,
+        "direction": "high=bad",
+        "p_raw": 0.0601,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.2553,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_late_minus_early",
+        "cohens_d": 0.753,
+        "direction": "high=good",
+        "p_raw": 0.0612,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.2553,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_late_minus_early",
+        "cohens_d": -0.753,
+        "direction": "high=bad",
+        "p_raw": 0.0612,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.2553,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_min",
+        "cohens_d": 0.65,
+        "direction": "high=good",
+        "p_raw": 0.0759,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.2995,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_max",
+        "cohens_d": -0.65,
+        "direction": "high=bad",
+        "p_raw": 0.0759,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.2995,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "margin_min",
+        "cohens_d": 0.652,
+        "direction": "high=good",
+        "p_raw": 0.0826,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.3135,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "surprisal_f10_max",
+        "cohens_d": -0.661,
+        "direction": "high=bad",
+        "p_raw": 0.085,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.3135,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "total_variation",
+        "cohens_d": -0.651,
+        "direction": "high=bad",
+        "p_raw": 0.0859,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.3135,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q4",
+        "cohens_d": -0.608,
+        "direction": "high=bad",
+        "p_raw": 0.0996,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.3547,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_std",
+        "cohens_d": -0.482,
+        "direction": "high=bad",
+        "p_raw": 0.1148,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.3869,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_std",
+        "cohens_d": -0.482,
+        "direction": "high=bad",
+        "p_raw": 0.1148,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.3869,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass1_min",
+        "cohens_d": 0.595,
+        "direction": "high=good",
+        "p_raw": 0.1166,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.3869,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "spike_relative_pos",
+        "cohens_d": -0.575,
+        "direction": "high=bad",
+        "p_raw": 0.1303,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.4085,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first10_std",
+        "cohens_d": -0.582,
+        "direction": "high=bad",
+        "p_raw": 0.1344,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.4085,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "surprisal_max",
+        "cohens_d": -0.572,
+        "direction": "high=bad",
+        "p_raw": 0.1354,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.4085,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first10_max",
+        "cohens_d": -0.573,
+        "direction": "high=bad",
+        "p_raw": 0.1409,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.4085,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "full_ent_f10_max",
+        "cohens_d": -0.573,
+        "direction": "high=bad",
+        "p_raw": 0.1409,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.4085,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_slope",
+        "cohens_d": 0.353,
+        "direction": "high=good",
+        "p_raw": 0.1426,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.4085,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "trend_rho",
+        "cohens_d": 0.556,
+        "direction": "high=good",
+        "p_raw": 0.1501,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.4085,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "full_ent_max",
+        "cohens_d": -0.552,
+        "direction": "high=bad",
+        "p_raw": 0.1506,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.4085,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_uniform_min",
+        "cohens_d": 0.551,
+        "direction": "high=good",
+        "p_raw": 0.1511,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.4085,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "max_entropy",
+        "cohens_d": -0.551,
+        "direction": "high=bad",
+        "p_raw": 0.1511,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.4085,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "n_semantic",
+        "cohens_d": -0.484,
+        "direction": "high=bad",
+        "p_raw": 0.2108,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.5496,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "n_tokens",
+        "cohens_d": -0.484,
+        "direction": "high=bad",
+        "p_raw": 0.2108,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.5496,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_cent_slope",
+        "cohens_d": -0.411,
+        "direction": "high=bad",
+        "p_raw": 0.2715,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.6954,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q2",
+        "cohens_d": -0.414,
+        "direction": "high=bad",
+        "p_raw": 0.2863,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.7207,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_late_minus_early",
+        "cohens_d": 0.327,
+        "direction": "high=good",
+        "p_raw": 0.3135,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.7633,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_step_late_minus_early",
+        "cohens_d": 0.388,
+        "direction": "high=good",
+        "p_raw": 0.3137,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.7633,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_cent_f5_mean",
+        "cohens_d": 0.371,
+        "direction": "high=good",
+        "p_raw": 0.3434,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.8219,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q_slope",
+        "cohens_d": 0.316,
+        "direction": "high=good",
+        "p_raw": 0.4121,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.9268,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "early_slope",
+        "cohens_d": -0.319,
+        "direction": "high=bad",
+        "p_raw": 0.4126,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.9268,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "full_ent_slope",
+        "cohens_d": -0.319,
+        "direction": "high=bad",
+        "p_raw": 0.4126,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.9268,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_uniform_slope",
+        "cohens_d": 0.319,
+        "direction": "high=good",
+        "p_raw": 0.4126,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.9268,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_cent_std",
+        "cohens_d": 0.31,
+        "direction": "high=good",
+        "p_raw": 0.4227,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.9351,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q_range",
+        "cohens_d": -0.305,
+        "direction": "high=bad",
+        "p_raw": 0.4308,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 0.9388,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "margin_early_vs_rest",
+        "cohens_d": 0.286,
+        "direction": "high=good",
+        "p_raw": 0.467,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q_curvature",
+        "cohens_d": 0.262,
+        "direction": "high=good",
+        "p_raw": 0.4735,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_step_slope",
+        "cohens_d": -0.25,
+        "direction": "high=bad",
+        "p_raw": 0.5001,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass1_early_vs_rest",
+        "cohens_d": 0.262,
+        "direction": "high=good",
+        "p_raw": 0.5002,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_mean",
+        "cohens_d": 0.244,
+        "direction": "high=good",
+        "p_raw": 0.5042,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_mean",
+        "cohens_d": -0.244,
+        "direction": "high=bad",
+        "p_raw": 0.5042,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "surprisal_early_vs_rest",
+        "cohens_d": -0.239,
+        "direction": "high=bad",
+        "p_raw": 0.5381,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q1_over_mean",
+        "cohens_d": 0.227,
+        "direction": "high=good",
+        "p_raw": 0.5566,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass1_slope",
+        "cohens_d": 0.222,
+        "direction": "high=good",
+        "p_raw": 0.5705,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "early_vs_rest",
+        "cohens_d": -0.212,
+        "direction": "high=bad",
+        "p_raw": 0.5807,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_uniform_early_vs_rest",
+        "cohens_d": 0.212,
+        "direction": "high=good",
+        "p_raw": 0.5807,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "full_ent_early_vs_rest",
+        "cohens_d": -0.211,
+        "direction": "high=bad",
+        "p_raw": 0.5813,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "margin_slope",
+        "cohens_d": 0.207,
+        "direction": "high=good",
+        "p_raw": 0.597,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_early_vs_rest",
+        "cohens_d": -0.184,
+        "direction": "high=bad",
+        "p_raw": 0.6126,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_early_vs_rest",
+        "cohens_d": 0.184,
+        "direction": "high=good",
+        "p_raw": 0.6126,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass1_f5_mean",
+        "cohens_d": 0.179,
+        "direction": "high=good",
+        "p_raw": 0.6183,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "margin_f5_mean",
+        "cohens_d": 0.223,
+        "direction": "high=good",
+        "p_raw": 0.6211,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "surprisal_slope",
+        "cohens_d": -0.193,
+        "direction": "high=bad",
+        "p_raw": 0.6244,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "surprisal_f5_mean",
+        "cohens_d": -0.174,
+        "direction": "high=bad",
+        "p_raw": 0.6271,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_entropy",
+        "cohens_d": -0.191,
+        "direction": "high=bad",
+        "p_raw": 0.644,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "late_vs_early_half",
+        "cohens_d": -0.175,
+        "direction": "high=bad",
+        "p_raw": 0.6472,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_min",
+        "cohens_d": 0.201,
+        "direction": "high=good",
+        "p_raw": 0.6551,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first5_mean",
+        "cohens_d": -0.137,
+        "direction": "high=bad",
+        "p_raw": 0.6587,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "full_ent_f5_mean",
+        "cohens_d": -0.137,
+        "direction": "high=bad",
+        "p_raw": 0.6587,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_uniform_f5_mean",
+        "cohens_d": 0.137,
+        "direction": "high=good",
+        "p_raw": 0.6587,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "full_ent_late_minus_early",
+        "cohens_d": -0.165,
+        "direction": "high=bad",
+        "p_raw": 0.666,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_uniform_late_minus_early",
+        "cohens_d": 0.164,
+        "direction": "high=good",
+        "p_raw": 0.6679,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_step_f5_mean",
+        "cohens_d": 0.161,
+        "direction": "high=good",
+        "p_raw": 0.6784,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_slope",
+        "cohens_d": 0.184,
+        "direction": "high=good",
+        "p_raw": 0.6916,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_slope",
+        "cohens_d": -0.184,
+        "direction": "high=bad",
+        "p_raw": 0.6916,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q4_over_mean",
+        "cohens_d": -0.155,
+        "direction": "high=bad",
+        "p_raw": 0.6951,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_cent_f10_max",
+        "cohens_d": -0.153,
+        "direction": "high=bad",
+        "p_raw": 0.7143,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_step_f10_max",
+        "cohens_d": -0.243,
+        "direction": "high=bad",
+        "p_raw": 0.7488,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q_early_drop",
+        "cohens_d": -0.124,
+        "direction": "high=bad",
+        "p_raw": 0.7576,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q_monotone_down",
+        "cohens_d": -0.157,
+        "direction": "high=bad",
+        "p_raw": 0.7616,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_step_f10_mean",
+        "cohens_d": 0.105,
+        "direction": "high=good",
+        "p_raw": 0.7797,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass1_late_minus_early",
+        "cohens_d": 0.101,
+        "direction": "high=good",
+        "p_raw": 0.794,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_std",
+        "cohens_d": -0.112,
+        "direction": "high=bad",
+        "p_raw": 0.7969,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_mean",
+        "cohens_d": 0.111,
+        "direction": "high=good",
+        "p_raw": 0.8055,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "osc_sign_changes",
+        "cohens_d": -0.099,
+        "direction": "high=bad",
+        "p_raw": 0.8073,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "n_spikes",
+        "cohens_d": 0.167,
+        "direction": "high=good",
+        "p_raw": 0.8213,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "surprisal_late_minus_early",
+        "cohens_d": -0.084,
+        "direction": "high=bad",
+        "p_raw": 0.8271,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_early_vs_rest",
+        "cohens_d": -0.106,
+        "direction": "high=bad",
+        "p_raw": 0.8274,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "path_ratio",
+        "cohens_d": -0.106,
+        "direction": "high=bad",
+        "p_raw": 0.8331,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "margin_late_minus_early",
+        "cohens_d": 0.066,
+        "direction": "high=good",
+        "p_raw": 0.8646,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_cent_early_vs_rest",
+        "cohens_d": 0.063,
+        "direction": "high=good",
+        "p_raw": 0.873,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_f5_mean",
+        "cohens_d": -0.144,
+        "direction": "high=bad",
+        "p_raw": 0.8753,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_cent_mean",
+        "cohens_d": -0.058,
+        "direction": "high=bad",
+        "p_raw": 0.8779,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "margin_max",
+        "cohens_d": -0.176,
+        "direction": "high=bad",
+        "p_raw": 0.8813,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_cent_max",
+        "cohens_d": -0.073,
+        "direction": "high=bad",
+        "p_raw": 0.8814,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "full_ent_min",
+        "cohens_d": 0.168,
+        "direction": "high=good",
+        "p_raw": 0.8817,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_uniform_max",
+        "cohens_d": -0.169,
+        "direction": "high=bad",
+        "p_raw": 0.8817,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass1_max",
+        "cohens_d": -0.168,
+        "direction": "high=bad",
+        "p_raw": 0.8817,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "surprisal_min",
+        "cohens_d": 0.168,
+        "direction": "high=good",
+        "p_raw": 0.882,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_step_max",
+        "cohens_d": -0.168,
+        "direction": "high=bad",
+        "p_raw": 0.884,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_max",
+        "cohens_d": -0.19,
+        "direction": "high=bad",
+        "p_raw": 0.8928,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_uniform_f10_max",
+        "cohens_d": 0.043,
+        "direction": "high=good",
+        "p_raw": 0.9317,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_first",
+        "cohens_d": -0.033,
+        "direction": "high=bad",
+        "p_raw": 0.9501,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first_token_entropy",
+        "cohens_d": 0.171,
+        "direction": "high=good",
+        "p_raw": 0.9595,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "full_ent_first",
+        "cohens_d": 0.171,
+        "direction": "high=good",
+        "p_raw": 0.9595,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_uniform_first",
+        "cohens_d": -0.171,
+        "direction": "high=bad",
+        "p_raw": 0.9595,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first3_mean",
+        "cohens_d": 0.172,
+        "direction": "high=good",
+        "p_raw": 0.9597,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass1_first",
+        "cohens_d": -0.189,
+        "direction": "high=bad",
+        "p_raw": 0.9602,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "phi_first",
+        "cohens_d": -0.189,
+        "direction": "high=bad",
+        "p_raw": 0.9602,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "surprisal_first",
+        "cohens_d": 0.189,
+        "direction": "high=good",
+        "p_raw": 0.9602,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass1_f10_max",
+        "cohens_d": 0.022,
+        "direction": "high=good",
+        "p_raw": 0.9624,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_f5_mean",
+        "cohens_d": -0.094,
+        "direction": "high=bad",
+        "p_raw": 0.963,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_f5_mean",
+        "cohens_d": 0.094,
+        "direction": "high=good",
+        "p_raw": 0.963,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "margin_first",
+        "cohens_d": -0.189,
+        "direction": "high=bad",
+        "p_raw": 0.964,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_first",
+        "cohens_d": 0.027,
+        "direction": "high=good",
+        "p_raw": 0.9642,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_first",
+        "cohens_d": -0.027,
+        "direction": "high=bad",
+        "p_raw": 0.9642,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "margin_f10_max",
+        "cohens_d": -0.014,
+        "direction": "high=bad",
+        "p_raw": 0.9742,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first_to_max_ratio",
+        "cohens_d": 0.172,
+        "direction": "high=good",
+        "p_raw": 0.9761,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_cent_f10_mean",
+        "cohens_d": 0.007,
+        "direction": "high=good",
+        "p_raw": 0.9898,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_f10_max",
+        "cohens_d": -0.025,
+        "direction": "high=bad",
+        "p_raw": 0.9945,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_f10_mean",
+        "cohens_d": -0.045,
+        "direction": "high=bad",
+        "p_raw": 0.9967,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_f10_mean",
+        "cohens_d": 0.045,
+        "direction": "high=good",
+        "p_raw": 0.9967,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_f10_mean",
+        "cohens_d": -0.015,
+        "direction": "high=bad",
+        "p_raw": 0.9973,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q_argmax",
+        "cohens_d": 0.045,
+        "direction": "high=good",
+        "p_raw": 1.0,
+        "n_ok": 52,
+        "n_fail": 8,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      }
+    ],
+    "note": "146 candidate entropy statistics were tested against the same pass/fail data, so raw p-values are corrected for multiple comparisons (Benjamini-Hochberg). A signal is only reported as usable if its corrected p clears alpha AND |d| >= 0.2. Signals listed in nominally_significant_but_not_surviving cleared p<0.05 on their own but not after correction \u2014 with this many tests, that is the expected behaviour of noise, not a lead. They are candidates for a pre-registered test on a fresh run, never findings."
+  },
+  "spike_location": {
+    "ok_spike_quartiles": [
+      0,
+      0,
+      2,
+      1,
+      1,
+      0,
+      3,
+      0,
+      2,
+      1,
+      1,
+      0,
+      2,
+      1,
+      2,
+      1,
+      0,
+      0,
+      0,
+      1,
+      1,
+      2,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      2,
+      2,
+      2,
+      0,
+      2,
+      0,
+      1,
+      1,
+      0,
+      3,
+      1,
+      2,
+      1,
+      0,
+      0,
+      2,
+      0,
+      1,
+      0,
+      2,
+      1,
+      2,
+      0,
+      1
+    ],
+    "fail_spike_quartiles": [
+      0,
+      3,
+      2,
+      2,
+      1,
+      2,
+      1,
+      2
+    ],
+    "ok_mean_spike_pos": 0.372,
+    "fail_mean_spike_pos": 0.508,
+    "ok_quartile_entropies": [
+      [
+        0.057,
+        0.0482,
+        0.0523,
+        0.0162
+      ],
+      [
+        0.1153,
+        0.0015,
+        0.0419,
+        0.0577
+      ],
+      [
+        0.0311,
+        0.0439,
+        0.0589,
+        0.0262
+      ],
+      [
+        0.0544,
+        0.0614,
+        0.0193,
+        0.0471
+      ],
+      [
+        0.1501,
+        0.0778,
+        0.0464,
+        0.0941
+      ],
+      [
+        0.094,
+        0.0791,
+        0.0633,
+        0.0132
+      ],
+      [
+        0.0161,
+        0.1629,
+        0.0048,
+        0.0864
+      ],
+      [
+        0.0774,
+        0.0244,
+        0.0388,
+        0.028
+      ],
+      [
+        0.0001,
+        0.1681,
+        0.1498,
+        0.0044
+      ],
+      [
+        0.0492,
+        0.0965,
+        0.0894,
+        0.0276
+      ]
+    ],
+    "fail_quartile_entropies": [
+      [
+        0.0872,
+        0.021,
+        0.0562,
+        0.026
+      ],
+      [
+        0.0722,
+        0.0476,
+        0.0379,
+        0.0204
+      ],
+      [
+        0.0561,
+        0.0386,
+        0.1059,
+        0.0772
+      ],
+      [
+        0.0591,
+        0.041,
+        0.0517,
+        0.0028
+      ],
+      [
+        0.0429,
+        0.1155,
+        0.0074,
+        0.0082
+      ],
+      [
+        0.0581,
+        0.0461,
+        0.1566,
+        0.0058
+      ],
+      [
+        0.0939,
+        0.109,
+        0.0603,
+        0.028
+      ],
+      [
+        0.0832,
+        0.0592,
+        0.078,
+        0.0566
+      ]
+    ],
+    "note": "spike_quartile: 0=head(early), 3=tail(late). If fail spikes cluster in a different quartile than ok spikes, spike location is a useful incorrectness predictor for this model."
+  },
+  "spike_threshold_calibrated": {
+    "signal": "max_entropy",
+    "threshold": null,
+    "usable": false,
+    "accuracy": 0,
+    "balanced_accuracy": null,
+    "chance_balanced_accuracy": 0.5,
+    "direction": "none",
+    "reason": "No entropy threshold is shipped for this model: difference is not distinguishable from chance (permutation p=0.151, needs p<0.05). Fitting a cut point to a difference this size would produce a number that looks actionable and is not."
+  },
+  "coverage_matrix": {
+    "test_retry": {
+      "recovered": 3,
+      "unique_recovered": 1,
+      "recovered_keys": [
+        [
+          "merge_k_sorted",
+          0
+        ],
+        [
+          "parse_query",
+          0
+        ],
+        [
+          "pipeline",
+          0
+        ]
+      ],
+      "unique_keys": [
+        [
+          "parse_query",
+          0
+        ]
+      ]
+    },
+    "skeleton_fill": {
+      "recovered": 3,
+      "unique_recovered": 1,
+      "recovered_keys": [
+        [
+          "cache",
+          0
+        ],
+        [
+          "merge_k_sorted",
+          0
+        ],
+        [
+          "pipeline",
+          0
+        ]
+      ],
+      "unique_keys": [
+        [
+          "cache",
+          0
+        ]
+      ]
+    }
+  },
+  "total_failures": 8,
+  "total_recoverable": 4,
+  "error_type_effectiveness": {
+    "logic": {
+      "test_retry": {
+        "recovered": 1,
+        "attempted": 4,
+        "rate": 0.25
+      },
+      "temp_retry": {
+        "recovered": 0,
+        "attempted": 4,
+        "rate": 0.0
+      },
+      "skeleton_fill": {
+        "recovered": 1,
+        "attempted": 4,
+        "rate": 0.25
+      }
+    },
+    "assertion": {
+      "test_retry": {
+        "recovered": 2,
+        "attempted": 3,
+        "rate": 0.67
+      },
+      "temp_retry": {
+        "recovered": 0,
+        "attempted": 3,
+        "rate": 0.0
+      },
+      "skeleton_fill": {
+        "recovered": 2,
+        "attempted": 3,
+        "rate": 0.67
+      }
+    },
+    "syntax": {
+      "test_retry": {
+        "recovered": 0,
+        "attempted": 1,
+        "rate": 0.0
+      },
+      "temp_retry": {
+        "recovered": 0,
+        "attempted": 1,
+        "rate": 0.0
+      },
+      "skeleton_fill": {
+        "recovered": 0,
+        "attempted": 1,
+        "rate": 0.0
+      }
+    }
+  },
+  "recommended_intervention_order": [
+    {
+      "intervention": "skeleton_fill",
+      "new_coverage": 3
+    },
+    {
+      "intervention": "test_retry",
+      "new_coverage": 1
+    }
+  ],
+  "arch_spike_vs_coder_quality": [],
+  "temp_sweep": {
+    "retry_temp_1": {
+      "attempted": 8,
+      "recovered": 0
+    }
+  },
+  "pipeline_version": "2026.09.05",
+  "reanalyzed_from": "_calibration_granite_raw.jsonl",
+  "config": {
+    "file": "granite-4.1-3b-Q5_K_M.gguf",
+    "label": "granite",
+    "fmt": "chatml",
+    "preset": {
+      "temp": 0.0,
+      "top_p": 1.0,
+      "top_k": 0,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0
+    },
+    "spike_threshold": 1.3805,
+    "spike_signal": "max_entropy",
+    "retry_temps": [
+      0.0,
+      0.3,
+      0.5
+    ],
+    "_provenance": {
+      "temp": "registry (card-verified)",
+      "top_p": "registry (card-verified)",
+      "top_k": "registry (card-verified)",
+      "min_p": "registry (card-verified)",
+      "repeat_penalty": "registry (card-verified)",
+      "presence_penalty": "registry (card-verified)",
+      "thinking": "registry (card-verified)"
+    },
+    "_registry_hit": true,
+    "struggle_base": 0.8954
+  },
+  "config_provenance": {
+    "temp": "registry (card-verified)",
+    "top_p": "registry (card-verified)",
+    "top_k": "registry (card-verified)",
+    "min_p": "registry (card-verified)",
+    "repeat_penalty": "registry (card-verified)",
+    "presence_penalty": "registry (card-verified)",
+    "thinking": "registry (card-verified)"
+  },
+  "model_file": "granite-4.1-3b-Q5_K_M.gguf",
+  "unverified_preset": false
+}

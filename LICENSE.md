@@ -13,8 +13,9 @@ The licensor grants you a non-exclusive, worldwide, royalty-free license to:
 - **Use** the software on your own local models and hardware
 - **Modify** the software and create derivative works
 - **Use** modifications in your own commercial projects and workflows
-- **Distribute** the unmodified software only to other licensed buyers (verified
-  via AgentMart purchase record or direct license grant)
+- **Distribute** the unmodified software only to other licensed buyers (that is,
+  people who purchased it themselves or received a direct license grant from the
+  licensor)
 
 ## 2. Grant-Back Clause (Track A / Track B)
 
@@ -29,7 +30,8 @@ When `federation.py` benchmarks your modification and confirms it outperforms
 the stock baseline, and you (the human user) approve at the y/n gate:
 
 - The **code diff** (localized to the `calibration-kit/` subdirectory) is
-  submitted to the licensor's webhook
+  written to a local contribution file, which you send by opening a pull
+  request or an issue on the repository
 - The **performance metrics** (efficiency gain, accuracy improvement, time
   reduction) are submitted
 - The **build plan** (AI-generated summary of what was tested and why it works)
@@ -62,15 +64,17 @@ The grant-back obligation is triggered ONLY when ALL of these are true:
 **No grant-back is owed for modifications that do not outperform the baseline,
 or for modifications you never run through `federation.py`.**
 
-## 3. No Telemetry Without Approval
+## 3. No Telemetry
 
-- The software transmits **zero telemetry** during active execution (Phases 1-2)
-- Phone-home is strictly blocked until Phase 3 and Phase 4 complete
-- The phone-home sequence requires a **human y/n keyboard input** at a visible
-  CLI prompt before any data touches the network
-- If the user declines (Track B), only the anonymized 4-sentence summary is sent
-- The licensor's backend rejects all incoming payloads unless they include a
-  valid AgentMart purchase license key
+- The software contains **no network code** — not gated, not opt-in: there
+  is no code path that opens a socket
+- `federation.py` writes the sanitized contribution to a local file and
+  stops there. Sending it is an act the licensee performs deliberately, by
+  opening a pull request or an issue
+- The Track A / Track B choice is a **human y/n keyboard input** at a
+  visible CLI prompt before any file is written
+- If the user declines (Track B), only the anonymized 4-sentence summary is
+  written out
 
 ## 4. Boundary Isolation
 
@@ -78,7 +82,7 @@ or for modifications you never run through `federation.py`.**
 `calibration-kit/` subdirectory. It is structurally blocked from:
 
 - Reading or diffing parent directories
-- Accessing environment variables (except the license key)
+- Accessing environment variables
 - Reading private source code outside the kit
 - Transmitting file contents from outside the kit
 

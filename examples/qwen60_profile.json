@@ -1,0 +1,2510 @@
+{
+  "sampling_independence": {
+    "n_probe_rows": 120,
+    "n_unique_generations": 108,
+    "pseudo_replication_factor": 1.11,
+    "deterministic": false
+  },
+  "model_label": "qwen3-4b-instruct",
+  "calibration_date": "2026-09-05 12:22",
+  "n_probe_runs": 108,
+  "n_probe_rows_before_dedup": 120,
+  "n_failures": 18,
+  "n_intervention_runs": 80,
+  "entropy_direction": {
+    "direction": "high=bad",
+    "raw_direction_before_gating": "high=bad",
+    "gate_reason": "permutation p=0.000, separation 0.296",
+    "permutation_p": 0.0001,
+    "separation": 0.296,
+    "ok_mean_max_entropy": 1.0259,
+    "fail_mean_max_entropy": 1.4562,
+    "n_ok_samples": 90,
+    "n_fail_samples": 18,
+    "observed_effect_cohens_d": -0.938,
+    "min_detectable_effect_d": 0.723,
+    "power_verdict": "signal detected",
+    "power_note": "Observed effect d=-0.94; this run could detect d>=0.72.",
+    "repeats_used": 2,
+    "repeats_for_80pct_power": 1,
+    "note": "high=bad means high entropy predicts failure -> bail early on high-entropy generations. high=good means high entropy predicts success -> verify high-entropy candidates first instead of bailing. none means entropy is not a usable signal for this model, which is a real and useful result, not a failed run. A direction is only reported when the difference survives a two-sided permutation test (p<0.05, 20000 resamples) AND exceeds a minimum separation of 0.08. raw_direction_before_gating is the unfiltered sign of the mean difference; it is recorded for transparency and must not be used as a finding."
+  },
+  "signal_coverage": {
+    "ran": true,
+    "folds": 5,
+    "cv_recall": 0.733,
+    "cv_fp_rate": 0.167,
+    "cv_balanced_accuracy": 0.783,
+    "mean_combo_size": 1.2,
+    "signal_stability": [
+      {
+        "signal": "plateau_start_quartile",
+        "chosen_in_folds": 5,
+        "of": 5
+      },
+      {
+        "signal": "kl_cent_std",
+        "chosen_in_folds": 1,
+        "of": 5
+      }
+    ],
+    "final_combination": [
+      {
+        "signal": "plateau_start_quartile",
+        "threshold": -0.5,
+        "direction": "high=bad",
+        "flag_when": "above"
+      }
+    ],
+    "final_fit_stats": {
+      "n_failures": 18,
+      "caught": 13,
+      "recall": 0.722,
+      "false_flags": 15,
+      "n_correct": 90,
+      "fp_rate": 0.167,
+      "balanced_accuracy": 0.778
+    },
+    "note": "cv_* numbers are the honest estimate: the combination was rebuilt from scratch in each fold and scored on records that fold never saw. final_fit_stats describes the shipped combination measured on all the data it was fitted to, so it is optimistic by construction -- quote the cv numbers. A signal chosen in only one or two folds is a fitting artefact, not part of this model's pattern; signal_stability shows which held up.",
+    "null_test": {
+      "shuffles": 40,
+      "null_median_balanced_accuracy": 0.491,
+      "null_max_balanced_accuracy": 0.633,
+      "real_balanced_accuracy": 0.783,
+      "beats_n_shuffles": 40,
+      "empirical_p": 0.0244,
+      "usable": true,
+      "note": "The entire selection procedure was re-run on 40 label shuffles. Shuffled labels landing at ~0.5 means the procedure is not manufacturing structure. empirical_p has a floor of 1/41 = 0.024 -- it cannot report smaller than that no matter how strong the effect."
+    }
+  },
+  "holdout_validation": {
+    "ran": true,
+    "n_train": 76,
+    "n_test": 32,
+    "n_train_failures": 13,
+    "n_test_failures": 5,
+    "selected_signal": null,
+    "verdict": "nothing selected on the training half"
+  },
+  "task_holdout_validation": {
+    "ran": true,
+    "n_tasks": 60,
+    "n_fail_tasks": 13,
+    "n_test_tasks": 18,
+    "n_test_fail_tasks": 4,
+    "n_train_failures": 13,
+    "n_test_failures": 5,
+    "transfer_estimate": {
+      "signal": "plateau_start_quartile",
+      "direction": "high=bad",
+      "n_splits": 299,
+      "mean_balanced_accuracy": 0.733,
+      "p5": 0.464,
+      "p95": 0.94,
+      "frac_above_chance": 0.92
+    },
+    "selected_signal": null,
+    "verdict": "nothing selected on the training tasks"
+  },
+  "rule_recommendation": {
+    "bail": {
+      "available": true,
+      "signal": "plateau_start_quartile",
+      "signal_chosen_in_folds": 4,
+      "of_folds": 5,
+      "cross_validated": {
+        "recall": 0.667,
+        "fp_rate": 0.167,
+        "balanced_accuracy": 0.75
+      },
+      "rule": {
+        "signal": "plateau_start_quartile",
+        "threshold": -0.5,
+        "flag_when": "above",
+        "recall": 0.722,
+        "fp_rate": 0.167
+      },
+      "economics": {
+        "avg_generation_tokens": 194.3,
+        "failure_rate": 0.167,
+        "signal_available": "final",
+        "tokens_if_aborted": 194.3148148148148,
+        "bail": {
+          "failures_aborted_per_1000": 111.2,
+          "correct_wrongly_aborted_per_1000": 139.2,
+          "tokens_saved": 0,
+          "tokens_wasted": 54084,
+          "net_tokens_per_1000": -54084,
+          "net_pct_of_baseline": -27.8
+        }
+      },
+      "availability": "final"
+    },
+    "trust": {
+      "available": true,
+      "signal": "surprisal_max",
+      "signal_chosen_in_folds": 2,
+      "of_folds": 5,
+      "cross_validated": {
+        "coverage": 0.459,
+        "purity": 0.916,
+        "n_in_zone": 10.0
+      },
+      "rule": {
+        "signal": "surprisal_max",
+        "threshold": 1.1439,
+        "trust_when": "below",
+        "coverage": 0.435,
+        "purity": 0.957,
+        "n_in_zone": 47
+      },
+      "economics": {
+        "avg_generation_tokens": 194.3,
+        "failure_rate": 0.167,
+        "signal_available": "final",
+        "tokens_if_aborted": 194.3148148148148,
+        "trust": {
+          "shipped_untested_per_1000": 459.0,
+          "defects_shipped_per_1000": 38.6,
+          "note": "Saves test execution, not generation tokens -- the generation is already paid for. Worth it when the test suite is expensive or when latency matters more than tokens. The defect count is the price."
+        }
+      },
+      "availability": "final"
+    },
+    "two_sided": {
+      "available": true,
+      "signal": "surprisal_max",
+      "signal_chosen_in_folds": 2,
+      "of_folds": 5,
+      "cross_validated": {
+        "trust_coverage": 0.45,
+        "trust_purity": 0.916,
+        "bail_recall": 0.683,
+        "band_share": 0.0
+      },
+      "rule": {
+        "signal": "surprisal_max",
+        "good_is_high": false,
+        "trust_threshold": 1.1439,
+        "bail_threshold": 1.1439,
+        "trust_coverage": 0.435,
+        "trust_purity": 0.957,
+        "bail_recall": 0.889,
+        "bail_precision": 0.262,
+        "band_share": 0.0
+      },
+      "note": "Ship the trust zone untested, regenerate the bail zone, test the band between them. Both cut points come from one fit on one signal, ordered so the zones cannot overlap. The band is what the signal cannot decide -- the honest residue, not a gap in the analysis.",
+      "economics": {
+        "avg_generation_tokens": 194.3,
+        "failure_rate": 0.167,
+        "signal_available": "final",
+        "tokens_if_aborted": 194.3148148148148,
+        "bail": {
+          "failures_aborted_per_1000": 113.8,
+          "correct_wrongly_aborted_per_1000": 320.6,
+          "tokens_saved": 0,
+          "tokens_wasted": 124612,
+          "net_tokens_per_1000": -124612,
+          "net_pct_of_baseline": -64.1
+        },
+        "trust": {
+          "shipped_untested_per_1000": 450.0,
+          "defects_shipped_per_1000": 37.8,
+          "note": "Saves test execution, not generation tokens -- the generation is already paid for. Worth it when the test suite is expensive or when latency matters more than tokens. The defect count is the price."
+        }
+      },
+      "availability": "final"
+    },
+    "best_for_compute": "bail",
+    "ran": true,
+    "n_unique_generations": 108,
+    "n_failures": 18,
+    "note": "Every threshold was fitted inside cross-validation folds and scored on records that fold never saw. `cross_validated` is what the rule does on unseen output from this model. `rule` is the same procedure fitted to all the data, for use."
+  },
+  "signal_scan": {
+    "n_signals_tested": 158,
+    "preregistered": null,
+    "alpha": 0.05,
+    "correction": "Benjamini-Hochberg FDR",
+    "best_surviving_signal": {
+      "signal": "plateau_start_quartile",
+      "cohens_d": -1.015,
+      "direction": "high=bad",
+      "p_raw": 0.0002,
+      "n_ok": 90,
+      "n_fail": 18,
+      "p_adjusted": 0.0105,
+      "survives_correction": true,
+      "nominally_significant": true
+    },
+    "nominally_significant_but_not_surviving": [
+      "q3",
+      "surprisal_early_vs_rest",
+      "surprisal_max",
+      "kl_cent_std",
+      "rank_std",
+      "mass1_early_vs_rest",
+      "mass5_min",
+      "rank_max",
+      "margin_early_vs_rest",
+      "mass5_late_minus_early",
+      "kl_uniform_std",
+      "surprisal_std",
+      "full_ent_std",
+      "rank_early_vs_rest",
+      "early_vs_rest",
+      "kl_uniform_early_vs_rest",
+      "full_ent_early_vs_rest",
+      "q_range",
+      "mass1_std",
+      "total_variation",
+      "kl_step_late_minus_early",
+      "full_ent_late_minus_early",
+      "late_vs_early_half",
+      "kl_uniform_late_minus_early",
+      "mass5_std",
+      "kl_cent_mean",
+      "first_token_entropy",
+      "full_ent_first",
+      "kl_uniform_first",
+      "mass1_first",
+      "mass1_min",
+      "surprisal_first",
+      "phi_first",
+      "margin_first",
+      "kl_step_early_vs_rest",
+      "margin_std",
+      "n_semantic",
+      "n_tokens",
+      "osc_sign_changes",
+      "n_spikes",
+      "rank_mean"
+    ],
+    "signals": [
+      {
+        "signal": "kl_uniform_min",
+        "cohens_d": 0.938,
+        "direction": "high=good",
+        "p_raw": 0.0001,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.0079,
+        "survives_correction": true,
+        "nominally_significant": true
+      },
+      {
+        "signal": "max_entropy",
+        "cohens_d": -0.938,
+        "direction": "high=bad",
+        "p_raw": 0.0001,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.0079,
+        "survives_correction": true,
+        "nominally_significant": true
+      },
+      {
+        "signal": "plateau_start_quartile",
+        "cohens_d": -1.015,
+        "direction": "high=bad",
+        "p_raw": 0.0002,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.0105,
+        "survives_correction": true,
+        "nominally_significant": true
+      },
+      {
+        "signal": "full_ent_max",
+        "cohens_d": -0.908,
+        "direction": "high=bad",
+        "p_raw": 0.0005,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.0198,
+        "survives_correction": true,
+        "nominally_significant": true
+      },
+      {
+        "signal": "q3",
+        "cohens_d": -0.885,
+        "direction": "high=bad",
+        "p_raw": 0.0016,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.0506,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "surprisal_early_vs_rest",
+        "cohens_d": 0.805,
+        "direction": "high=good",
+        "p_raw": 0.0022,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.0579,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "surprisal_max",
+        "cohens_d": -0.767,
+        "direction": "high=bad",
+        "p_raw": 0.003,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.0672,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "kl_cent_std",
+        "cohens_d": 0.789,
+        "direction": "high=good",
+        "p_raw": 0.0034,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.0672,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "rank_std",
+        "cohens_d": -0.736,
+        "direction": "high=bad",
+        "p_raw": 0.0042,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.0737,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "mass1_early_vs_rest",
+        "cohens_d": -0.708,
+        "direction": "high=bad",
+        "p_raw": 0.006,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.0869,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "mass5_min",
+        "cohens_d": 0.745,
+        "direction": "high=good",
+        "p_raw": 0.0069,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.0869,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "rank_max",
+        "cohens_d": -0.731,
+        "direction": "high=bad",
+        "p_raw": 0.0075,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.0869,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "margin_early_vs_rest",
+        "cohens_d": -0.688,
+        "direction": "high=bad",
+        "p_raw": 0.0077,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.0869,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "mass5_late_minus_early",
+        "cohens_d": 0.616,
+        "direction": "high=good",
+        "p_raw": 0.0077,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.0869,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "kl_uniform_std",
+        "cohens_d": -0.678,
+        "direction": "high=bad",
+        "p_raw": 0.0087,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.0916,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "surprisal_std",
+        "cohens_d": -0.68,
+        "direction": "high=bad",
+        "p_raw": 0.0094,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.0928,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "full_ent_std",
+        "cohens_d": -0.666,
+        "direction": "high=bad",
+        "p_raw": 0.0104,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.0967,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "rank_early_vs_rest",
+        "cohens_d": 0.656,
+        "direction": "high=good",
+        "p_raw": 0.0116,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1018,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "early_vs_rest",
+        "cohens_d": 0.631,
+        "direction": "high=good",
+        "p_raw": 0.0142,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1122,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "kl_uniform_early_vs_rest",
+        "cohens_d": -0.631,
+        "direction": "high=bad",
+        "p_raw": 0.0142,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1122,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "full_ent_early_vs_rest",
+        "cohens_d": 0.625,
+        "direction": "high=good",
+        "p_raw": 0.015,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1129,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "q_range",
+        "cohens_d": -0.604,
+        "direction": "high=bad",
+        "p_raw": 0.0253,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "mass1_std",
+        "cohens_d": -0.578,
+        "direction": "high=bad",
+        "p_raw": 0.0255,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "total_variation",
+        "cohens_d": -0.569,
+        "direction": "high=bad",
+        "p_raw": 0.0271,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "kl_step_late_minus_early",
+        "cohens_d": 0.572,
+        "direction": "high=good",
+        "p_raw": 0.0291,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "full_ent_late_minus_early",
+        "cohens_d": -0.577,
+        "direction": "high=bad",
+        "p_raw": 0.0293,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "late_vs_early_half",
+        "cohens_d": -0.576,
+        "direction": "high=bad",
+        "p_raw": 0.0295,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "kl_uniform_late_minus_early",
+        "cohens_d": 0.576,
+        "direction": "high=good",
+        "p_raw": 0.0296,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "mass5_std",
+        "cohens_d": -0.57,
+        "direction": "high=bad",
+        "p_raw": 0.031,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "kl_cent_mean",
+        "cohens_d": 0.552,
+        "direction": "high=good",
+        "p_raw": 0.0331,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "first_token_entropy",
+        "cohens_d": -0.55,
+        "direction": "high=bad",
+        "p_raw": 0.0335,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "full_ent_first",
+        "cohens_d": -0.55,
+        "direction": "high=bad",
+        "p_raw": 0.0335,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "kl_uniform_first",
+        "cohens_d": 0.55,
+        "direction": "high=good",
+        "p_raw": 0.0335,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "mass1_first",
+        "cohens_d": 0.544,
+        "direction": "high=good",
+        "p_raw": 0.035,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "mass1_min",
+        "cohens_d": 0.546,
+        "direction": "high=good",
+        "p_raw": 0.035,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "surprisal_first",
+        "cohens_d": -0.544,
+        "direction": "high=bad",
+        "p_raw": 0.035,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "phi_first",
+        "cohens_d": 0.544,
+        "direction": "high=good",
+        "p_raw": 0.0351,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "margin_first",
+        "cohens_d": 0.543,
+        "direction": "high=good",
+        "p_raw": 0.0352,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "kl_step_early_vs_rest",
+        "cohens_d": -0.538,
+        "direction": "high=bad",
+        "p_raw": 0.0355,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1438,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "margin_std",
+        "cohens_d": -0.54,
+        "direction": "high=bad",
+        "p_raw": 0.0373,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1473,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "n_semantic",
+        "cohens_d": -0.523,
+        "direction": "high=bad",
+        "p_raw": 0.0393,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1478,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "n_tokens",
+        "cohens_d": -0.523,
+        "direction": "high=bad",
+        "p_raw": 0.0393,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1478,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "osc_sign_changes",
+        "cohens_d": -0.52,
+        "direction": "high=bad",
+        "p_raw": 0.0434,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1576,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "n_spikes",
+        "cohens_d": 0.537,
+        "direction": "high=good",
+        "p_raw": 0.0439,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1576,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "rank_mean",
+        "cohens_d": -0.507,
+        "direction": "high=bad",
+        "p_raw": 0.0464,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1629,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "kl_uniform_mean",
+        "cohens_d": 0.486,
+        "direction": "high=good",
+        "p_raw": 0.0552,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1806,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mean_entropy",
+        "cohens_d": -0.486,
+        "direction": "high=bad",
+        "p_raw": 0.0552,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1806,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass1_late_minus_early",
+        "cohens_d": 0.5,
+        "direction": "high=good",
+        "p_raw": 0.0557,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1806,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "surprisal_mean",
+        "cohens_d": -0.487,
+        "direction": "high=bad",
+        "p_raw": 0.056,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1806,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "full_ent_mean",
+        "cohens_d": -0.48,
+        "direction": "high=bad",
+        "p_raw": 0.0584,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.1845,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "margin_mean",
+        "cohens_d": 0.474,
+        "direction": "high=good",
+        "p_raw": 0.0654,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.2006,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "phi_mean",
+        "cohens_d": 0.469,
+        "direction": "high=good",
+        "p_raw": 0.0667,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.2006,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass1_mean",
+        "cohens_d": 0.468,
+        "direction": "high=good",
+        "p_raw": 0.0673,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.2006,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "margin_late_minus_early",
+        "cohens_d": 0.454,
+        "direction": "high=good",
+        "p_raw": 0.0802,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.2336,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "surprisal_f10_max",
+        "cohens_d": 0.443,
+        "direction": "high=good",
+        "p_raw": 0.0813,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.2336,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mono_down_frac",
+        "cohens_d": -0.463,
+        "direction": "high=bad",
+        "p_raw": 0.0832,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.2347,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "surprisal_late_minus_early",
+        "cohens_d": -0.449,
+        "direction": "high=bad",
+        "p_raw": 0.0874,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.2423,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_step_mean",
+        "cohens_d": 0.433,
+        "direction": "high=good",
+        "p_raw": 0.0893,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.2433,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q_curvature",
+        "cohens_d": 0.423,
+        "direction": "high=good",
+        "p_raw": 0.0957,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.2563,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first_to_max_ratio",
+        "cohens_d": 0.415,
+        "direction": "high=good",
+        "p_raw": 0.1073,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.2826,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "surprisal_f10_mean",
+        "cohens_d": 0.408,
+        "direction": "high=good",
+        "p_raw": 0.1129,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.2924,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_step_max",
+        "cohens_d": 0.404,
+        "direction": "high=good",
+        "p_raw": 0.1152,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.2936,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_step_std",
+        "cohens_d": -0.39,
+        "direction": "high=bad",
+        "p_raw": 0.1314,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.3169,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "surprisal_min",
+        "cohens_d": -0.387,
+        "direction": "high=bad",
+        "p_raw": 0.1343,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.3169,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass1_max",
+        "cohens_d": 0.379,
+        "direction": "high=good",
+        "p_raw": 0.1389,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.3169,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first10_max",
+        "cohens_d": 0.381,
+        "direction": "high=good",
+        "p_raw": 0.1392,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.3169,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "full_ent_f10_max",
+        "cohens_d": 0.381,
+        "direction": "high=good",
+        "p_raw": 0.1392,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.3169,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_uniform_max",
+        "cohens_d": 0.378,
+        "direction": "high=good",
+        "p_raw": 0.1392,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.3169,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "full_ent_min",
+        "cohens_d": -0.377,
+        "direction": "high=bad",
+        "p_raw": 0.1395,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.3169,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_f10_max",
+        "cohens_d": 0.385,
+        "direction": "high=good",
+        "p_raw": 0.1404,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.3169,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q_monotone_down",
+        "cohens_d": -0.421,
+        "direction": "high=bad",
+        "p_raw": 0.1446,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.3218,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first10_std",
+        "cohens_d": 0.364,
+        "direction": "high=good",
+        "p_raw": 0.1585,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.3478,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "margin_min",
+        "cohens_d": 0.359,
+        "direction": "high=good",
+        "p_raw": 0.1697,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.3673,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass1_f10_mean",
+        "cohens_d": -0.345,
+        "direction": "high=bad",
+        "p_raw": 0.1816,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.3726,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_late_minus_early",
+        "cohens_d": 0.361,
+        "direction": "high=good",
+        "p_raw": 0.1816,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.3726,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "phi_first10_mean",
+        "cohens_d": -0.345,
+        "direction": "high=bad",
+        "p_raw": 0.1816,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.3726,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_late_minus_early",
+        "cohens_d": -0.361,
+        "direction": "high=bad",
+        "p_raw": 0.1816,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.3726,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_early_vs_rest",
+        "cohens_d": -0.287,
+        "direction": "high=bad",
+        "p_raw": 0.1859,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.3766,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "margin_f10_mean",
+        "cohens_d": -0.337,
+        "direction": "high=bad",
+        "p_raw": 0.1926,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.3852,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_f10_max",
+        "cohens_d": 0.322,
+        "direction": "high=good",
+        "p_raw": 0.2292,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.4527,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "margin_max",
+        "cohens_d": 0.306,
+        "direction": "high=good",
+        "p_raw": 0.2452,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.4783,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "trend_rho",
+        "cohens_d": 0.299,
+        "direction": "high=good",
+        "p_raw": 0.2489,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.4786,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "head_entropy",
+        "cohens_d": -0.293,
+        "direction": "high=bad",
+        "p_raw": 0.2585,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.4786,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q1",
+        "cohens_d": -0.293,
+        "direction": "high=bad",
+        "p_raw": 0.2589,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.4786,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_mean",
+        "cohens_d": 0.259,
+        "direction": "high=good",
+        "p_raw": 0.2597,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.4786,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_entropy",
+        "cohens_d": -0.295,
+        "direction": "high=bad",
+        "p_raw": 0.2605,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.4786,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_step_f10_mean",
+        "cohens_d": -0.277,
+        "direction": "high=bad",
+        "p_raw": 0.2718,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.4936,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q4_over_mean",
+        "cohens_d": 0.27,
+        "direction": "high=good",
+        "p_raw": 0.2972,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.5336,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "surprisal_f5_mean",
+        "cohens_d": 0.272,
+        "direction": "high=good",
+        "p_raw": 0.308,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.5468,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_cent_slope",
+        "cohens_d": 0.261,
+        "direction": "high=good",
+        "p_raw": 0.3241,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.5636,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q4",
+        "cohens_d": -0.261,
+        "direction": "high=bad",
+        "p_raw": 0.3246,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.5636,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "rank_f10_max",
+        "cohens_d": 0.339,
+        "direction": "high=good",
+        "p_raw": 0.3446,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.576,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "rank_f10_mean",
+        "cohens_d": 0.339,
+        "direction": "high=good",
+        "p_raw": 0.3446,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.576,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_cent_f10_mean",
+        "cohens_d": 0.249,
+        "direction": "high=good",
+        "p_raw": 0.3475,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.576,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "rank_f5_mean",
+        "cohens_d": 0.316,
+        "direction": "high=good",
+        "p_raw": 0.3536,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.576,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "rank_late_minus_early",
+        "cohens_d": -0.242,
+        "direction": "high=bad",
+        "p_raw": 0.3537,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.576,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first10_mean",
+        "cohens_d": 0.24,
+        "direction": "high=good",
+        "p_raw": 0.3608,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.576,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_uniform_f10_mean",
+        "cohens_d": -0.24,
+        "direction": "high=bad",
+        "p_raw": 0.3608,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.576,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "full_ent_f10_mean",
+        "cohens_d": 0.24,
+        "direction": "high=good",
+        "p_raw": 0.3609,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.576,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_step_slope",
+        "cohens_d": -0.232,
+        "direction": "high=bad",
+        "p_raw": 0.3944,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.6232,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_f10_mean",
+        "cohens_d": -0.206,
+        "direction": "high=bad",
+        "p_raw": 0.4443,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.695,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q_argmax",
+        "cohens_d": 0.209,
+        "direction": "high=good",
+        "p_raw": 0.4867,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.7539,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass1_f5_mean",
+        "cohens_d": -0.18,
+        "direction": "high=bad",
+        "p_raw": 0.4927,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.7558,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "margin_f5_mean",
+        "cohens_d": -0.174,
+        "direction": "high=bad",
+        "p_raw": 0.5083,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.7707,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "spike_relative_pos",
+        "cohens_d": 0.167,
+        "direction": "high=good",
+        "p_raw": 0.521,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.7707,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "early_slope",
+        "cohens_d": 0.188,
+        "direction": "high=good",
+        "p_raw": 0.5269,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.7707,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "full_ent_slope",
+        "cohens_d": 0.188,
+        "direction": "high=good",
+        "p_raw": 0.5269,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.7707,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_uniform_slope",
+        "cohens_d": -0.188,
+        "direction": "high=bad",
+        "p_raw": 0.5269,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.7707,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_step_min",
+        "cohens_d": -0.182,
+        "direction": "high=bad",
+        "p_raw": 0.5317,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.7707,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass1_slope",
+        "cohens_d": -0.176,
+        "direction": "high=bad",
+        "p_raw": 0.5525,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.7739,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q1_over_mean",
+        "cohens_d": 0.152,
+        "direction": "high=good",
+        "p_raw": 0.5551,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.7739,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "margin_slope",
+        "cohens_d": -0.168,
+        "direction": "high=bad",
+        "p_raw": 0.5565,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.7739,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "spike_quartile",
+        "cohens_d": 0.181,
+        "direction": "high=good",
+        "p_raw": 0.5581,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.7739,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_f5_mean",
+        "cohens_d": -0.181,
+        "direction": "high=bad",
+        "p_raw": 0.5584,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.7739,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_f10_mean",
+        "cohens_d": -0.204,
+        "direction": "high=bad",
+        "p_raw": 0.584,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.7939,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_f10_mean",
+        "cohens_d": 0.204,
+        "direction": "high=good",
+        "p_raw": 0.584,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.7939,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_f10_max",
+        "cohens_d": 0.206,
+        "direction": "high=good",
+        "p_raw": 0.5879,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.7939,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_cent_f10_max",
+        "cohens_d": -0.152,
+        "direction": "high=bad",
+        "p_raw": 0.6035,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.8023,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "margin_f10_max",
+        "cohens_d": -0.149,
+        "direction": "high=bad",
+        "p_raw": 0.6133,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.8023,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass1_f10_max",
+        "cohens_d": -0.15,
+        "direction": "high=bad",
+        "p_raw": 0.6143,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.8023,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_step_f10_max",
+        "cohens_d": -0.146,
+        "direction": "high=bad",
+        "p_raw": 0.6194,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.8023,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_uniform_f10_max",
+        "cohens_d": -0.147,
+        "direction": "high=bad",
+        "p_raw": 0.6195,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.8023,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "rank_slope",
+        "cohens_d": -0.165,
+        "direction": "high=bad",
+        "p_raw": 0.6249,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.8027,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_first",
+        "cohens_d": -0.125,
+        "direction": "high=bad",
+        "p_raw": 0.6364,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.8109,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "surprisal_slope",
+        "cohens_d": 0.128,
+        "direction": "high=good",
+        "p_raw": 0.6534,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.8259,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_slope",
+        "cohens_d": -0.201,
+        "direction": "high=bad",
+        "p_raw": 0.6879,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.8558,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_slope",
+        "cohens_d": 0.201,
+        "direction": "high=good",
+        "p_raw": 0.6879,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.8558,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q_early_drop",
+        "cohens_d": -0.094,
+        "direction": "high=bad",
+        "p_raw": 0.6939,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.8565,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first3_mean",
+        "cohens_d": 0.098,
+        "direction": "high=good",
+        "p_raw": 0.7064,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.8567,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_first",
+        "cohens_d": -0.097,
+        "direction": "high=bad",
+        "p_raw": 0.7095,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.8567,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_first",
+        "cohens_d": 0.097,
+        "direction": "high=good",
+        "p_raw": 0.7103,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.8567,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_cent_f5_mean",
+        "cohens_d": -0.08,
+        "direction": "high=bad",
+        "p_raw": 0.7612,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.894,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_step_f5_mean",
+        "cohens_d": -0.077,
+        "direction": "high=bad",
+        "p_raw": 0.7694,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.894,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first5_mean",
+        "cohens_d": 0.077,
+        "direction": "high=good",
+        "p_raw": 0.7695,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.894,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "full_ent_f5_mean",
+        "cohens_d": 0.077,
+        "direction": "high=good",
+        "p_raw": 0.7695,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.894,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_uniform_f5_mean",
+        "cohens_d": -0.077,
+        "direction": "high=bad",
+        "p_raw": 0.7695,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.894,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_std",
+        "cohens_d": -0.107,
+        "direction": "high=bad",
+        "p_raw": 0.7826,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.896,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_std",
+        "cohens_d": -0.107,
+        "direction": "high=bad",
+        "p_raw": 0.7826,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.896,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "spike_token_idx",
+        "cohens_d": -0.064,
+        "direction": "high=bad",
+        "p_raw": 0.8053,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.9154,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_slope",
+        "cohens_d": -0.156,
+        "direction": "high=bad",
+        "p_raw": 0.8115,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.9158,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q2",
+        "cohens_d": -0.057,
+        "direction": "high=bad",
+        "p_raw": 0.8312,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.9314,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_cent_max",
+        "cohens_d": -0.064,
+        "direction": "high=bad",
+        "p_raw": 0.8565,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.933,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_min",
+        "cohens_d": 0.073,
+        "direction": "high=good",
+        "p_raw": 0.865,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.933,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_max",
+        "cohens_d": -0.073,
+        "direction": "high=bad",
+        "p_raw": 0.865,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.933,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_early_vs_rest",
+        "cohens_d": -0.056,
+        "direction": "high=bad",
+        "p_raw": 0.8848,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.933,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_early_vs_rest",
+        "cohens_d": 0.056,
+        "direction": "high=good",
+        "p_raw": 0.8848,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.933,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_cent_late_minus_early",
+        "cohens_d": -0.037,
+        "direction": "high=bad",
+        "p_raw": 0.8918,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.933,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_mean",
+        "cohens_d": 0.049,
+        "direction": "high=good",
+        "p_raw": 0.8931,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.933,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_mean",
+        "cohens_d": -0.049,
+        "direction": "high=bad",
+        "p_raw": 0.8931,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.933,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass20_f5_mean",
+        "cohens_d": -0.038,
+        "direction": "high=bad",
+        "p_raw": 0.897,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.933,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_f5_mean",
+        "cohens_d": 0.038,
+        "direction": "high=good",
+        "p_raw": 0.897,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.933,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "spike_height",
+        "cohens_d": -0.035,
+        "direction": "high=bad",
+        "p_raw": 0.8976,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.933,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q_slope",
+        "cohens_d": -0.029,
+        "direction": "high=bad",
+        "p_raw": 0.9092,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.9389,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "path_ratio",
+        "cohens_d": 0.023,
+        "direction": "high=good",
+        "p_raw": 0.9335,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.9577,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "kl_cent_early_vs_rest",
+        "cohens_d": -0.02,
+        "direction": "high=bad",
+        "p_raw": 0.9403,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.9585,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "osc_rate",
+        "cohens_d": -0.015,
+        "direction": "high=bad",
+        "p_raw": 0.9537,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 0.9659,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mass5_max",
+        "cohens_d": 0.115,
+        "direction": "high=good",
+        "p_raw": 1.0,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_mass_min",
+        "cohens_d": 0.052,
+        "direction": "high=good",
+        "p_raw": 1.0,
+        "n_ok": 90,
+        "n_fail": 18,
+        "p_adjusted": 1.0,
+        "survives_correction": false,
+        "nominally_significant": false
+      }
+    ],
+    "note": "158 candidate entropy statistics were tested against the same pass/fail data, so raw p-values are corrected for multiple comparisons (Benjamini-Hochberg). A signal is only reported as usable if its corrected p clears alpha AND |d| >= 0.2. Signals listed in nominally_significant_but_not_surviving cleared p<0.05 on their own but not after correction \u2014 with this many tests, that is the expected behaviour of noise, not a lead. They are candidates for a pre-registered test on a fresh run, never findings."
+  },
+  "spike_location": {
+    "ok_spike_quartiles": [
+      2,
+      2,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      3,
+      3,
+      3,
+      2,
+      3,
+      2,
+      1,
+      0,
+      3,
+      3,
+      3,
+      0,
+      0,
+      0,
+      1,
+      1,
+      2,
+      1,
+      1,
+      3,
+      3,
+      0,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      1,
+      0,
+      2,
+      2,
+      1,
+      2,
+      1,
+      3,
+      3,
+      3,
+      2,
+      1,
+      2,
+      0,
+      0,
+      0,
+      0,
+      2,
+      2,
+      0,
+      1,
+      1,
+      2,
+      3,
+      3,
+      0,
+      1,
+      1,
+      1,
+      0,
+      1,
+      0,
+      0,
+      1,
+      3,
+      2,
+      2,
+      0,
+      1,
+      1,
+      0,
+      3,
+      3,
+      2,
+      0,
+      0,
+      1,
+      3,
+      3,
+      0,
+      1,
+      3,
+      0
+    ],
+    "fail_spike_quartiles": [
+      3,
+      2,
+      0,
+      0,
+      2,
+      2,
+      0,
+      1,
+      2,
+      2,
+      2,
+      1,
+      0,
+      0,
+      1,
+      2,
+      2,
+      0
+    ],
+    "ok_mean_spike_pos": 0.497,
+    "fail_mean_spike_pos": 0.451,
+    "ok_quartile_entropies": [
+      [
+        0.0708,
+        0.0304,
+        0.0567,
+        0.0246
+      ],
+      [
+        0.0587,
+        0.0352,
+        0.0742,
+        0.0107
+      ],
+      [
+        0.0633,
+        0.0069,
+        0.0221,
+        0.0015
+      ],
+      [
+        0.0678,
+        0.0137,
+        0.0183,
+        0.0017
+      ],
+      [
+        0.0775,
+        0.0149,
+        0.0336,
+        0.0002
+      ],
+      [
+        0.0454,
+        0.0134,
+        0.0374,
+        0.0269
+      ],
+      [
+        0.0897,
+        0.0203,
+        0.032,
+        0.0242
+      ],
+      [
+        0.0933,
+        0.0311,
+        0.0315,
+        0.0377
+      ],
+      [
+        0.0441,
+        0.0525,
+        0.0288,
+        0.0714
+      ],
+      [
+        0.0482,
+        0.0202,
+        0.0584,
+        0.0701
+      ]
+    ],
+    "fail_quartile_entropies": [
+      [
+        0.0731,
+        0.029,
+        0.0247,
+        0.0207
+      ],
+      [
+        0.0764,
+        0.0099,
+        0.0695,
+        0.0454
+      ],
+      [
+        0.0668,
+        0.0291,
+        0.0361,
+        0.0178
+      ],
+      [
+        0.074,
+        0.0239,
+        0.0241,
+        0.0277
+      ],
+      [
+        0.0223,
+        0.099,
+        0.1383,
+        0.0346
+      ],
+      [
+        0.1876,
+        0.0746,
+        0.1501,
+        0.1581
+      ],
+      [
+        0.1159,
+        0.0401,
+        0.0239,
+        0.0041
+      ],
+      [
+        0.0275,
+        0.2741,
+        0.0988,
+        0.0566
+      ],
+      [
+        0.0233,
+        0.0046,
+        0.2024,
+        0.0208
+      ],
+      [
+        0.0239,
+        0.0049,
+        0.3805,
+        0.3388
+      ]
+    ],
+    "note": "spike_quartile: 0=head(early), 3=tail(late). If fail spikes cluster in a different quartile than ok spikes, spike location is a useful incorrectness predictor for this model."
+  },
+  "spike_threshold_calibrated": {
+    "signal": "plateau_start_quartile",
+    "threshold": -0.5,
+    "usable": true,
+    "accuracy": 0.701,
+    "balanced_accuracy": 0.701,
+    "chance_balanced_accuracy": 0.5,
+    "raw_accuracy_of_always_guessing_pass": 0.833,
+    "direction": "high=bad",
+    "cohens_d": -1.015,
+    "p_adjusted": 0.0105,
+    "note": "Fitted on plateau_start_quartile, the signal that survived correction for 158 tested candidates -- not on max_entropy, which did not separate. balanced_accuracy compares to 0.5."
+  },
+  "coverage_matrix": {
+    "test_retry": {
+      "recovered": 7,
+      "unique_recovered": 4,
+      "recovered_keys": [
+        [
+          "binary_gap",
+          0
+        ],
+        [
+          "binary_gap",
+          1
+        ],
+        [
+          "filter",
+          1
+        ],
+        [
+          "group_anagrams",
+          1
+        ],
+        [
+          "rle_decode",
+          1
+        ],
+        [
+          "validator",
+          0
+        ],
+        [
+          "validator",
+          1
+        ]
+      ],
+      "unique_keys": [
+        [
+          "binary_gap",
+          0
+        ],
+        [
+          "binary_gap",
+          1
+        ],
+        [
+          "validator",
+          0
+        ],
+        [
+          "validator",
+          1
+        ]
+      ]
+    },
+    "temp_retry": {
+      "recovered": 6,
+      "unique_recovered": 1,
+      "recovered_keys": [
+        [
+          "filter",
+          1
+        ],
+        [
+          "group_anagrams",
+          1
+        ],
+        [
+          "missing_ranges",
+          0
+        ],
+        [
+          "report",
+          0
+        ],
+        [
+          "rle_decode",
+          1
+        ],
+        [
+          "version_compare",
+          1
+        ]
+      ],
+      "unique_keys": [
+        [
+          "missing_ranges",
+          0
+        ]
+      ]
+    },
+    "skeleton_fill": {
+      "recovered": 4,
+      "unique_recovered": 1,
+      "recovered_keys": [
+        [
+          "group_anagrams",
+          1
+        ],
+        [
+          "justify_text",
+          1
+        ],
+        [
+          "report",
+          0
+        ],
+        [
+          "version_compare",
+          1
+        ]
+      ],
+      "unique_keys": [
+        [
+          "justify_text",
+          1
+        ]
+      ]
+    }
+  },
+  "total_failures": 20,
+  "total_recoverable": 11,
+  "error_type_effectiveness": {
+    "logic": {
+      "test_retry": {
+        "recovered": 3,
+        "attempted": 6,
+        "rate": 0.5
+      },
+      "temp_retry": {
+        "recovered": 2,
+        "attempted": 6,
+        "rate": 0.33
+      },
+      "skeleton_fill": {
+        "recovered": 1,
+        "attempted": 6,
+        "rate": 0.17
+      },
+      "decompose": {
+        "recovered": 0,
+        "attempted": 6,
+        "rate": 0.0
+      }
+    },
+    "assertion": {
+      "test_retry": {
+        "recovered": 4,
+        "attempted": 14,
+        "rate": 0.29
+      },
+      "temp_retry": {
+        "recovered": 4,
+        "attempted": 14,
+        "rate": 0.29
+      },
+      "skeleton_fill": {
+        "recovered": 3,
+        "attempted": 14,
+        "rate": 0.21
+      },
+      "decompose": {
+        "recovered": 0,
+        "attempted": 14,
+        "rate": 0.0
+      }
+    }
+  },
+  "recommended_intervention_order": [
+    {
+      "intervention": "test_retry",
+      "new_coverage": 7
+    },
+    {
+      "intervention": "temp_retry",
+      "new_coverage": 3
+    },
+    {
+      "intervention": "skeleton_fill",
+      "new_coverage": 1
+    }
+  ],
+  "arch_spike_vs_coder_quality": [],
+  "temp_sweep": {
+    "retry_temp_1": {
+      "attempted": 20,
+      "recovered": 6
+    }
+  },
+  "pipeline_version": "2026.09.05",
+  "reanalyzed_from": "_calibration_qwen3-4b-instruct_raw.jsonl",
+  "config": {
+    "file": "Qwen_Qwen3-4B-Instruct-2507-Q5_K_L.gguf",
+    "label": "qwen3-4b-instruct",
+    "fmt": "chatml",
+    "preset": {
+      "temp": 0.7,
+      "top_p": 0.8,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0
+    },
+    "spike_threshold": 0.9755,
+    "spike_signal": "max_entropy",
+    "retry_temps": [
+      0.0,
+      0.6,
+      0.7
+    ],
+    "_provenance": {
+      "temp": "registry (card-verified)",
+      "top_p": "registry (card-verified)",
+      "top_k": "registry (card-verified)",
+      "min_p": "registry (card-verified)",
+      "repeat_penalty": "registry (card-verified)",
+      "presence_penalty": "registry (card-verified)",
+      "thinking": "registry (card-verified)"
+    },
+    "_registry_hit": true,
+    "struggle_base": 0.8109
+  },
+  "config_provenance": {
+    "temp": "registry (card-verified)",
+    "top_p": "registry (card-verified)",
+    "top_k": "registry (card-verified)",
+    "min_p": "registry (card-verified)",
+    "repeat_penalty": "registry (card-verified)",
+    "presence_penalty": "registry (card-verified)",
+    "thinking": "registry (card-verified)"
+  },
+  "model_file": "Qwen_Qwen3-4B-Instruct-2507-Q5_K_L.gguf",
+  "unverified_preset": false
+}

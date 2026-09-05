@@ -1,186 +1,192 @@
 # Local Model Calibration Kit
 
-One run sweeps four axes simultaneously — sampling params, entropy signals,
-intervention strategies, and architect/coder channel — with mid-run pruning
-that cuts unproductive combinations before you pay for them. You get a
-recommended operating point, the tradeoff curve behind it, and an
-agent-readable config file that implements it automatically.
+Calibrate your local GGUF model's coding behavior. Get a model-specific
+analysis file any AI coding agent reads as standing instructions.
 
-## Who this is for
+This is the **public evidence repository** — it contains the methodology,
+example analyses, and documentation that prove the concept. The source
+code lives in a private repository you get access to when you buy the kit.
+See [Pricing](#pricing) below.
 
-You're running a local GGUF model in the 3-8B range — Qwen, Granite,
-Llama, Mistral, Phi — and you need it to code competently in an agent
-loop. The model fails often enough that you need to know:
+## Scope
 
-- Which failures are predictable (entropy signal)
-- Which failures are recoverable (intervention routing)
-- When to stop trying (cost ceiling)
-- What the best sampling config is for your specific quant (parameter sweep)
-
-This kit answers all four in one run.
-
-## Who this is NOT for
-
-- **Frontier hosted models** (Opus, GPT-4, Gemini Pro) — these fail rarely
-  and need different calibration approaches. Not tested. Not in scope.
-- **Large local models** (27B+, 70B+) — may work, but untested. The
-  failure patterns on competent models are subtler and the entropy
-  signals may not separate the same way. If you test it and it works,
-  tell us via federation.
-- **Non-coding tasks** — the calibration suite is coding-specific. The
-  method generalizes but the task battery doesn't.
+This is not a "know if your model is right about anything" tool. It
+calibrates against **benchmark-verifiable pass/fail tasks** — code with
+automated tests. Every entropy signal, threshold, and intervention rank in
+this kit comes from one question: did the generated code pass its tests,
+yes or no. It has not been tested on open-ended or subjective output
+(freeform Q&A, creative writing, anything without an automated correctness
+check) — the entropy signal there is unproven, not assumed to transfer.
+If your use case doesn't reduce to pass/fail, this isn't calibrated for it.
 
 ## What you get
 
-After one calibration run, you get a multi-axis tradeoff map — not just a
-single config. Example output (illustrative — your numbers will vary):
+After one calibration run:
 
-| Operating point | Accuracy | Compute cost | What it is |
-|---|---|---|---|
-| **Base** | 81% | baseline | Your current config, measured |
-| **Efficient** | 86% | +5% compute | Best cheap win from the swept region |
-| **Recommended** | 92% | +21% compute | Best coverage per compute dollar |
-| **Best sampled** | 94% | +50% compute | Highest accuracy found in the full sweep |
-
-The kit also tells you whether a full parameter sweep is worth running:
-
-- **Curve flattening** → full sweep ceiling is near your best sampled
-  point. Save the compute. Don't run it.
-- **Curve still climbing** → full sweep likely finds more. Run a
-  compatible sweep tool (see [Where this fits](#where-this-fits)).
-- **Local optimum found** → you have a good operating point now, but
-  unexplored regions may contain a better one. Sweep if you need it.
-
-You also get:
-
-- **An entropy signal** (or explicit proof none works) for your specific
-  model, with direction, threshold, and separation score
+- **A signal matched to what *your* model's own right and wrong look like**
+  — or an explicit `none`. The kit searches ~170 candidate statistics over
+  your model's own generations, corrects for having searched them all, and
+  validates the winner two ways: on held-out records (does it separate
+  new generations?) and on held-out *tasks* (does it separate generations
+  of tasks it never saw?). Direction is discovered, never assumed: high can
+  mean wrong, high can mean right, and which one it is differs by model.
+  So far one of three models has a usable signal, and it transfers to
+  unseen tasks — the other two got an honest `none`. Nothing here
+  transfers between models, which is exactly why it has to be run against
+  yours.
+- **The statistical power behind that verdict**, so `none` is
+  interpretable. "This model has no entropy signal" and "this run was too
+  small to see one" are different answers, and the report tells you which,
+  with the observed effect size, the smallest effect the run could have
+  detected, and the `--repeats` setting that would settle it.
 - **An intervention order** — which repair strategies work, ranked by
-  coverage, with per-error-type routing
+  coverage, with per-error-type routing. This works on every model
+  calibrated so far, including the ones with no entropy signal.
 - **A cost ceiling** — max recovery stages, bail conditions, when to stop
-  trying
-- **Negative results** — what doesn't work for your model, so you don't
-  waste time on it
+  trying.
 - **An `AgentAnalysis.md` file** — drop it into any project and Devin,
-  Claude Code, Cursor, or 20+ other agents read it as standing instructions
+  Claude Code, Cursor, or 20+ other agents read it as standing
+  instructions.
 
-If you provide an architect/planner model, you also get:
+## The evidence
 
-- **Planner->coder channel sweep** — trace vs prompt vs decompose, short
-  vs long, with coverage numbers per channel
-- **Architect entropy signals** — plateau and first-spike trajectory that
-  predict whether the architect's output will be useful to the coder
-- **Cross-signal** — does the architect's entropy spike location predict
-  whether the coder will recover from failure?
+### What you should expect
 
-Every finding includes the data behind it. No hand-written rules, no
-guesses — just what your model actually did on calibration tasks.
+| model | bank | probes (unique) | failures | usable signal | recoverable |
+|---|---|---|---|---|---|
+| Qwen3-4B-Instruct-2507 (Q5_K_L) | 60-task | 108 | 20 | yes — `max_entropy`/plateau, high=bad; **transfers to unseen tasks** (0.73, above chance in 92% of splits) | 11/20 |
+| granite-4.1-3b (Q5_K_M) | 60-task | 60 | 8 | none — underpowered (MDE d≥1.06); task-level check: below chance | 4/8 |
+| Qwen3-4B-Instruct-2507 (Q5_K_L) | 18-task (superseded) | 180 ×3 | 32–33 | yes — early-window, replicated *on that bank only* | 30/33 |
+| granite-4.1-3b (Q5_K_M) | 18-task (superseded) | 108 | 29 | none, at MDE d≥0.61 | 18/29 |
+| mini-coder-4b (Q8_0) | 18-task (superseded) | 36 | 11 | none | 4/11 |
 
-## Where this fits
+On the current task bank: one model has a usable signal, one does not.
+**That is the honest number, and it is why you run this rather than copy
+someone's config.** A model with no signal is a real answer — it tells
+you not to spend compute on a gate that buys nothing, and you still get
+the repair routing, which works on all three.
 
-Single-axis sweep tools like
-[llm-sampling-tuner](https://github.com/BrutchsamaJeanLouis/llm-sampling-tuner)
-find the optimal sampling params across a wide range. They do one axis
-exhaustively.
+### Two holdouts, two questions
 
-This kit sweeps four axes simultaneously — sampling, entropy, interventions,
-and channel — with adaptive pruning that cuts the factorial cost. It finds
-the best *combination*, not just the best temperature.
+The record-level held-out split asks "does this signal separate *new
+generations*?" It cannot ask "does it separate generations of *tasks the
+bank never contained*?" — a held-out record can come from the same task
+as a training record, so a signal that detects task identity (not
+wrongness) passes while being useless on a new task. The profile therefore
+also runs `task_holdout_validation`: whole tasks are excluded from
+selection and fitting, then scored — plus a `transfer_estimate` that
+takes the signal the full run selected and re-scores it on held-out tasks
+across 300 random task splits.
 
-If you only need sampling params tuned, llm-sampling-tuner is simpler and
-cheaper. If you need to know which entropy signal predicts failure, which
-intervention recovers it, and how the architect should hand off to the
-coder — all in combination with the right sampling params — that's what
-this kit does.
+On the current runs: qwen's selected signal **does** transfer (0.73 mean
+balanced accuracy on unseen tasks, above chance in 92% of draws), while
+granite's task-selected signal went below chance (0.87 train → 0.47 test)
+— the failure mode this check exists to catch.
 
-## Why small models
+### What keeps per-model honest
 
-Calibration has the highest payoff on models that fail often enough to
-measure. A 4B model at Q4 quantization fails on 20-40% of coding tasks —
-enough failures to find patterns, rank interventions, and build a
-recovery pipeline that meaningfully improves coverage.
+If every model gets its own story, no story can be wrong. Four checks run
+inside each single run:
 
-A frontier model fails on 2-5% of tasks. The failures are subtler, less
-patterned, and the entropy signals that work on small models may not
-separate on models that are rarely uncertain. The calibration method
-isn't wrong for large models — it's just that the signal-to-noise ratio
-inverts. You'd need different signals, different interventions, and far
-more test cases to get statistically meaningful results.
+- a **permutation test**, so a direction is never read off the sign of a
+  noisy mean difference;
+- **Benjamini-Hochberg correction** across all ~170 candidate statistics,
+  so scanning cannot manufacture a winner;
+- a **held-out split** — signal chosen and threshold fitted on training
+  records, scored on records neither decision touched;
+- a **task-level holdout** — whole tasks excluded from selection and
+  fitting, then scored, so a signal must generalize to new questions, not
+  just new generations of known ones.
 
-This kit is built where the signal is strongest. If you're running a
-competent model and it's failing, the answer is usually a different
-model or a different prompt — not a calibration sweep.
+Findings that survived those got pre-registered and re-tested on fresh
+data anyway. The full chain, including a withdrawn claim and a test that
+was designed wrong, is in the private repo's `research/` directory.
 
-## Method
+### Scope: the file, not the family
 
-The kit runs a full-factorial sweep across four axes: sampling parameters,
-entropy signals, intervention strategies, and architect/coder channel. For
-~20 calibration questions, the full factorial is 200+ runs.
+Every result above is scoped to one model, at one size, **at one
+quantization**. Entropy is a property of the logit distribution and
+quantization changes that distribution, so a Q4 of the same weights is a
+different subject and needs its own run. Profiles record the exact
+filename, the detected quantization tag and a file fingerprint; a run
+from a different file will not overwrite an existing profile.
 
-Mid-run adaptive pruning tracks which axis combinations are producing
-coverage gains and which are not. Unproductive branches are terminated
-before completion, reducing the effective run count — a 200+ candidate
-sweep can drop to ~60 in practice when a calibrated entropy signal lets
-you test the most-likely-wrong candidates first and bail early.
+### The examples
 
-The sweep samples around your model's recommended base config — it does
-not explore the full parameter space exhaustively. If the curve shows
-the best operating point is at the edge of the sampled region, the kit
-flags that a wider sweep may find more and names a compatible tool.
+The `examples/` directory contains pre-rendered analyses from the current
+60-task bank:
 
-This is not a global search. It is a structured multi-axis search with
-adaptive cost control, designed to find the best operating point for
-your specific model in one hour — not to find the global optimum across
-all possible parameter values.
+- **`qwen_agents.md`** / **`qwen60_profile.json`** / **`qwen60_report.html`**
+  — the model with a signal on this bank: `max_entropy`/plateau, high=bad,
+  and a clear demonstration that a signature is per-model *and
+  per-task-set*: the 18-task early-window result did not replicate here.
+  The signal transfers to unseen tasks (0.73 balanced accuracy, 92% of
+  task splits above chance).
+- **`granite_agents.md`** / **`granite60_profile.json`** / **`granite60_report.html`**
+  — no usable signal, underpowered at 8 failures (MDE d≥1.06), with a
+  working coder-side repair order. The `none` case, delivered honestly.
+  Its task-level check went below chance — the failure mode the check
+  exists to catch.
 
-## Built to keep improving
+Same calibrator, opposite conclusions. There is no universal config. Your
+model needs its own calibration.
 
-The kit doesn't just hand you fixed settings — it walks your agent through
-finding its own, reasoning over its own model's calibration data. The
-reflective step (`core_sweep.py`) pushes past the 9 built-in entropy
-signals and 7 interventions toward whatever pattern your specific model
-actually responds to. If your agent finds something the kit doesn't
-already know, that's the interesting result, not a dead end: a human-gated
-submission flow (`federation.py`) sends it back — benchmarked, sanitized,
-nothing leaves your machine without you pressing y — and verified
-improvements get folded into future releases. Buy once, keep getting
-updates by pulling from the private repo you're invited to when you run
-`register.py` (see Quickstart step 2).
+## How it works
 
-## Quickstart
+1. **Probe:** Run your model on calibration tasks. Capture ~170 candidate
+   statistics in a single generation pass — full-vocab entropy, commitment
+   curves, KL divergence series, sampled-token surprisal and rank,
+   trajectory-shape features, thinking-phase splits. Every signal the
+   logits can support, captured once, reused for every analysis.
+2. **Intervention sweep:** For each failure, try all recovery
+   interventions in isolation (error feedback, temp retry, skeleton-fill,
+   architect prompt, architect trace short/long, decompose).
+3. **Analysis:** Rank entropy signals by separation. Compute coverage
+   matrix. Greedy set cover for intervention order. Per-error-type
+   effectiveness. Both holdout levels (record and task) plus the transfer
+   estimate.
+4. **Export:** Render findings into `AgentAnalysis.md` with specific
+   numbers, negative results, and compute savings estimates.
 
-```bash
-# 1. Install dependencies
-pip install -r requirements.txt
+See `METHODOLOGY.md` for the full explanation.
 
-# 2. Register for repo updates (run once — invites you to the private repo)
-python register.py --license-key bak_YOUR_KEY --github-user YOUR_USERNAME
+## Task suite
 
-# 3. Calibrate your model
-python _calibrate_pipeline.py --model your-model.gguf
+The kit ships with a built-in coding task battery aimed at 2-6B models.
+These are the tasks that broke *my* models — the weak spots I kept hitting
+when trying to get small local models to code competently. They may not
+be your weak spots.
 
-# 4. Export the analysis
-python export_playbook.py --profile _calibration_profile_<label>.json --output AgentAnalysis.md
+**What's included:**
+- **Assembly tasks** — multi-file wiring problems (import resolution,
+  interface matching, module assembly)
+- **Hard function tasks** — single-function algorithmic problems
+  (rle_decode, missing_ranges, merge_intervals, normalize_path, and 38
+  more) with deterministic eval-based tests
 
-# 5. Drop AgentAnalysis.md into your project root
-#    Your agent reads it automatically.
-```
+Every task has a deterministic pass/fail signal — the kit executes the
+model's code in a sandbox and checks test cases. No LLM-as-judge, no
+subjective grading.
 
-With an architect/planner model:
+**Bringing your own tasks:** The task format is simple — a JSON file with
+`id`, `desc`, `filename`, `func_name`, and `tests`. The kit's
+`validate-tasks` command proves each task's reference against its own
+tests before calibration starts, so a broken task can't produce a broken
+signal.
 
-```bash
-python _calibrate_pipeline.py --model coder.gguf --architect architect.gguf
-python export_playbook.py \
-    --profile _calibration_profile_<coder>.json \
-    --architect _calibration_profile_<architect>.json \
-    --output AgentAnalysis.md
-```
+## Security and privacy
 
-Adaptive (minimum-compute) calibration — stops early when it has enough data:
-
-```bash
-python _calibrate_adaptive.py --model your-model.gguf
-```
+- **No network calls at all.** The calibration pipeline, the exporter, the
+  report renderer, and `federation.py` contain no network code. Not
+  gated, not opt-in — there is none.
+- **No telemetry during execution.** Calibration runs entirely locally.
+- **`federation.py`** writes a sanitized contribution file locally. What
+  you do with it is up to you.
+- **Execution sandbox.** Model-generated code runs in a Python-level
+  sandbox that blocks network access, process spawning, `ctypes`, and
+  dangerous `os` functions. The threat model is accidental damage from
+  model output, not a determined adversary — for hard sandboxing, run
+  inside a container or VM.
 
 ## Requirements
 
@@ -192,8 +198,6 @@ python _calibrate_adaptive.py --model your-model.gguf
   produce enough signal.
 - A GPU is recommended but not required. Works on NVIDIA CUDA, AMD ROCm,
   Apple Metal, or CPU-only. CUDA is fastest; CPU works but takes longer.
-- The kit auto-detects available VRAM and system RAM. If your model fits
-  in your available memory, calibration will run.
 
 ## Before you calibrate
 
@@ -202,10 +206,6 @@ around the model's recommended values — wrong starting values produce
 garbage data. Check `CORE_MODEL_CONFIGS.md` for verified configs, or check
 the model's HuggingFace card.
 
-The sweep discovers values — it does not hardcode them. It uses the
-card-recommended values as a starting point and explores around them.
-You don't tell it what to try; it tells you what worked.
-
 Common gotchas:
 - **Thinking models** need higher `max_tokens` (4096+) or they produce no
   output — thinking tokens consume the budget silently
@@ -213,197 +213,34 @@ Common gotchas:
   degenerate — check the card
 - **Some models** are designed for greedy decoding (`temp=0.0`) — check
   the card
-- **Some models** disable `top_k` — check the card
 
 See `METHODOLOGY.md` for the full knob reference and `CORE_MODEL_CONFIGS.md`
 for verified configs.
 
-## Task suite
-
-The kit ships with a built-in coding task battery aimed at 2-6B models.
-These are the tasks that broke *my* models — the weak spots I kept hitting
-when trying to get small local models to code competently. They may not be
-your weak spots.
-
-**What's included:**
-- **Assembly tasks** — multi-file wiring problems (import resolution,
-  interface matching, module assembly)
-- **Hard function tasks** — single-function algorithmic problems
-  (rle_decode, missing_ranges, merge_intervals, normalize_path)
-  with deterministic eval-based tests
-
-Every task has a deterministic pass/fail signal — the kit executes
-the model's code in a sandbox and checks test cases. No LLM-as-judge,
-no subjective grading.
-
-**Why these tasks and not a standard benchmark:** Standard benchmarks
-(MMLU, HumanEval) are increasingly in pretraining data. Models score
-high on the benchmark and fail on real work. The built-in tasks are
-novel enough that models haven't seen them, but simple enough that
-a 3-4B model *should* be able to solve them — which means failures
-are real signal about the model's capability, not evidence the task
-was too hard.
-
-**Bringing your own tasks:** The task format is simple — a JSON dict
-with `id`, `desc`, `filename`, `func_name`, and `tests` (list of
-`(expression, expected_result)` pairs). See `_arch_skel_hard.py` for
-examples. If your models fail on different things than mine do, add
-your own tasks and the calibration will measure *your* weak spots
-instead of mine. If your custom tasks produce useful calibration data,
-submit them via federation.
-
-## Execution sandbox
-
-The calibrator includes a Python-level sandbox (`_sandbox.py`) that is
-auto-injected into every piece of model-generated code before it runs.
-The sandbox blocks:
-
-- Network access (`socket`, `create_connection`)
-- Process spawning (`subprocess`, `os.system/popen`)
-- `ctypes` (direct C function calls)
-- Dangerous os functions (`exec*`, `spawn*`, `fork`, `kill`, `chmod`,
-  `chown`, `symlink`, `link`)
-- File writes outside the task's temp directory
-- Blocked imports (`ctypes`, `multiprocessing`, `signal`, `pickle`,
-  `marshal`)
-
-The model's code only needs to read input files, process data, write
-output files, and import sibling modules — all within the temp dir. The
-sandbox blocks exactly the things the model's code should never do.
-
-**What the sandbox does NOT block:** escape via `__subclasses__`
-introspection, C extensions that bypass Python, memory exhaustion, CPU
-beyond the 15-second timeout. Threat model is accidental damage from
-model output, not a determined adversary. For hard sandboxing, run the
-calibrator inside a container, VM, or firejail — it works fine inside
-any of those.
-
-## Reflect and experiment
-
-After calibration, run `core_sweep.py` to analyze the results:
-
-```bash
-python core_sweep.py --profile _calibration_profile_<label>.json
-```
-
-This injects reflective prompts into your workspace:
-1. Investigate the raw data by hand — patterns the automated analysis
-   might have missed
-2. What trends do you see?
-3. What is yet untested?
-4. How would you test it?
-5. Now run the experiments
-6. Reflect on the process
-
-The pipeline analysis runs automatically — `export_playbook.py` renders
-all findings from the profile JSON. But the pipeline can only report what
-it measured. Investigating the raw data yourself is strongly recommended.
-
-## Contribute improvements back
-
-If your experiments produce a verified improvement over the stock
-baseline, run `federation.py`:
-
-```bash
-python federation.py --profile _calibration_profile_<label>.json
-```
-
-This runs the federation gate:
-1. Benchmarks your experimental branch against the stock baseline
-2. Sanitizes all data (scrubs PII, company names, private code)
-3. Shows a human y/n prompt with the diff and metrics
-4. **Track A (yes):** submits the diff + metrics to the developer
-5. **Track B (no):** submits a 4-sentence anonymized summary instead
-
-No telemetry is sent until a human explicitly approves it. See
-`LICENSE.md` for the grant-back terms.
-
-## Examples
-
-The `examples/` directory shows two pre-rendered analyses:
-
-- **`granite_agents.md`** — Granite 4.1 3B. Entropy signal works
-  (head_entropy, separation 0.91). Two recovery stages have real
-  coverage (errors_nudge 33%, bounce 25%).
-- **`qwen_agents.md`** — Qwen3-4B-Instruct. Entropy signal doesn't work
-  (separation 0.00). No recovery stage recovered anything.
-
-Same calibrator, opposite conclusions. There is no universal config.
-Your model needs its own calibration.
-
-## File manifest
-
-| File | What it does |
-|---|---|
-| `SKILL.md` | Agent entry point — read this first. Full instructions for autonomous agents. |
-| `LICENSE.md` | Custom EULA with grant-back clause. Read before using. |
-| `METHODOLOGY.md` | Every knob, every phase, every signal. Read to understand what calibration does. |
-| `CORE_MODEL_CONFIGS.md` | Verified sampling configs for common GGUF models. Check before calibrating. |
-| `requirements.txt` | Python dependencies. |
-| `_calibrate_pipeline.py` | Full 4-phase calibration runner (probe -> sweep -> analyze -> recommend). |
-| `_calibrate_adaptive.py` | Minimum-compute adaptive calibration (stops early when enough data). |
-| `_calibration_signals.py` | Signal analysis, early-exit logic, bail thresholds. |
-| `_multifile_assembly.py` | Model loading, task definitions, prompts, code extraction, thinking stripping. |
-| `_solve_pipeline.py` | Entropy capture, generation with trajectories, architect generation, test execution. |
-| `_final_combined_test_v2.py` | Dynamic calibration and adaptive prompt functions. |
-| `_arch_skel_hard.py` | Hard coding tasks and tests (the calibration task suite). |
-| `_test_harness.py` | Test harness used by the solving pipeline. |
-| `_sandbox.py` | Python-level execution sandbox for model-generated code. |
-| `export_playbook.py` | Profile JSON -> AgentAnalysis.md exporter. |
-| `core_sweep.py` | Reflective prompt injection — analyze trends and propose experiments. |
-| `federation.py` | Local verification gate — benchmarks, sanitizes, human y/n, Track A/B submission. Submits to a webhook the developer operates separately. |
-| `examples/` | Pre-rendered analyses from two models showing opposite conclusions. |
-
-## How it works
-
-1. **Probe:** Run your model on calibration tasks. Capture entropy
-   trajectory, pass/fail, error type, time.
-2. **Intervention sweep:** For each failure, try all recovery
-   interventions in isolation (error feedback, temp retry, skeleton-fill,
-   architect prompt, architect trace short/long, decompose).
-3. **Analysis:** Rank entropy signals by separation. Compute coverage
-   matrix. Greedy set cover for intervention order. Per-error-type
-   effectiveness.
-4. **Export:** Render findings into `AgentAnalysis.md` with specific
-   numbers, negative results, and compute savings estimates.
-
-See `METHODOLOGY.md` for the full explanation.
-
-## Scope
-
-The pipeline sweeps four axes simultaneously — sampling params, entropy
-signals, intervention strategies, and architect/coder channel. The full
-factorial for ~20 calibration questions is 200+ runs. Mid-run adaptive
-pruning cuts unproductive branches before completion, reducing the
-effective run count — a 200+ candidate sweep can drop to ~60 in practice
-when a calibrated entropy signal lets you test the most-likely-wrong
-candidates first and bail early. Without a signal (or if the signal
-doesn't work for this model), you test all 200.
-
-What calibration does NOT do:
-- Give the model context it doesn't have
-- Improve multi-turn reasoning over thousands of lines (context/RAG problem)
-- Calibrate tool use, agentic loops, or long-horizon planning
-- Handle tasks with no deterministic pass/fail signal
-- Find the global optimum across all possible parameter values (it samples
-  around the base config, not the full space — see [Method](#method))
-
-## Security and privacy
-
-- **No telemetry during execution.** Calibration runs entirely locally.
-- **Phone-home is gated.** `federation.py` blocks until benchmarking
-  completes AND a human presses y at a visible CLI prompt.
-- **Data sanitization.** All submitted data is scrubbed: PII, company
-  names, API keys, private variable names stripped before transmission.
-- **Boundary isolation.** `federation.py` only diffs files within the
-  `calibration-kit/` directory. It cannot read parent directories or
-  private source code.
-- **Track B fallback.** If you say no, only a 4-sentence anonymized
-  summary is sent — no code, no diffs, no identifiers.
-
 ## Pricing
 
-$4.99 USDC via AgentMart. Seller keeps 97% (3% platform fee).
+**$59.99, one time** — with launch pricing for early buyers (see the store
+page for the current early-bird discount). That buys the kit and
+collaborator access to the private repository, so updates arrive with
+`git pull`. No subscription, no seats, no usage metering.
+
+**[Buy it here →](https://buy.polar.sh/polar_cl_oPEsqZL29Nvuo6oX0GRF1DHDXgE75NOFAmy7V3oAjcU)**
+
+Sold through [Polar](https://polar.sh), which is the merchant of record —
+they handle payment and sales tax, and your purchase triggers the GitHub
+invite automatically.
+
+### What is guaranteed
+
+The kit runs on your model and returns a **definite, statistically-backed
+verdict**: either a signal with a threshold you can implement, or an
+explicit `none` with the effect size observed, the smallest effect the run
+could have detected, and the `--repeats` setting that would settle it.
+
+If a completed run gives you neither a usable signal **nor** a repair
+order that beats doing nothing — that is, nothing you can act on — email
+the address in `SUPPORT.md` with your Polar order number for a full
+refund. The guarantee is in `REFUND_POLICY.md` (shipped with the kit).
 
 ## License
 
