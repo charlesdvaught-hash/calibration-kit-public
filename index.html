@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Local Model Calibration Kit — Evidence</title>
+<style>
+:root{--surface:#fcfcfb;--plane:#f9f9f7;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;--border:rgba(11,11,11,0.10);--s1:#2a78d6;--s2:#eb6834;--good:#0ca30c;--critical:#d03b3b}
+@media (prefers-color-scheme:dark){:root{--surface:#1a1a19;--plane:#0d0d0d;--ink:#ffffff;--ink2:#c3c2b7;--muted:#898781;--border:rgba(255,255,255,0.10);--s1:#3987e5;--s2:#d95926;--good:#0ca30c;--critical:#d03b3b}}
+*{box-sizing:border-box}
+body{background:var(--plane);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;margin:0;padding:48px 20px 80px}
+.wrap{max-width:720px;margin:0 auto}
+h1{font-size:28px;line-height:1.2;margin:0 0 8px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:14px;margin-bottom:32px}
+p{margin:0 0 14px;color:var(--ink2)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px 26px;margin:16px 0}
+.card h2{font-size:18px;margin:0 0 6px;color:var(--ink)}
+.card .meta{font-size:13px;color:var(--muted);margin-bottom:14px}
+.card .sig{font:14px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--plane);border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin:10px 0}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:2px 10px;border-radius:20px;margin-left:8px;vertical-align:middle}
+.badge.yes{background:rgba(12,163,12,0.12);color:var(--good)}
+.badge.no{background:rgba(208,59,59,0.12);color:var(--critical)}
+a.cta{display:inline-block;background:var(--s1);color:#fff;text-decoration:none;padding:10px 24px;border-radius:8px;font-weight:600;margin-top:12px}
+a.cta:hover{opacity:.9}
+a.rep{color:var(--s1);text-decoration:none;font-weight:600}
+a.rep:hover{text-decoration:underline}
+.footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--border);font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Local Model Calibration Kit</h1>
+<div class="sub">Evidence reports — what the kit found on real models</div>
+
+<p>These are unmodified calibration reports from the kit's 60-task bank.
+Each report shows the full signal scan, both holdout levels (record and
+task), the transfer estimate, intervention ranking, and power analysis.
+Same kit, different models, honest results.</p>
+
+<div class="card">
+<h2>Qwen3-4B-Instruct-2507 <span class="badge yes">signal found</span></h2>
+<div class="meta">Q5_K_L &middot; 60-task bank &middot; 108 probes &middot; 20 failures</div>
+<p>A trajectory-shape signal (<code>plateau_start_quartile</code>, high=bad)
+survives correction and <strong>transfers to unseen tasks</strong> — 0.73
+mean balanced accuracy across 300 task splits, above chance in 92% of
+draws. The model's signature is per-model <em>and</em> per-task-set: the
+18-task early-window signal did not replicate here.</p>
+<div class="sig">d = &minus;0.94 &middot; adjusted p = 0.008 &middot; transfers: 0.73 (92%)</div>
+<a class="rep" href="examples/qwen60_report.html">View full report &rarr;</a>
+</div>
+
+<div class="card">
+<h2>Granite-4.1-3b <span class="badge no">no signal</span></h2>
+<div class="meta">Q5_K_M &middot; 60-task bank &middot; 60 probes &middot; 8 failures</div>
+<p>No usable entropy signal — underpowered at 8 failures (MDE d&ge;1.06).
+The task-level holdout caught a false positive: a signal that looked real
+on training tasks (0.87 balanced accuracy) went <strong>below chance</strong>
+on unseen tasks (0.47). That's the failure mode the check exists to catch.
+Repair routing still works — 4 of 8 failures recoverable coder-side.</p>
+<div class="sig">verdict: none &middot; MDE d&ge;1.06 &middot; task-level: 0.87 &rarr; 0.47 (below chance)</div>
+<a class="rep" href="examples/granite60_report.html">View full report &rarr;</a>
+</div>
+
+<div class="footer">
+<p><strong>Same calibrator, opposite conclusions.</strong> There is no
+universal config. Your model needs its own calibration.</p>
+<p><a href="https://github.com/charlesdvaught-hash/calibration-kit-public">Source &amp; documentation on GitHub</a> &middot; <a href="https://buy.polar.sh/polar_cl_oPEsqZL29Nvuo6oX0GRF1DHDXgE75NOFAmy7V3oAjcU">Buy the kit ($59.99)</a></p>
+</div>
+</div>
+</body>
+</html>
