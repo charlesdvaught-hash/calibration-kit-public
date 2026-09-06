@@ -32,10 +32,26 @@ a.rep:hover{text-decoration:underline}
 <h1>Local Model Calibration Kit</h1>
 <div class="sub">Evidence reports — what the kit found on real models</div>
 
-<p>These are unmodified calibration reports from the kit's 60-task bank.
-Each report shows the full signal scan, both holdout levels (record and
-task), the transfer estimate, intervention ranking, and power analysis.
+<p>These are unmodified calibration reports from the kit's task banks
+(the 60-task built-in bank, and the 224-task bank that adds 164 HumanEval
+tasks). Each report shows the full signal scan, both holdout levels
+(record and task), the transfer estimate, intervention ranking, pre-test
+failure routing, and power analysis.
 Same kit, different models, honest results.</p>
+
+<div class="card">
+<h2>Qwen3-8B <span class="badge yes">signal found</span></h2>
+<div class="meta">Q5_K_M &middot; thinking mode &middot; 224-task bank (164 HumanEval + 60 built-in) &middot; 224 probes &middot; 37 failures</div>
+<p>A reasoning-allocation signal (<code>think_frac</code>, high=good)
+survives correction and <strong>transfers to unseen tasks</strong> — 0.838
+mean balanced accuracy across 300 task splits, above chance in 100% of
+draws. Also the first report with <em>pre-test failure routing</em>: the
+signal splits "didn't engage" failures (syntax/empty output) from
+"thought but got it wrong" (assertion/logic), each with its own
+first-try intervention.</p>
+<div class="sig">d = +2.07 &middot; adjusted p = 0.000 &middot; transfers: 0.838 (100%)</div>
+<a class="rep" href="examples/qwen3-8b_report.html">View full report &rarr;</a>
+</div>
 
 <div class="card">
 <h2>Qwen3-4B-Instruct-2507 <span class="badge yes">signal found</span></h2>

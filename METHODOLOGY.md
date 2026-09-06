@@ -229,6 +229,19 @@ are a possible future extension, not a v1 feature.
   most failures, in order. This becomes the recommended intervention order.
 - **Per-error-type effectiveness:** which intervention works best for each
   error type (syntax, name_error, logic, etc.).
+- **Signal-based failure routing (pre-test):** the per-error-type table
+  tells you what to try *once the tests have told you* what kind of failure
+  you have. This step goes one level earlier: it splits the failures on
+  whichever captured signal best separates their error-type distributions
+  (median/mean/midpoint thresholds over every candidate statistic — the
+  pass/fail calibrated signal gets no preference, because the best splitter
+  is model-specific), then reports each cluster's dominant error types and
+  per-intervention recovery rates. The output is a routing rule of the form
+  *"if signal X is below T, expect failure modes A/B — try intervention Y
+  first,"* usable before a single test executes. Small clusters (<5
+  failures) are flagged provisional in the report; the rule is a
+  prioritization hint, not a guarantee, and it sits alongside the
+  per-error-type table rather than replacing it.
 - **Architect spike vs coder quality:** does the architect's entropy spike
   location predict whether the coder will recover?
 

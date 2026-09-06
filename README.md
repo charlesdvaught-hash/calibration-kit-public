@@ -30,7 +30,7 @@ After one calibration run:
   new generations?) and on held-out *tasks* (does it separate generations
   of tasks it never saw?). Direction is discovered, never assumed: high can
   mean wrong, high can mean right, and which one it is differs by model.
-  So far one of three models has a usable signal, and it transfers to
+  So far two of four models have a usable signal, and both transfer to
   unseen tasks — the other two got an honest `none`. Nothing here
   transfers between models, which is exactly why it has to be run against
   yours.
@@ -42,6 +42,10 @@ After one calibration run:
 - **An intervention order** — which repair strategies work, ranked by
   coverage, with per-error-type routing. This works on every model
   calibrated so far, including the ones with no entropy signal.
+- **Pre-test failure routing** — when a generation is going to fail, the
+  signal often predicts *which kind* of failure it will be (e.g.
+  disengaged/empty output vs a real logic bug) before the tests run, and
+  which intervention to reach for first in each case.
 - **A cost ceiling** — max recovery stages, bail conditions, when to stop
   trying.
 - **An `AgentAnalysis.md` file** — drop it into any project and Devin,
@@ -54,17 +58,19 @@ After one calibration run:
 
 | model | bank | probes (unique) | failures | usable signal | recoverable |
 |---|---|---|---|---|---|
+| Qwen3-8B (Q5_K_M, thinking mode) | 224-task (164 HumanEval + 60 built-in) | 224 | 37 | yes — `think_frac`, high=good; **transfers to unseen tasks** (0.838 mean, above chance in 100% of 300 splits) | 17/37 |
 | Qwen3-4B-Instruct-2507 (Q5_K_L) | 60-task | 108 | 20 | yes — `max_entropy`/plateau, high=bad; **transfers to unseen tasks** (0.73, above chance in 92% of splits) | 11/20 |
 | granite-4.1-3b (Q5_K_M) | 60-task | 60 | 8 | none — underpowered (MDE d≥1.06); task-level check: below chance | 4/8 |
 | Qwen3-4B-Instruct-2507 (Q5_K_L) | 18-task (superseded) | 180 ×3 | 32–33 | yes — early-window, replicated *on that bank only* | 30/33 |
 | granite-4.1-3b (Q5_K_M) | 18-task (superseded) | 108 | 29 | none, at MDE d≥0.61 | 18/29 |
 | mini-coder-4b (Q8_0) | 18-task (superseded) | 36 | 11 | none | 4/11 |
 
-On the current task bank: one model has a usable signal, one does not.
+Across the current banks: two models have usable signals that transfer to
+unseen tasks, two do not.
 **That is the honest number, and it is why you run this rather than copy
 someone's config.** A model with no signal is a real answer — it tells
 you not to spend compute on a gate that buys nothing, and you still get
-the repair routing, which works on all three.
+the repair routing, which works on all of them.
 
 ### Two holdouts, two questions
 
@@ -78,10 +84,11 @@ selection and fitting, then scored — plus a `transfer_estimate` that
 takes the signal the full run selected and re-scores it on held-out tasks
 across 300 random task splits.
 
-On the current runs: qwen's selected signal **does** transfer (0.73 mean
-balanced accuracy on unseen tasks, above chance in 92% of draws), while
-granite's task-selected signal went below chance (0.87 train → 0.47 test)
-— the failure mode this check exists to catch.
+On the current runs: Qwen3-8B's `think_frac` transfers (0.838 mean
+balanced accuracy on unseen tasks, above chance in 100% of 300 draws),
+Qwen3-4B's `max_entropy`/plateau transfers (0.73, above chance in 92% of
+draws), while granite's task-selected signal went below chance (0.87
+train → 0.47 test) — the failure mode this check exists to catch.
 
 ### What keeps per-model honest
 
@@ -113,9 +120,16 @@ from a different file will not overwrite an existing profile.
 
 ### The examples
 
-The `examples/` directory contains pre-rendered analyses from the current
-60-task bank:
+The `examples/` directory contains pre-rendered analyses:
 
+- **`qwen3-8b_agents.md`** / **`qwen3-8b_profile.json`** / **`qwen3-8b_report.html`**
+  — the largest bank so far (224 tasks: 164 HumanEval + 60 built-in),
+  Qwen3-8B in thinking mode at its card-recommended sampling settings.
+  `think_frac`, high=good, survives correction and transfers (0.838,
+  100% of splits above chance). Also the first example with **pre-test
+  failure routing**: a generation-length split separates "didn't engage"
+  failures (syntax/empty output) from "thought but got it wrong"
+  (assertion/logic), each with its own first-try intervention.
 - **`qwen_agents.md`** / **`qwen60_profile.json`** / **`qwen60_report.html`**
   — the model with a signal on this bank: `max_entropy`/plateau, high=bad,
   and a clear demonstration that a signature is per-model *and
