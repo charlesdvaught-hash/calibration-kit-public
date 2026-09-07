@@ -1,0 +1,264 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>mini-coder-4b-q8-0 — calibration report</title><style>.rp{color-scheme:light;--surface:#fcfcfb;--plane:#f9f9f7;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;--grid:#e1e0d9;--axis:#c3c2b7;--border:rgba(11,11,11,0.10);--s1:#2a78d6;--s2:#eb6834;--good:#0ca30c;--warning:#fab219;--critical:#d03b3b;--band:rgba(137,135,129,0.13)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .rp{color-scheme:dark;--surface:#1a1a19;--plane:#0d0d0d;--ink:#ffffff;--ink2:#c3c2b7;--muted:#898781;--grid:#2c2c2a;--axis:#383835;--border:rgba(255,255,255,0.10);--s1:#3987e5;--s2:#d95926;--good:#0ca30c;--warning:#fab219;--critical:#d03b3b;--band:rgba(137,135,129,0.16)}}
+:root[data-theme="dark"] .rp{color-scheme:dark;--surface:#1a1a19;--plane:#0d0d0d;--ink:#ffffff;--ink2:#c3c2b7;--muted:#898781;--grid:#2c2c2a;--axis:#383835;--border:rgba(255,255,255,0.10);--s1:#3987e5;--s2:#d95926;--good:#0ca30c;--warning:#fab219;--critical:#d03b3b;--band:rgba(137,135,129,0.16)}
+
+*{box-sizing:border-box}
+.rp{background:var(--plane);color:var(--ink);
+ font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;
+ margin:0;padding:32px 20px 72px}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:26px;line-height:1.25;margin:0 0 6px;letter-spacing:-.01em}
+h2{font-size:18px;margin:44px 0 10px;letter-spacing:-.005em}
+h3{font-size:15px;margin:22px 0 6px}
+p{margin:0 0 12px;color:var(--ink2)}
+.sub{color:var(--muted);font-size:13px;margin-bottom:26px}
+code{font:13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;
+ background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1px 5px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+ padding:20px 22px;margin:16px 0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;margin:22px 0 6px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.tile .k{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.tile .v{font-size:25px;line-height:1.15;margin-top:5px;color:var(--ink)}
+.tile .n{font-size:12px;color:var(--muted);margin-top:3px}
+.verdict{border-left:3px solid var(--critical);padding-left:14px}
+.verdict.ok{border-left-color:var(--good)}
+.rule{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--s1);
+ border-radius:12px;padding:6px 22px 6px 20px;margin:16px 0}
+.rule ol{margin:14px 0;padding-left:20px}
+.rule li{margin:0 0 11px;color:var(--ink2)}
+.lead{border:1px solid var(--border);border-radius:12px;background:var(--surface);
+ padding:16px 18px;margin:12px 0}
+.lead .t{font-weight:600;color:var(--ink);font-family:ui-monospace,Menlo,monospace;font-size:14px}
+.lead .nx{margin-top:9px;padding-top:9px;border-top:1px solid var(--border);
+ font-size:13.5px;color:var(--ink2)}
+figure{margin:18px 0 6px}
+figcaption{font-size:13px;color:var(--muted);margin-bottom:8px}
+.plot{overflow-x:auto}
+svg{width:100%;height:auto;display:block;min-width:520px}
+.grid{stroke:var(--grid);stroke-width:1}
+.axis,.zero{stroke:var(--axis);stroke-width:1}
+.zero{stroke-width:1.5}
+.tick{font-size:11px;fill:var(--muted)}
+.axtitle{font-size:12px;fill:var(--muted)}
+.rowlbl{font-size:12.5px;fill:var(--ink2)}
+.rowsub{font-size:11px;fill:var(--muted)}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.vallbl{font-size:12px;fill:var(--ink2)}
+.inbar{fill:var(--surface)}
+.usablelbl{fill:var(--good)}
+.bandlbl{font-size:11px;fill:var(--muted)}
+.band{fill:var(--band)}
+.dot{opacity:.8}.dot:hover{opacity:1}
+.dot.s1{fill:var(--s1)}.dot.s2{fill:var(--s2)}
+.meanmark{stroke-width:2}
+.meanmark.s1{stroke:var(--s1)}.meanmark.s2{stroke:var(--s2)}
+.meanlbl{font-size:11.5px}
+.s1t{fill:var(--s1)}.s2t{fill:var(--s2)}
+.stem{stroke:var(--axis);stroke-width:2}
+.eff{fill:var(--s1);stroke:var(--surface);stroke-width:2}
+.eff.usable{fill:var(--good)}
+.bar{fill:var(--s1)}
+.bar.best{fill:var(--s1)}
+.sm{margin:14px 0}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:10px 0}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);color:var(--ink2)}
+th{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+details{margin:14px 0}
+summary{cursor:pointer;color:var(--ink2);font-size:13.5px}
+.legend{display:flex;gap:18px;font-size:12.5px;color:var(--ink2);margin:2px 0 4px}
+.legend span{display:flex;align-items:center;gap:7px}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+.foot{margin-top:52px;padding-top:18px;border-top:1px solid var(--border);
+ font-size:12.5px;color:var(--muted)}
+</style></head><body class="rp"><div class="wrap"><h1>mini-coder-4b-q8-0 — calibration report</h1>
+<p class="sub">2026-09-04 13:35 · pipeline 2026.09.04 · 36 probe generations · 44 repair attempts</p>
+<div class="tiles">
+<div class="tile"><div class="k">Entropy signal</div><div class="v">none</div><div class="n">p=0.807</div></div>
+<div class="tile"><div class="k">Effect seen</div><div class="v">d=0.09</div><div class="n">detectable: d≥1.01</div></div>
+<div class="tile"><div class="k">Failures</div><div class="v">11</div><div class="n">of 36 generations</div></div>
+<div class="tile"><div class="k">Recoverable</div><div class="v">4<span style="font-size:15px;color:var(--muted)"> / 11</span></div><div class="n">by any strategy tested</div></div>
+</div>
+<h2>The rule</h2>
+<p>Implementable as written. Every number below was measured on this model, on this run.</p>
+<div class="rule"><ol>
+<li><strong>Do not gate generation on entropy.</strong> No entropy statistic separates this model's correct from incorrect output well enough to act on, so an entropy gate costs compute and buys nothing.</li>
+<li>On a failed generation, repair in this order: <code>test_retry</code>. This ordering is greedy set cover over what actually recovered failures in this run, not a preference — <code>test_retry</code> alone recovered 4 of 11.</li>
+<li>When the failure is a <strong>logic</strong> error, route to <code>test_retry</code> first (3/4, 75%), ahead of skeleton_fill 25%, temp_retry 0%.</li>
+<li>When the failure is an <strong>assertion</strong> error, expect little. The best strategy tested, <code>test_retry</code>, recovered only 1 of 7 (14%). Try it once, then escalate rather than working through the rest.</li>
+<li>Stop after the ordered chain. 4 of 11 failures were recoverable by <em>any</em> strategy tested; the remaining 7 were not recovered by any of them, so further retries on those are spend without evidence behind it.</li>
+</ol></div>
+<h2>Does entropy predict correctness here?</h2>
+<div class="legend"><span><i class="sw" style="background:var(--s1)"></i>Correct</span><span><i class="sw" style="background:var(--s2)"></i>Incorrect</span></div>
+<figure><figcaption>Every probe generation, placed by its max_entropy. Vertical marks are group means.</figcaption><div class="plot"><svg viewBox="0 0 720 250" role="img" aria-label="max_entropy for correct vs incorrect generations" preserveAspectRatio="xMidYMid meet">
+<line x1="226.9" y1="18.0" x2="226.9" y2="206.0" class="grid"/>
+<text x="226.9" y="226.0" text-anchor="middle" class="tick">1</text>
+<line x1="384.7" y1="18.0" x2="384.7" y2="206.0" class="grid"/>
+<text x="384.7" y="226.0" text-anchor="middle" class="tick">1.5</text>
+<line x1="542.6" y1="18.0" x2="542.6" y2="206.0" class="grid"/>
+<text x="542.6" y="226.0" text-anchor="middle" class="tick">2</text>
+<text x="396.0" y="242.0" text-anchor="middle" class="axtitle">max_entropy</text>
+<text x="84.0" y="68.0" text-anchor="end" class="rowlbl">Correct</text>
+<text x="84.0" y="84.0" text-anchor="end" class="rowsub">n=25</text>
+<circle cx="128.1" cy="57.6" r="4" class="dot s1"><title>max_entropy = 0.6872 (correct)</title></circle>
+<circle cx="160.8" cy="67.3" r="4" class="dot s1"><title>max_entropy = 0.7906 (correct)</title></circle>
+<circle cx="175.2" cy="64.3" r="4" class="dot s1"><title>max_entropy = 0.8361 (correct)</title></circle>
+<circle cx="187.4" cy="61.2" r="4" class="dot s1"><title>max_entropy = 0.8749 (correct)</title></circle>
+<circle cx="210.9" cy="58.2" r="4" class="dot s1"><title>max_entropy = 0.9492 (correct)</title></circle>
+<circle cx="275.1" cy="67.9" r="4" class="dot s1"><title>max_entropy = 1.1525 (correct)</title></circle>
+<circle cx="324.4" cy="64.8" r="4" class="dot s1"><title>max_entropy = 1.3089 (correct)</title></circle>
+<circle cx="355.5" cy="61.8" r="4" class="dot s1"><title>max_entropy = 1.4072 (correct)</title></circle>
+<circle cx="384.7" cy="58.7" r="4" class="dot s1"><title>max_entropy = 1.4999 (correct)</title></circle>
+<circle cx="393.3" cy="68.5" r="4" class="dot s1"><title>max_entropy = 1.5271 (correct)</title></circle>
+<circle cx="416.2" cy="65.4" r="4" class="dot s1"><title>max_entropy = 1.5997 (correct)</title></circle>
+<circle cx="435.2" cy="62.3" r="4" class="dot s1"><title>max_entropy = 1.6597 (correct)</title></circle>
+<circle cx="444.9" cy="59.3" r="4" class="dot s1"><title>max_entropy = 1.6905 (correct)</title></circle>
+<circle cx="449.6" cy="69.0" r="4" class="dot s1"><title>max_entropy = 1.7055 (correct)</title></circle>
+<circle cx="463.1" cy="66.0" r="4" class="dot s1"><title>max_entropy = 1.7481 (correct)</title></circle>
+<circle cx="478.8" cy="62.9" r="4" class="dot s1"><title>max_entropy = 1.7978 (correct)</title></circle>
+<circle cx="484.1" cy="59.9" r="4" class="dot s1"><title>max_entropy = 1.8147 (correct)</title></circle>
+<circle cx="491.2" cy="69.6" r="4" class="dot s1"><title>max_entropy = 1.8372 (correct)</title></circle>
+<circle cx="497.2" cy="66.5" r="4" class="dot s1"><title>max_entropy = 1.8561 (correct)</title></circle>
+<circle cx="502.9" cy="63.5" r="4" class="dot s1"><title>max_entropy = 1.8743 (correct)</title></circle>
+<circle cx="506.6" cy="60.4" r="4" class="dot s1"><title>max_entropy = 1.8859 (correct)</title></circle>
+<circle cx="538.7" cy="70.2" r="4" class="dot s1"><title>max_entropy = 1.9876 (correct)</title></circle>
+<circle cx="584.1" cy="67.1" r="4" class="dot s1"><title>max_entropy = 2.1316 (correct)</title></circle>
+<circle cx="589.7" cy="64.0" r="4" class="dot s1"><title>max_entropy = 2.1491 (correct)</title></circle>
+<circle cx="601.7" cy="61.0" r="4" class="dot s1"><title>max_entropy = 2.1871 (correct)</title></circle>
+<line x1="403.2" y1="34.0" x2="403.2" y2="94.0" class="meanmark s1"/>
+<text x="403.2" y="28.0" text-anchor="middle" class="meanlbl s1t">mean 1.558</text>
+<text x="84.0" y="150.0" text-anchor="end" class="rowlbl">Incorrect</text>
+<text x="84.0" y="166.0" text-anchor="end" class="rowsub">n=11</text>
+<circle cx="225.6" cy="134.0" r="4" class="dot s2"><title>max_entropy = 0.9959 (incorrect)</title></circle>
+<circle cx="229.8" cy="152.3" r="4" class="dot s2"><title>max_entropy = 1.0091 (incorrect)</title></circle>
+<circle cx="272.3" cy="146.5" r="4" class="dot s2"><title>max_entropy = 1.1438 (incorrect)</title></circle>
+<circle cx="274.0" cy="140.8" r="4" class="dot s2"><title>max_entropy = 1.1492 (incorrect)</title></circle>
+<circle cx="286.2" cy="135.1" r="4" class="dot s2"><title>max_entropy = 1.1878 (incorrect)</title></circle>
+<circle cx="327.9" cy="153.3" r="4" class="dot s2"><title>max_entropy = 1.3200 (incorrect)</title></circle>
+<circle cx="411.1" cy="147.6" r="4" class="dot s2"><title>max_entropy = 1.5833 (incorrect)</title></circle>
+<circle cx="490.4" cy="141.8" r="4" class="dot s2"><title>max_entropy = 1.8347 (incorrect)</title></circle>
+<circle cx="545.6" cy="136.1" r="4" class="dot s2"><title>max_entropy = 2.0095 (incorrect)</title></circle>
+<circle cx="567.2" cy="154.4" r="4" class="dot s2"><title>max_entropy = 2.0779 (incorrect)</title></circle>
+<circle cx="663.9" cy="148.6" r="4" class="dot s2"><title>max_entropy = 2.3841 (incorrect)</title></circle>
+<line x1="390.4" y1="116.0" x2="390.4" y2="176.0" class="meanmark s2"/>
+<text x="390.4" y="110.0" text-anchor="middle" class="meanlbl s2t">mean 1.518</text>
+</svg></div></figure>
+<p>Correct generations averaged max_entropy 1.558; incorrect ones 1.518. The distributions overlap almost completely — that overlap, not the gap between the means, is the finding.</p>
+<p>A permutation test puts that difference at p=0.8069, against an alpha of 0.05. Reshuffling which generations were labelled correct reproduces a gap this large routinely.</p>
+<p>Across 10 candidate statistics the largest effect was <code>mean_entropy</code> at d=+0.377 (high=good), and it does not survive correction for the number tested.</p>
+<p>4 of 11 failures were recoverable by at least one repair strategy. Recovery is measured directly — break it, repair it, re-run the tests — so these counts do not depend on any of the statistical argument above.</p>
+<div class="card verdict"><strong>Power: underpowered.</strong> This run could only reliably detect an effect of d&gt;=1.01; the effect it saw was d=+0.09. That means this run cannot tell &#x27;no entropy signal&#x27; apart from &#x27;too few failures to see one&#x27;. Confirming an effect this small would take --repeats 249, which is not a practical run. Treat entropy as unusable for this model: even if the effect is real, it is too small to route decisions on.</div>
+<h2>Every candidate signal, corrected</h2>
+<p>All 10 numeric statistics were tested against the same pass/fail outcome, so raw p-values are corrected with Benjamini-Hochberg FDR. A statistic is called usable only if its adjusted p clears 0.05 <em>and</em> |d| ≥ 0.2. The shaded band is what this run was too small to detect at all.</p>
+<figure><div class="plot"><svg viewBox="0 0 720 340" role="img" aria-label="Effect size per candidate signal against the run&#x27;s detection limit" preserveAspectRatio="xMidYMid meet">
+<rect x="211.7" y="22.0" width="396.6" height="274.0" class="band"/>
+<text x="410.0" y="16.0" text-anchor="middle" class="bandlbl">too small for this run to detect  (|d| &lt; 1.01)</text>
+<line x1="214.2" y1="22.0" x2="214.2" y2="298.0" class="grid"/>
+<text x="214.2" y="316.0" text-anchor="middle" class="tick">-1</text>
+<line x1="312.1" y1="22.0" x2="312.1" y2="298.0" class="grid"/>
+<text x="312.1" y="316.0" text-anchor="middle" class="tick">-0.5</text>
+<line x1="410.0" y1="22.0" x2="410.0" y2="298.0" class="grid"/>
+<text x="410.0" y="316.0" text-anchor="middle" class="tick">0</text>
+<line x1="507.9" y1="22.0" x2="507.9" y2="298.0" class="grid"/>
+<text x="507.9" y="316.0" text-anchor="middle" class="tick">0.5</text>
+<line x1="605.8" y1="22.0" x2="605.8" y2="298.0" class="grid"/>
+<text x="605.8" y="316.0" text-anchor="middle" class="tick">1</text>
+<line x1="410.0" y1="22.0" x2="410.0" y2="298.0" class="zero"/>
+<text x="176.0" y="330.0" text-anchor="start" class="axtitle">← higher on incorrect</text>
+<text x="410.0" y="330.0" text-anchor="middle" class="axtitle">Cohen&#x27;s d</text>
+<text x="644.0" y="330.0" text-anchor="end" class="axtitle">higher on correct →</text>
+<text x="162.0" y="51.0" text-anchor="end" class="rowlbl mono">mean_entropy</text>
+<line x1="410.0" y1="47.0" x2="483.8" y2="47.0" class="stem"/>
+<circle cx="483.8" cy="47.0" r="5" class="eff"><title>mean_entropy: d=+0.377, p=0.3102, adjusted p=0.9074 — not usable</title></circle>
+<text x="495.8" y="51.0" text-anchor="start" class="vallbl">+0.38</text>
+<text x="162.0" y="77.0" text-anchor="end" class="rowlbl mono">plateau_start_quartile</text>
+<line x1="410.0" y1="73.0" x2="480.5" y2="73.0" class="stem"/>
+<circle cx="480.5" cy="73.0" r="5" class="eff"><title>plateau_start_quartile: d=+0.360, p=0.3747, adjusted p=0.9074 — not usable</title></circle>
+<text x="492.5" y="77.0" text-anchor="start" class="vallbl">+0.36</text>
+<text x="162.0" y="103.0" text-anchor="end" class="rowlbl mono">spike_relative_pos</text>
+<line x1="410.0" y1="99.0" x2="469.9" y2="99.0" class="stem"/>
+<circle cx="469.9" cy="99.0" r="5" class="eff"><title>spike_relative_pos: d=+0.306, p=0.4119, adjusted p=0.9074 — not usable</title></circle>
+<text x="481.9" y="103.0" text-anchor="start" class="vallbl">+0.31</text>
+<text x="162.0" y="129.0" text-anchor="end" class="rowlbl mono">spike_token_idx</text>
+<line x1="410.0" y1="125.0" x2="468.7" y2="125.0" class="stem"/>
+<circle cx="468.7" cy="125.0" r="5" class="eff"><title>spike_token_idx: d=+0.300, p=0.4344, adjusted p=0.9074 — not usable</title></circle>
+<text x="480.7" y="129.0" text-anchor="start" class="vallbl">+0.30</text>
+<text x="162.0" y="155.0" text-anchor="end" class="rowlbl mono">head_entropy</text>
+<line x1="410.0" y1="151.0" x2="450.5" y2="151.0" class="stem"/>
+<circle cx="450.5" cy="151.0" r="5" class="eff"><title>head_entropy: d=+0.207, p=0.5906, adjusted p=0.9074 — not usable</title></circle>
+<text x="462.5" y="155.0" text-anchor="start" class="vallbl">+0.21</text>
+<text x="162.0" y="181.0" text-anchor="end" class="rowlbl mono">spike_quartile</text>
+<line x1="410.0" y1="177.0" x2="441.7" y2="177.0" class="stem"/>
+<circle cx="441.7" cy="177.0" r="5" class="eff"><title>spike_quartile: d=+0.162, p=0.7442, adjusted p=0.9074 — not usable</title></circle>
+<text x="453.7" y="181.0" text-anchor="start" class="vallbl">+0.16</text>
+<text x="162.0" y="207.0" text-anchor="end" class="rowlbl mono">max_entropy</text>
+<line x1="410.0" y1="203.0" x2="427.8" y2="203.0" class="stem"/>
+<circle cx="427.8" cy="203.0" r="5" class="eff"><title>max_entropy: d=+0.091, p=0.8069, adjusted p=0.9074 — not usable</title></circle>
+<text x="439.8" y="207.0" text-anchor="start" class="vallbl">+0.09</text>
+<text x="162.0" y="233.0" text-anchor="end" class="rowlbl mono">n_semantic</text>
+<line x1="410.0" y1="229.0" x2="422.5" y2="229.0" class="stem"/>
+<circle cx="422.5" cy="229.0" r="5" class="eff"><title>n_semantic: d=+0.064, p=0.8664, adjusted p=0.9074 — not usable</title></circle>
+<text x="434.5" y="233.0" text-anchor="start" class="vallbl">+0.06</text>
+<text x="162.0" y="259.0" text-anchor="end" class="rowlbl mono">n_tokens</text>
+<line x1="410.0" y1="255.0" x2="422.5" y2="255.0" class="stem"/>
+<circle cx="422.5" cy="255.0" r="5" class="eff"><title>n_tokens: d=+0.064, p=0.8664, adjusted p=0.9074 — not usable</title></circle>
+<text x="434.5" y="259.0" text-anchor="start" class="vallbl">+0.06</text>
+<text x="162.0" y="285.0" text-anchor="end" class="rowlbl mono">tail_entropy</text>
+<line x1="410.0" y1="281.0" x2="401.4" y2="281.0" class="stem"/>
+<circle cx="401.4" cy="281.0" r="5" class="eff"><title>tail_entropy: d=-0.044, p=0.9074, adjusted p=0.9074 — not usable</title></circle>
+<text x="389.4" y="285.0" text-anchor="end" class="vallbl">-0.04</text>
+</svg></div></figure>
+<details><summary>Table view — all signals</summary><table><thead><tr><th>Signal</th><th>Direction</th><th class="num">d</th><th class="num">p</th><th class="num">p adjusted</th><th>Usable</th></tr></thead><tbody>
+<tr><td><code>mean_entropy</code></td><td>high=good</td><td class="num">+0.377</td><td class="num">0.3102</td><td class="num">0.9074</td><td>no</td></tr>
+<tr><td><code>plateau_start_quartile</code></td><td>high=good</td><td class="num">+0.360</td><td class="num">0.3747</td><td class="num">0.9074</td><td>no</td></tr>
+<tr><td><code>spike_relative_pos</code></td><td>high=good</td><td class="num">+0.306</td><td class="num">0.4119</td><td class="num">0.9074</td><td>no</td></tr>
+<tr><td><code>spike_token_idx</code></td><td>high=good</td><td class="num">+0.300</td><td class="num">0.4344</td><td class="num">0.9074</td><td>no</td></tr>
+<tr><td><code>head_entropy</code></td><td>high=good</td><td class="num">+0.207</td><td class="num">0.5906</td><td class="num">0.9074</td><td>no</td></tr>
+<tr><td><code>spike_quartile</code></td><td>high=good</td><td class="num">+0.162</td><td class="num">0.7442</td><td class="num">0.9074</td><td>no</td></tr>
+<tr><td><code>max_entropy</code></td><td>high=good</td><td class="num">+0.091</td><td class="num">0.8069</td><td class="num">0.9074</td><td>no</td></tr>
+<tr><td><code>n_semantic</code></td><td>high=good</td><td class="num">+0.064</td><td class="num">0.8664</td><td class="num">0.9074</td><td>no</td></tr>
+<tr><td><code>n_tokens</code></td><td>high=good</td><td class="num">+0.064</td><td class="num">0.8664</td><td class="num">0.9074</td><td>no</td></tr>
+<tr><td><code>tail_entropy</code></td><td>high=bad</td><td class="num">-0.044</td><td class="num">0.9074</td><td class="num">0.9074</td><td>no</td></tr>
+</tbody></table></details>
+<h2>What repairs failures</h2>
+<p>Direct measurement, not correlation: each failed generation was re-attempted with every strategy and re-tested. Nothing in this section depends on the entropy question above.</p>
+<figure><div class="plot"><svg viewBox="0 0 720 176" role="img" aria-label="Failures recovered by each repair strategy" preserveAspectRatio="xMidYMid meet">
+<line x1="176.0" y1="16.0" x2="176.0" y2="138.0" class="grid"/>
+<text x="176.0" y="156.0" text-anchor="middle" class="tick">0</text>
+<line x1="279.0" y1="16.0" x2="279.0" y2="138.0" class="grid"/>
+<text x="279.0" y="156.0" text-anchor="middle" class="tick">1</text>
+<line x1="382.0" y1="16.0" x2="382.0" y2="138.0" class="grid"/>
+<text x="382.0" y="156.0" text-anchor="middle" class="tick">2</text>
+<line x1="485.0" y1="16.0" x2="485.0" y2="138.0" class="grid"/>
+<text x="485.0" y="156.0" text-anchor="middle" class="tick">3</text>
+<line x1="588.0" y1="16.0" x2="588.0" y2="138.0" class="grid"/>
+<text x="588.0" y="156.0" text-anchor="middle" class="tick">4</text>
+<text x="382.0" y="170.0" text-anchor="middle" class="axtitle">failures recovered (of 11)</text>
+<text x="162.0" y="34.0" text-anchor="end" class="rowlbl mono">test_retry</text>
+<rect x="176.0" y="21.0" width="412.0" height="18" rx="4" class="bar"><title>test_retry: recovered 4 of 11 failures, 3 of them recovered by nothing else</title></rect>
+<text x="578.0" y="34.0" text-anchor="end" class="vallbl inbar">4 (36%) · 3 only here</text>
+<text x="162.0" y="64.0" text-anchor="end" class="rowlbl mono">skeleton_fill</text>
+<rect x="176.0" y="51.0" width="103.0" height="18" rx="4" class="bar"><title>skeleton_fill: recovered 1 of 11 failures, 0 of them recovered by nothing else</title></rect>
+<text x="289.0" y="64.0" text-anchor="start" class="vallbl">1 (9%)</text>
+<text x="162.0" y="94.0" text-anchor="end" class="rowlbl mono">decompose</text>
+<text x="186.0" y="94.0" text-anchor="start" class="vallbl">0 (0%)</text>
+<text x="162.0" y="124.0" text-anchor="end" class="rowlbl mono">temp_retry</text>
+<text x="186.0" y="124.0" text-anchor="start" class="vallbl">0 (0%)</text>
+</svg></div></figure>
+<h3>Routing by error type</h3>
+<figure class="sm"><figcaption>logic errors</figcaption><div class="plot"><svg viewBox="0 0 720 134" role="img" aria-label="Recovery rate by strategy for logic errors" preserveAspectRatio="xMidYMid meet"><line x1="293.0" y1="12.0" x2="293.0" y2="110.0" class="grid"/><text x="293.0" y="126.0" text-anchor="middle" class="tick">25%</text><line x1="410.0" y1="12.0" x2="410.0" y2="110.0" class="grid"/><text x="410.0" y="126.0" text-anchor="middle" class="tick">50%</text><line x1="527.0" y1="12.0" x2="527.0" y2="110.0" class="grid"/><text x="527.0" y="126.0" text-anchor="middle" class="tick">75%</text><line x1="644.0" y1="12.0" x2="644.0" y2="110.0" class="grid"/><text x="644.0" y="126.0" text-anchor="middle" class="tick">100%</text><text x="162.0" y="27.0" text-anchor="end" class="rowlbl mono">test_retry</text><rect x="176.0" y="16.0" width="351.0" height="14" rx="4" class="bar best"><title>test_retry on logic errors: 3/4 recovered (75%)</title></rect><text x="537.0" y="27.0" text-anchor="start" class="vallbl">3/4</text><text x="162.0" y="51.0" text-anchor="end" class="rowlbl mono">skeleton_fill</text><rect x="176.0" y="40.0" width="117.0" height="14" rx="4" class="bar"><title>skeleton_fill on logic errors: 1/4 recovered (25%)</title></rect><text x="303.0" y="51.0" text-anchor="start" class="vallbl">1/4</text><text x="162.0" y="75.0" text-anchor="end" class="rowlbl mono">decompose</text><text x="186.0" y="75.0" text-anchor="start" class="vallbl">0/4</text><text x="162.0" y="99.0" text-anchor="end" class="rowlbl mono">temp_retry</text><text x="186.0" y="99.0" text-anchor="start" class="vallbl">0/4</text></svg></div></figure><figure class="sm"><figcaption>assertion errors</figcaption><div class="plot"><svg viewBox="0 0 720 134" role="img" aria-label="Recovery rate by strategy for assertion errors" preserveAspectRatio="xMidYMid meet"><line x1="293.0" y1="12.0" x2="293.0" y2="110.0" class="grid"/><text x="293.0" y="126.0" text-anchor="middle" class="tick">25%</text><line x1="410.0" y1="12.0" x2="410.0" y2="110.0" class="grid"/><text x="410.0" y="126.0" text-anchor="middle" class="tick">50%</text><line x1="527.0" y1="12.0" x2="527.0" y2="110.0" class="grid"/><text x="527.0" y="126.0" text-anchor="middle" class="tick">75%</text><line x1="644.0" y1="12.0" x2="644.0" y2="110.0" class="grid"/><text x="644.0" y="126.0" text-anchor="middle" class="tick">100%</text><text x="162.0" y="27.0" text-anchor="end" class="rowlbl mono">test_retry</text><rect x="176.0" y="16.0" width="65.5" height="14" rx="4" class="bar best"><title>test_retry on assertion errors: 1/7 recovered (14%)</title></rect><text x="251.5" y="27.0" text-anchor="start" class="vallbl">1/7</text><text x="162.0" y="51.0" text-anchor="end" class="rowlbl mono">decompose</text><text x="186.0" y="51.0" text-anchor="start" class="vallbl">0/7</text><text x="162.0" y="75.0" text-anchor="end" class="rowlbl mono">skeleton_fill</text><text x="186.0" y="75.0" text-anchor="start" class="vallbl">0/7</text><text x="162.0" y="99.0" text-anchor="end" class="rowlbl mono">temp_retry</text><text x="186.0" y="99.0" text-anchor="start" class="vallbl">0/7</text></svg></div></figure>
+<h2>What shows promise</h2>
+<p>Nothing in this run clears the bar for a follow-up. No candidate statistic came close enough to correction to be worth the GPU time.</p>
+<h2>Settings this run used</h2>
+<table><thead><tr><th>Parameter</th><th class="num">Value</th><th>Source</th></tr></thead><tbody>
+<tr><td><code>min_p</code></td><td class="num">0.0</td><td>not recorded</td></tr>
+<tr><td><code>presence_penalty</code></td><td class="num">0.0</td><td>not recorded</td></tr>
+<tr><td><code>repeat_penalty</code></td><td class="num">1.0</td><td>not recorded</td></tr>
+<tr><td><code>temp</code></td><td class="num">0.7</td><td>not recorded</td></tr>
+<tr><td><code>top_k</code></td><td class="num">20</td><td>not recorded</td></tr>
+<tr><td><code>top_p</code></td><td class="num">0.8</td><td>not recorded</td></tr>
+<tr><td><code>thinking</code></td><td class="num">False</td><td>not recorded</td></tr>
+</tbody></table>
+<p style="font-size:13px">Source is blank because this run predates provenance tracking — the values above are what the profile recorded, but where each one came from was not saved at the time. Runs from this version onward record it.</p>
+<p class="foot">Generated by the Local Model Calibration Kit. Raw records for every generation and repair attempt are in the run’s <code>_raw.jsonl</code>; <code>calibrate.py reanalyze</code> rebuilds this report from them without re-running the model.</p></div></body></html>

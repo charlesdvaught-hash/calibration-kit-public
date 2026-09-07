@@ -1,2 +1,42 @@
-﻿__pycache__/
+__pycache__/
 *.pyc
+
+# calibration run scratch output (buyer/dev runs, not shipped) - polished
+# copies belong in examples/ instead
+_calibration_*.json
+_calibration_*_raw.jsonl
+_calibration_*_report.txt
+*.log
+AgentAnalysis_*.md
+BUSINESS_STRATEGY.md
+_ckpt_*
+
+# Exploratory scratch drivers — hardcode local paths, never shipped
+_run_function_only.py
+_tmp_*
+
+# contributions written by federation.py (buyer-local, never committed)
+contribution_track_*.json
+
+# HF dataset cache (regenerate via _humaneval_convert.py)
+_humaneval_data/
+
+# PyInstaller / packaging artifacts
+build/
+dist/
+*.spec
+
+# Local harness/proxy scratch (buyer/dev runs, not shipped)
+aider_dryrun/
+aider_dryrun.jsonl
+calibration_proxy.jsonl
+.env
+.env.*
+.aider*
+
+# Internal agent/project notes (not shipped)
+AGENTS.md
+STATUS.txt
+BUSINESS_STRATEGY.md
+_strategy_addendum.md
+

@@ -1,0 +1,1674 @@
+{
+  "model_label": "granite",
+  "calibration_date": "2026-09-04 14:40",
+  "n_probe_runs": 108,
+  "n_failures": 29,
+  "n_intervention_runs": 203,
+  "entropy_direction": {
+    "direction": "none",
+    "raw_direction_before_gating": "high=good",
+    "gate_reason": "difference is not distinguishable from chance (permutation p=0.562, needs p<0.05)",
+    "permutation_p": 0.5617,
+    "separation": 0.03,
+    "ok_mean_max_entropy": 0.9778,
+    "fail_mean_max_entropy": 0.9487,
+    "n_ok_samples": 79,
+    "n_fail_samples": 29,
+    "observed_effect_cohens_d": 0.127,
+    "min_detectable_effect_d": 0.608,
+    "power_verdict": "underpowered",
+    "power_note": "This run could only reliably detect an effect of d>=0.61; the effect it saw was d=+0.13. That means this run cannot tell 'no entropy signal' apart from 'too few failures to see one'. Confirming an effect this small would take --repeats 137, which is not a practical run. Treat entropy as unusable for this model: even if the effect is real, it is too small to route decisions on.",
+    "repeats_used": 6,
+    "repeats_for_80pct_power": 137,
+    "note": "high=bad means high entropy predicts failure -> bail early on high-entropy generations. high=good means high entropy predicts success -> verify high-entropy candidates first instead of bailing. none means entropy is not a usable signal for this model, which is a real and useful result, not a failed run. A direction is only reported when the difference survives a two-sided permutation test (p<0.05, 20000 resamples) AND exceeds a minimum separation of 0.08. raw_direction_before_gating is the unfiltered sign of the mean difference; it is recorded for transparency and must not be used as a finding."
+  },
+  "signal_scan": {
+    "n_signals_tested": 22,
+    "alpha": 0.05,
+    "correction": "Benjamini-Hochberg FDR",
+    "best_surviving_signal": {
+      "signal": "spike_token_idx",
+      "cohens_d": -0.902,
+      "direction": "high=bad",
+      "p_raw": 0.0001,
+      "n_ok": 79,
+      "n_fail": 29,
+      "p_adjusted": 0.0007,
+      "survives_correction": true,
+      "nominally_significant": true
+    },
+    "nominally_significant_but_not_surviving": [
+      "first3_mean",
+      "first_token_entropy",
+      "first_to_max_ratio",
+      "first10_mean",
+      "spike_quartile"
+    ],
+    "signals": [
+      {
+        "signal": "n_semantic",
+        "cohens_d": -0.891,
+        "direction": "high=bad",
+        "p_raw": 0.0001,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.0007,
+        "survives_correction": true,
+        "nominally_significant": true
+      },
+      {
+        "signal": "n_tokens",
+        "cohens_d": -0.891,
+        "direction": "high=bad",
+        "p_raw": 0.0001,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.0007,
+        "survives_correction": true,
+        "nominally_significant": true
+      },
+      {
+        "signal": "spike_token_idx",
+        "cohens_d": -0.902,
+        "direction": "high=bad",
+        "p_raw": 0.0001,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.0007,
+        "survives_correction": true,
+        "nominally_significant": true
+      },
+      {
+        "signal": "plateau_start_quartile",
+        "cohens_d": -0.798,
+        "direction": "high=bad",
+        "p_raw": 0.0005,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.0027,
+        "survives_correction": true,
+        "nominally_significant": true
+      },
+      {
+        "signal": "first3_mean",
+        "cohens_d": 0.535,
+        "direction": "high=good",
+        "p_raw": 0.0133,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.0546,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "first_token_entropy",
+        "cohens_d": 0.525,
+        "direction": "high=good",
+        "p_raw": 0.0149,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.0546,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "first_to_max_ratio",
+        "cohens_d": 0.505,
+        "direction": "high=good",
+        "p_raw": 0.0186,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.0585,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "first10_mean",
+        "cohens_d": -0.473,
+        "direction": "high=bad",
+        "p_raw": 0.0298,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.0787,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "spike_quartile",
+        "cohens_d": -0.467,
+        "direction": "high=bad",
+        "p_raw": 0.0322,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.0787,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "spike_relative_pos",
+        "cohens_d": -0.393,
+        "direction": "high=bad",
+        "p_raw": 0.0714,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.1571,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "early_vs_rest",
+        "cohens_d": -0.377,
+        "direction": "high=bad",
+        "p_raw": 0.0842,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.1684,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first10_std",
+        "cohens_d": -0.347,
+        "direction": "high=bad",
+        "p_raw": 0.1133,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.2077,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first10_max",
+        "cohens_d": -0.302,
+        "direction": "high=bad",
+        "p_raw": 0.169,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.286,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "early_slope",
+        "cohens_d": -0.29,
+        "direction": "high=bad",
+        "p_raw": 0.1851,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.2909,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q_slope",
+        "cohens_d": -0.266,
+        "direction": "high=bad",
+        "p_raw": 0.2232,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.3274,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "mean_entropy",
+        "cohens_d": -0.224,
+        "direction": "high=bad",
+        "p_raw": 0.3026,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.4056,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "tail_entropy",
+        "cohens_d": -0.223,
+        "direction": "high=bad",
+        "p_raw": 0.3134,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.4056,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q_argmax",
+        "cohens_d": -0.205,
+        "direction": "high=bad",
+        "p_raw": 0.4001,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.489,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q_curvature",
+        "cohens_d": -0.158,
+        "direction": "high=bad",
+        "p_raw": 0.4765,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.5517,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "max_entropy",
+        "cohens_d": 0.127,
+        "direction": "high=good",
+        "p_raw": 0.5617,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.6179,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first5_mean",
+        "cohens_d": -0.058,
+        "direction": "high=bad",
+        "p_raw": 0.8062,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.8446,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "head_entropy",
+        "cohens_d": -0.02,
+        "direction": "high=bad",
+        "p_raw": 0.924,
+        "n_ok": 79,
+        "n_fail": 29,
+        "p_adjusted": 0.924,
+        "survives_correction": false,
+        "nominally_significant": false
+      }
+    ],
+    "note": "22 candidate entropy statistics were tested against the same pass/fail data, so raw p-values are corrected for multiple comparisons (Benjamini-Hochberg). A signal is only reported as usable if its corrected p clears alpha AND |d| >= 0.2. Signals listed in nominally_significant_but_not_surviving cleared p<0.05 on their own but not after correction \u2014 with this many tests, that is the expected behaviour of noise, not a lead. They are candidates for a pre-registered test on a fresh run, never findings."
+  },
+  "spike_location": {
+    "ok_spike_quartiles": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      3,
+      3,
+      3,
+      3,
+      3,
+      1,
+      2,
+      2,
+      2,
+      2,
+      2,
+      0,
+      2,
+      2,
+      2,
+      2,
+      2,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "fail_spike_quartiles": [
+      0,
+      2,
+      2,
+      2,
+      2,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+    ],
+    "ok_mean_spike_pos": 0.463,
+    "fail_mean_spike_pos": 0.57,
+    "ok_quartile_entropies": [
+      [
+        0.057,
+        0.0482,
+        0.0523,
+        0.0162
+      ],
+      [
+        0.1153,
+        0.0015,
+        0.0419,
+        0.0577
+      ],
+      [
+        0.1244,
+        0.0026,
+        0.04,
+        0.0534
+      ],
+      [
+        0.1244,
+        0.0026,
+        0.04,
+        0.0534
+      ],
+      [
+        0.1244,
+        0.0026,
+        0.04,
+        0.0534
+      ],
+      [
+        0.1244,
+        0.0026,
+        0.04,
+        0.0534
+      ],
+      [
+        0.1244,
+        0.0026,
+        0.04,
+        0.0534
+      ],
+      [
+        0.0311,
+        0.0439,
+        0.0589,
+        0.0262
+      ],
+      [
+        0.0313,
+        0.0418,
+        0.056,
+        0.0274
+      ],
+      [
+        0.0313,
+        0.0418,
+        0.056,
+        0.0274
+      ]
+    ],
+    "fail_quartile_entropies": [
+      [
+        0.0872,
+        0.021,
+        0.0562,
+        0.026
+      ],
+      [
+        0.0942,
+        0.0182,
+        0.061,
+        0.0227
+      ],
+      [
+        0.0942,
+        0.0182,
+        0.061,
+        0.0227
+      ],
+      [
+        0.0942,
+        0.0182,
+        0.061,
+        0.0227
+      ],
+      [
+        0.0942,
+        0.0182,
+        0.061,
+        0.0227
+      ],
+      [
+        0.0942,
+        0.0182,
+        0.061,
+        0.0227
+      ],
+      [
+        0.0596,
+        0.0618,
+        0.0743,
+        0.0985
+      ],
+      [
+        0.0596,
+        0.0618,
+        0.0743,
+        0.0985
+      ],
+      [
+        0.0596,
+        0.0618,
+        0.0743,
+        0.0985
+      ],
+      [
+        0.0596,
+        0.0618,
+        0.0743,
+        0.0985
+      ]
+    ],
+    "note": "spike_quartile: 0=head(early), 3=tail(late). If fail spikes cluster in a different quartile than ok spikes, spike location is a useful incorrectness predictor for this model."
+  },
+  "spike_threshold_calibrated": {
+    "threshold": null,
+    "usable": false,
+    "accuracy": 0,
+    "balanced_accuracy": null,
+    "chance_balanced_accuracy": 0.5,
+    "direction": "none",
+    "reason": "No entropy threshold is shipped for this model: difference is not distinguishable from chance (permutation p=0.562, needs p<0.05). Fitting a cut point to a difference this size would produce a number that looks actionable and is not."
+  },
+  "coverage_matrix": {
+    "test_retry": {
+      "recovered": 9,
+      "unique_recovered": 0,
+      "recovered_keys": [
+        [
+          "pipeline",
+          0
+        ],
+        [
+          "pipeline",
+          1
+        ],
+        [
+          "pipeline",
+          2
+        ],
+        [
+          "pipeline",
+          3
+        ],
+        [
+          "pipeline",
+          4
+        ],
+        [
+          "pipeline",
+          5
+        ],
+        [
+          "report",
+          2
+        ],
+        [
+          "report",
+          3
+        ],
+        [
+          "report",
+          5
+        ]
+      ],
+      "unique_keys": []
+    },
+    "temp_retry": {
+      "recovered": 3,
+      "unique_recovered": 0,
+      "recovered_keys": [
+        [
+          "report",
+          1
+        ],
+        [
+          "report",
+          3
+        ],
+        [
+          "report",
+          4
+        ]
+      ],
+      "unique_keys": []
+    },
+    "skeleton_fill": {
+      "recovered": 16,
+      "unique_recovered": 0,
+      "recovered_keys": [
+        [
+          "cache",
+          0
+        ],
+        [
+          "cache",
+          1
+        ],
+        [
+          "cache",
+          2
+        ],
+        [
+          "cache",
+          3
+        ],
+        [
+          "cache",
+          4
+        ],
+        [
+          "cache",
+          5
+        ],
+        [
+          "pipeline",
+          0
+        ],
+        [
+          "pipeline",
+          1
+        ],
+        [
+          "pipeline",
+          2
+        ],
+        [
+          "pipeline",
+          3
+        ],
+        [
+          "pipeline",
+          4
+        ],
+        [
+          "pipeline",
+          5
+        ],
+        [
+          "report",
+          1
+        ],
+        [
+          "report",
+          2
+        ],
+        [
+          "report",
+          3
+        ],
+        [
+          "report",
+          4
+        ]
+      ],
+      "unique_keys": []
+    },
+    "arch_design": {
+      "recovered": 7,
+      "unique_recovered": 0,
+      "recovered_keys": [
+        [
+          "cache",
+          5
+        ],
+        [
+          "pipeline",
+          1
+        ],
+        [
+          "pipeline",
+          3
+        ],
+        [
+          "pipeline",
+          4
+        ],
+        [
+          "pipeline",
+          5
+        ],
+        [
+          "report",
+          1
+        ],
+        [
+          "report",
+          3
+        ]
+      ],
+      "unique_keys": []
+    },
+    "arch_trace_short": {
+      "recovered": 5,
+      "unique_recovered": 0,
+      "recovered_keys": [
+        [
+          "cache",
+          2
+        ],
+        [
+          "cache",
+          3
+        ],
+        [
+          "report",
+          1
+        ],
+        [
+          "report",
+          3
+        ],
+        [
+          "report",
+          5
+        ]
+      ],
+      "unique_keys": []
+    },
+    "arch_trace_long": {
+      "recovered": 7,
+      "unique_recovered": 1,
+      "recovered_keys": [
+        [
+          "cache",
+          0
+        ],
+        [
+          "filter",
+          4
+        ],
+        [
+          "pipeline",
+          0
+        ],
+        [
+          "pipeline",
+          5
+        ],
+        [
+          "report",
+          1
+        ],
+        [
+          "report",
+          2
+        ],
+        [
+          "report",
+          3
+        ]
+      ],
+      "unique_keys": [
+        [
+          "filter",
+          4
+        ]
+      ]
+    },
+    "decompose": {
+      "recovered": 12,
+      "unique_recovered": 0,
+      "recovered_keys": [
+        [
+          "cache",
+          0
+        ],
+        [
+          "cache",
+          1
+        ],
+        [
+          "cache",
+          2
+        ],
+        [
+          "cache",
+          4
+        ],
+        [
+          "cache",
+          5
+        ],
+        [
+          "pipeline",
+          0
+        ],
+        [
+          "pipeline",
+          1
+        ],
+        [
+          "pipeline",
+          2
+        ],
+        [
+          "pipeline",
+          3
+        ],
+        [
+          "pipeline",
+          4
+        ],
+        [
+          "pipeline",
+          5
+        ],
+        [
+          "report",
+          5
+        ]
+      ],
+      "unique_keys": []
+    }
+  },
+  "total_failures": 29,
+  "total_recoverable": 18,
+  "error_type_effectiveness": {
+    "logic": {
+      "test_retry": {
+        "recovered": 6,
+        "attempted": 18,
+        "rate": 0.33
+      },
+      "temp_retry": {
+        "recovered": 0,
+        "attempted": 18,
+        "rate": 0.0
+      },
+      "skeleton_fill": {
+        "recovered": 6,
+        "attempted": 18,
+        "rate": 0.33
+      },
+      "arch_design": {
+        "recovered": 4,
+        "attempted": 18,
+        "rate": 0.22
+      },
+      "arch_trace_short": {
+        "recovered": 0,
+        "attempted": 18,
+        "rate": 0.0
+      },
+      "arch_trace_long": {
+        "recovered": 3,
+        "attempted": 18,
+        "rate": 0.17
+      },
+      "decompose": {
+        "recovered": 6,
+        "attempted": 18,
+        "rate": 0.33
+      }
+    },
+    "assertion": {
+      "test_retry": {
+        "recovered": 3,
+        "attempted": 11,
+        "rate": 0.27
+      },
+      "temp_retry": {
+        "recovered": 3,
+        "attempted": 11,
+        "rate": 0.27
+      },
+      "skeleton_fill": {
+        "recovered": 10,
+        "attempted": 11,
+        "rate": 0.91
+      },
+      "arch_design": {
+        "recovered": 3,
+        "attempted": 11,
+        "rate": 0.27
+      },
+      "arch_trace_short": {
+        "recovered": 5,
+        "attempted": 11,
+        "rate": 0.45
+      },
+      "arch_trace_long": {
+        "recovered": 4,
+        "attempted": 11,
+        "rate": 0.36
+      },
+      "decompose": {
+        "recovered": 6,
+        "attempted": 11,
+        "rate": 0.55
+      }
+    }
+  },
+  "recommended_intervention_order": [
+    {
+      "intervention": "skeleton_fill",
+      "new_coverage": 16
+    },
+    {
+      "intervention": "arch_trace_long",
+      "new_coverage": 1
+    },
+    {
+      "intervention": "arch_trace_short",
+      "new_coverage": 1
+    }
+  ],
+  "arch_spike_vs_coder_quality": [
+    {
+      "intervention": "arch_design",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.2981252670288086,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.7272517085075378,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.8415937423706055,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.6831297874450684,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.6682898998260498,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.280236005783081,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.581406593322754,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 0.8187251091003418,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.7012033462524414,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.0390127897262573,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.6908937692642212,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.09934401512146,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.6549694538116455,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.0344467163085938,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.6926081776618958,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.8130154609680176,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.0705771446228027,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.392730951309204,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "report",
+      "recovered": true,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 1.47391676902771,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "report",
+      "recovered": true,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.934626042842865,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "report",
+      "recovered": true,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 1.1577563285827637,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.4290995597839355,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.888613760471344,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "report",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.2261343002319336,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "report",
+      "recovered": true,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.1997638940811157,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "report",
+      "recovered": true,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.8636674284934998,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "report",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.9271337985992432,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.055518388748169,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.8693115711212158,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.7284334897994995,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.7596917152404785,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "report",
+      "recovered": true,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.960303783416748,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.9396771192550659,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "cache",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 1.1644428968429565,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "cache",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.7125022411346436,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "cache",
+      "recovered": true,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.6921340227127075,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "cache",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.9126770496368408,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "cache",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.854823112487793,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "cache",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 1.2275429964065552,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "cache",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.858005166053772,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "cache",
+      "recovered": true,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.0469555854797363,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "cache",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.4180339574813843,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "cache",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.2472965717315674,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "cache",
+      "recovered": true,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.302511215209961,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "cache",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.6156554222106934,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "cache",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 1.2337942123413086,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "cache",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.532832145690918,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "cache",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.3644039630889893,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "cache",
+      "recovered": true,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 1.3371649980545044,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "cache",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.5288312435150146,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "cache",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.418501377105713,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.107123613357544,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.7296292781829834,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.3081321716308594,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.3326750993728638,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.707593560218811,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.220299243927002,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 0.7607407569885254,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.1513656377792358,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.074781894683838,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.5681946277618408,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.1007719039916992,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.6877840757369995,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.4511624574661255,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.2357439994812012,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 0.8461437225341797,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 2.1682889461517334,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.8254142999649048,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.4335060119628906,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "pipeline",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.2653591632843018,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "pipeline",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.6484408378601074,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "pipeline",
+      "recovered": true,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.8091620206832886,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "pipeline",
+      "recovered": true,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.8542795181274414,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "pipeline",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.9469276666641235,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "pipeline",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.08394455909729,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "pipeline",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.5790526270866394,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "pipeline",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.6919046640396118,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "pipeline",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.7138263583183289,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "pipeline",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.8846099376678467,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "pipeline",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.8801690936088562,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "pipeline",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.4466315507888794,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "pipeline",
+      "recovered": true,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.8880778551101685,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "pipeline",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.6719989776611328,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "pipeline",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.9754493236541748,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "pipeline",
+      "recovered": true,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 1.2713013887405396,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "pipeline",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.8269736170768738,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "pipeline",
+      "recovered": true,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.7004191875457764,
+      "arch_plateau": false
+    }
+  ],
+  "temp_sweep": {
+    "retry_temp_1": {
+      "attempted": 29,
+      "recovered": 3
+    }
+  },
+  "model_file": "granite-4.1-3b-Q5_K_M.gguf",
+  "config": {
+    "file": "granite-4.1-3b-Q5_K_M.gguf",
+    "label": "granite",
+    "fmt": "chatml",
+    "preset": {
+      "temp": 0.0,
+      "top_p": 1.0,
+      "top_k": 0,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0
+    },
+    "spike_threshold": 1.3805,
+    "spike_signal": "max_entropy",
+    "retry_temps": [
+      0.0,
+      0.3,
+      0.5
+    ],
+    "_provenance": {
+      "temp": "registry (card-verified)",
+      "top_p": "registry (card-verified)",
+      "top_k": "registry (card-verified)",
+      "min_p": "registry (card-verified)",
+      "repeat_penalty": "registry (card-verified)",
+      "presence_penalty": "registry (card-verified)",
+      "thinking": "registry (card-verified)"
+    },
+    "_registry_hit": true,
+    "struggle_base": 0.8954
+  },
+  "config_provenance": {
+    "temp": "registry (card-verified)",
+    "top_p": "registry (card-verified)",
+    "top_k": "registry (card-verified)",
+    "min_p": "registry (card-verified)",
+    "repeat_penalty": "registry (card-verified)",
+    "presence_penalty": "registry (card-verified)",
+    "thinking": "registry (card-verified)"
+  },
+  "pipeline_version": "2026.09.04",
+  "unverified_preset": false
+}

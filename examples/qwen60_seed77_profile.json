@@ -1,0 +1,615 @@
+{
+  "sampling_independence": {
+    "n_probe_rows": 120,
+    "n_unique_generations": 107,
+    "pseudo_replication_factor": 1.12,
+    "deterministic": false
+  },
+  "model_label": "qwen3-4b-instruct",
+  "calibration_date": "2026-09-05 11:06",
+  "n_probe_runs": 107,
+  "n_probe_rows_before_dedup": 120,
+  "n_failures": 19,
+  "n_intervention_runs": 0,
+  "entropy_direction": {
+    "direction": "none",
+    "raw_direction_before_gating": "high=bad",
+    "gate_reason": "difference is not distinguishable from chance (permutation p=0.084, needs p<0.05)",
+    "permutation_p": 0.0844,
+    "separation": 0.155,
+    "ok_mean_max_entropy": 1.0273,
+    "fail_mean_max_entropy": 1.2161,
+    "n_ok_samples": 88,
+    "n_fail_samples": 19,
+    "observed_effect_cohens_d": -0.435,
+    "min_detectable_effect_d": 0.708,
+    "power_verdict": "underpowered",
+    "power_note": "This run could only reliably detect an effect of d>=0.71; the effect it saw was d=-0.44. That means this run cannot tell 'no entropy signal' apart from 'too few failures to see one'. Re-running with --repeats 5 (this run used 2) would give ~80% power on an effect that size.",
+    "repeats_used": 2,
+    "repeats_for_80pct_power": 5,
+    "note": "high=bad means high entropy predicts failure -> bail early on high-entropy generations. high=good means high entropy predicts success -> verify high-entropy candidates first instead of bailing. none means entropy is not a usable signal for this model, which is a real and useful result, not a failed run. A direction is only reported when the difference survives a two-sided permutation test (p<0.05, 20000 resamples) AND exceeds a minimum separation of 0.08. raw_direction_before_gating is the unfiltered sign of the mean difference; it is recorded for transparency and must not be used as a finding."
+  },
+  "signal_coverage": {
+    "ran": true,
+    "folds": 5,
+    "cv_recall": 0.283,
+    "cv_fp_rate": 0.124,
+    "cv_balanced_accuracy": 0.58,
+    "mean_combo_size": 1.0,
+    "signal_stability": [
+      {
+        "signal": "plateau_start_quartile",
+        "chosen_in_folds": 4,
+        "of": 5
+      },
+      {
+        "signal": "max_entropy",
+        "chosen_in_folds": 1,
+        "of": 5
+      }
+    ],
+    "final_combination": [],
+    "final_fit_stats": {
+      "n_failures": 19,
+      "caught": 6,
+      "recall": 0.316,
+      "false_flags": 7,
+      "n_correct": 88,
+      "fp_rate": 0.08,
+      "balanced_accuracy": 0.618
+    },
+    "note": "cv_* numbers are the honest estimate: the combination was rebuilt from scratch in each fold and scored on records that fold never saw. final_fit_stats describes the shipped combination measured on all the data it was fitted to, so it is optimistic by construction -- quote the cv numbers. A signal chosen in only one or two folds is a fitting artefact, not part of this model's pattern; signal_stability shows which held up.",
+    "null_test": {
+      "shuffles": 40,
+      "null_median_balanced_accuracy": 0.493,
+      "null_max_balanced_accuracy": 0.63,
+      "real_balanced_accuracy": 0.58,
+      "beats_n_shuffles": 35,
+      "empirical_p": 0.1463,
+      "usable": false,
+      "note": "The entire selection procedure was re-run on 40 label shuffles. Shuffled labels landing at ~0.5 means the procedure is not manufacturing structure. empirical_p has a floor of 1/41 = 0.024 -- it cannot report smaller than that no matter how strong the effect."
+    },
+    "verdict": "No usable combination: the score did not clear the label-shuffle null. Nothing is shipped."
+  },
+  "holdout_validation": {
+    "ran": true,
+    "n_train": 75,
+    "n_test": 32,
+    "n_train_failures": 13,
+    "n_test_failures": 6,
+    "selected_signal": null,
+    "verdict": "nothing selected on the training half"
+  },
+  "rule_recommendation": {
+    "bail": {
+      "available": true,
+      "signal": "plateau_start_quartile",
+      "signal_chosen_in_folds": 3,
+      "of_folds": 5,
+      "cross_validated": {
+        "recall": 0.283,
+        "fp_rate": 0.297,
+        "balanced_accuracy": 0.493
+      },
+      "rule": {
+        "signal": "plateau_start_quartile",
+        "threshold": -0.5,
+        "flag_when": "above",
+        "recall": 0.421,
+        "fp_rate": 0.159
+      },
+      "economics": {
+        "avg_generation_tokens": 188.2,
+        "failure_rate": 0.178,
+        "signal_available": "final",
+        "tokens_if_aborted": 188.21495327102804,
+        "bail": {
+          "failures_aborted_per_1000": 50.3,
+          "correct_wrongly_aborted_per_1000": 244.3,
+          "tokens_saved": 0,
+          "tokens_wasted": 91947,
+          "net_tokens_per_1000": -91947,
+          "net_pct_of_baseline": -48.9
+        }
+      },
+      "availability": "final"
+    },
+    "trust": {
+      "available": true,
+      "signal": "max_entropy",
+      "signal_chosen_in_folds": 5,
+      "of_folds": 5,
+      "cross_validated": {
+        "coverage": 0.346,
+        "purity": 0.94,
+        "n_in_zone": 7.4
+      },
+      "rule": {
+        "signal": "max_entropy",
+        "threshold": 0.7982,
+        "trust_when": "below",
+        "coverage": 0.336,
+        "purity": 0.972,
+        "n_in_zone": 36
+      },
+      "economics": {
+        "avg_generation_tokens": 188.2,
+        "failure_rate": 0.178,
+        "signal_available": "final",
+        "tokens_if_aborted": 188.21495327102804,
+        "trust": {
+          "shipped_untested_per_1000": 346.0,
+          "defects_shipped_per_1000": 20.8,
+          "note": "Saves test execution, not generation tokens -- the generation is already paid for. Worth it when the test suite is expensive or when latency matters more than tokens. The defect count is the price."
+        }
+      },
+      "availability": "final"
+    },
+    "two_sided": {
+      "available": true,
+      "signal": "max_entropy",
+      "signal_chosen_in_folds": 5,
+      "of_folds": 5,
+      "cross_validated": {
+        "trust_coverage": 0.327,
+        "trust_purity": 1.0,
+        "bail_recall": 1.0,
+        "band_share": 0.0
+      },
+      "rule": {
+        "signal": "max_entropy",
+        "good_is_high": false,
+        "trust_threshold": 0.7713,
+        "bail_threshold": 0.7713,
+        "trust_coverage": 0.318,
+        "trust_purity": 1.0,
+        "bail_recall": 1.0,
+        "bail_precision": 0.26,
+        "band_share": 0.0
+      },
+      "note": "Ship the trust zone untested, regenerate the bail zone, test the band between them. Both cut points come from one fit on one signal, ordered so the zones cannot overlap. The band is what the signal cannot decide -- the honest residue, not a gap in the analysis.",
+      "economics": {
+        "avg_generation_tokens": 188.2,
+        "failure_rate": 0.178,
+        "signal_available": "final",
+        "tokens_if_aborted": 188.21495327102804,
+        "bail": {
+          "failures_aborted_per_1000": 177.6,
+          "correct_wrongly_aborted_per_1000": 505.4,
+          "tokens_saved": 0,
+          "tokens_wasted": 190245,
+          "net_tokens_per_1000": -190245,
+          "net_pct_of_baseline": -101.1
+        },
+        "trust": {
+          "shipped_untested_per_1000": 327.0,
+          "defects_shipped_per_1000": 0.0,
+          "note": "Saves test execution, not generation tokens -- the generation is already paid for. Worth it when the test suite is expensive or when latency matters more than tokens. The defect count is the price."
+        }
+      },
+      "availability": "final"
+    },
+    "best_for_compute": "bail",
+    "ran": true,
+    "n_unique_generations": 107,
+    "n_failures": 19,
+    "note": "Every threshold was fitted inside cross-validation folds and scored on records that fold never saw. `cross_validated` is what the rule does on unseen output from this model. `rule` is the same procedure fitted to all the data, for use."
+  },
+  "signal_scan": {
+    "n_signals_tested": 7,
+    "preregistered": "first10_max,first10_std,q_argmax,phi_first10_mean,q1_over_mean,plateau_start_quartile,max_entropy",
+    "alpha": 0.05,
+    "correction": "Benjamini-Hochberg FDR",
+    "best_surviving_signal": null,
+    "nominally_significant_but_not_surviving": [
+      "plateau_start_quartile"
+    ],
+    "signals": [
+      {
+        "signal": "plateau_start_quartile",
+        "cohens_d": -0.676,
+        "direction": "high=bad",
+        "p_raw": 0.009,
+        "n_ok": 88,
+        "n_fail": 19,
+        "p_adjusted": 0.063,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "max_entropy",
+        "cohens_d": -0.435,
+        "direction": "high=bad",
+        "p_raw": 0.0844,
+        "n_ok": 88,
+        "n_fail": 19,
+        "p_adjusted": 0.2764,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first10_max",
+        "cohens_d": 0.358,
+        "direction": "high=good",
+        "p_raw": 0.1588,
+        "n_ok": 88,
+        "n_fail": 19,
+        "p_adjusted": 0.2764,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "first10_std",
+        "cohens_d": 0.333,
+        "direction": "high=good",
+        "p_raw": 0.1894,
+        "n_ok": 88,
+        "n_fail": 19,
+        "p_adjusted": 0.2764,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "phi_first10_mean",
+        "cohens_d": -0.328,
+        "direction": "high=bad",
+        "p_raw": 0.1974,
+        "n_ok": 88,
+        "n_fail": 19,
+        "p_adjusted": 0.2764,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q_argmax",
+        "cohens_d": 0.179,
+        "direction": "high=good",
+        "p_raw": 0.5019,
+        "n_ok": 88,
+        "n_fail": 19,
+        "p_adjusted": 0.5856,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "q1_over_mean",
+        "cohens_d": 0.073,
+        "direction": "high=good",
+        "p_raw": 0.7773,
+        "n_ok": 88,
+        "n_fail": 19,
+        "p_adjusted": 0.7773,
+        "survives_correction": false,
+        "nominally_significant": false
+      }
+    ],
+    "note": "7 candidate entropy statistics were tested against the same pass/fail data, so raw p-values are corrected for multiple comparisons (Benjamini-Hochberg). A signal is only reported as usable if its corrected p clears alpha AND |d| >= 0.2. Signals listed in nominally_significant_but_not_surviving cleared p<0.05 on their own but not after correction \u2014 with this many tests, that is the expected behaviour of noise, not a lead. They are candidates for a pre-registered test on a fresh run, never findings."
+  },
+  "spike_location": {
+    "ok_spike_quartiles": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      2,
+      1,
+      2,
+      2,
+      3,
+      3,
+      0,
+      0,
+      1,
+      3,
+      3,
+      0,
+      0,
+      1,
+      2,
+      2,
+      2,
+      3,
+      1,
+      1,
+      3,
+      0,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      1,
+      0,
+      2,
+      2,
+      2,
+      3,
+      3,
+      2,
+      0,
+      1,
+      2,
+      2,
+      0,
+      0,
+      0,
+      0,
+      1,
+      3,
+      2,
+      0,
+      3,
+      2,
+      3,
+      3,
+      0,
+      2,
+      1,
+      2,
+      0,
+      0,
+      1,
+      0,
+      2,
+      2,
+      0,
+      1,
+      1,
+      1,
+      0,
+      3,
+      3,
+      0,
+      3,
+      0,
+      1,
+      0,
+      3,
+      0,
+      1,
+      3,
+      0,
+      0
+    ],
+    "fail_spike_quartiles": [
+      1,
+      1,
+      2,
+      0,
+      0,
+      3,
+      0,
+      2,
+      2,
+      1,
+      2,
+      1,
+      1,
+      2,
+      0,
+      2,
+      2,
+      0,
+      0
+    ],
+    "ok_mean_spike_pos": 0.474,
+    "fail_mean_spike_pos": 0.439,
+    "ok_quartile_entropies": [
+      [
+        0.0839,
+        0.0273,
+        0.0539,
+        0.0072
+      ],
+      [
+        0.0572,
+        0.0228,
+        0.0173,
+        0.0008
+      ],
+      [
+        0.0625,
+        0.0139,
+        0.0271,
+        0.0005
+      ],
+      [
+        0.0466,
+        0.0163,
+        0.0345,
+        0.0285
+      ],
+      [
+        0.072,
+        0.0157,
+        0.0363,
+        0.0002
+      ],
+      [
+        0.0903,
+        0.0285,
+        0.0323,
+        0.0395
+      ],
+      [
+        0.0891,
+        0.0183,
+        0.0334,
+        0.0269
+      ],
+      [
+        0.0446,
+        0.0301,
+        0.0974,
+        0.0311
+      ],
+      [
+        0.0476,
+        0.0199,
+        0.074,
+        0.0654
+      ],
+      [
+        0.0585,
+        0.4863,
+        0.1495,
+        0.1122
+      ]
+    ],
+    "fail_quartile_entropies": [
+      [
+        0.0823,
+        0.0287,
+        0.0354,
+        0.0204
+      ],
+      [
+        0.0785,
+        0.029,
+        0.0409,
+        0.0216
+      ],
+      [
+        0.0822,
+        0.0076,
+        0.0747,
+        0.0375
+      ],
+      [
+        0.0668,
+        0.0291,
+        0.0361,
+        0.0178
+      ],
+      [
+        0.0754,
+        0.0243,
+        0.0246,
+        0.0281
+      ],
+      [
+        0.061,
+        0.0817,
+        0.0009,
+        0.0737
+      ],
+      [
+        0.0782,
+        0.0734,
+        0.006,
+        0.117
+      ],
+      [
+        0.0535,
+        0.0309,
+        0.0799,
+        0.0371
+      ],
+      [
+        0.0029,
+        0.0934,
+        0.155,
+        0.0001
+      ],
+      [
+        0.0256,
+        0.2622,
+        0.1018,
+        0.0523
+      ]
+    ],
+    "note": "spike_quartile: 0=head(early), 3=tail(late). If fail spikes cluster in a different quartile than ok spikes, spike location is a useful incorrectness predictor for this model."
+  },
+  "spike_threshold_calibrated": {
+    "signal": "max_entropy",
+    "threshold": null,
+    "usable": false,
+    "accuracy": 0,
+    "balanced_accuracy": null,
+    "chance_balanced_accuracy": 0.5,
+    "direction": "none",
+    "reason": "No entropy threshold is shipped for this model: difference is not distinguishable from chance (permutation p=0.084, needs p<0.05). Fitting a cut point to a difference this size would produce a number that looks actionable and is not."
+  },
+  "coverage_matrix": {},
+  "total_failures": 0,
+  "total_recoverable": 0,
+  "error_type_effectiveness": {},
+  "recommended_intervention_order": [],
+  "arch_spike_vs_coder_quality": [],
+  "temp_sweep": {},
+  "model_file": "Qwen_Qwen3-4B-Instruct-2507-Q5_K_L.gguf",
+  "config": {
+    "file": "Qwen_Qwen3-4B-Instruct-2507-Q5_K_L.gguf",
+    "label": "qwen3-4b-instruct",
+    "fmt": "chatml",
+    "preset": {
+      "temp": 0.7,
+      "top_p": 0.8,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0
+    },
+    "spike_threshold": 1.0305,
+    "spike_signal": "max_entropy",
+    "retry_temps": [
+      0.0,
+      0.6,
+      0.7
+    ],
+    "_provenance": {
+      "temp": "registry (card-verified)",
+      "top_p": "registry (card-verified)",
+      "top_k": "registry (card-verified)",
+      "min_p": "registry (card-verified)",
+      "repeat_penalty": "registry (card-verified)",
+      "presence_penalty": "registry (card-verified)",
+      "thinking": "registry (card-verified)"
+    },
+    "_registry_hit": true,
+    "struggle_base": 0.8109
+  },
+  "probe_only": true,
+  "seed": 77,
+  "quantization": "Q5_K_L",
+  "model_fingerprint": {
+    "bytes": 2983714016,
+    "sha256_head_tail": "8cdda854e412bf92"
+  },
+  "scope_note": "These results were measured on Qwen_Qwen3-4B-Instruct-2507-Q5_K_L.gguf (Q5_K_L) and apply to that file. Quantization changes the logit distribution, and every signal here is a property of that distribution, so a different quantization of the same weights is outside this profile's scope and needs its own run.",
+  "config_provenance": {
+    "temp": "registry (card-verified)",
+    "top_p": "registry (card-verified)",
+    "top_k": "registry (card-verified)",
+    "min_p": "registry (card-verified)",
+    "repeat_penalty": "registry (card-verified)",
+    "presence_penalty": "registry (card-verified)",
+    "thinking": "registry (card-verified)"
+  },
+  "pipeline_version": "2026.09.05",
+  "signal_capture": {
+    "version": 2,
+    "series": [
+      "entropy",
+      "phi",
+      "margin",
+      "full_ent",
+      "mass1",
+      "mass5",
+      "mass20",
+      "tail_mass",
+      "kl_step",
+      "kl_cent",
+      "kl_uniform",
+      "surprisal",
+      "rank",
+      "structural_entropy"
+    ]
+  },
+  "unverified_preset": false
+}

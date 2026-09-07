@@ -1,0 +1,1764 @@
+{
+  "model_label": "qwen3-4b-instruct",
+  "calibration_date": "2026-09-04 13:57",
+  "n_probe_runs": 180,
+  "n_failures": 33,
+  "n_intervention_runs": 231,
+  "entropy_direction": {
+    "direction": "none",
+    "raw_direction_before_gating": "high=good",
+    "gate_reason": "difference is not distinguishable from chance (permutation p=0.387, needs p<0.05)",
+    "permutation_p": 0.3868,
+    "separation": 0.061,
+    "ok_mean_max_entropy": 1.1041,
+    "fail_mean_max_entropy": 1.0372,
+    "n_ok_samples": 147,
+    "n_fail_samples": 33,
+    "observed_effect_cohens_d": 0.169,
+    "min_detectable_effect_d": 0.539,
+    "power_verdict": "underpowered",
+    "power_note": "This run could only reliably detect an effect of d>=0.54; the effect it saw was d=+0.17. That means this run cannot tell 'no entropy signal' apart from 'too few failures to see one'. Confirming an effect this small would take --repeats 102, which is not a practical run. Treat entropy as unusable for this model: even if the effect is real, it is too small to route decisions on.",
+    "repeats_used": 10,
+    "repeats_for_80pct_power": 102,
+    "note": "high=bad means high entropy predicts failure -> bail early on high-entropy generations. high=good means high entropy predicts success -> verify high-entropy candidates first instead of bailing. none means entropy is not a usable signal for this model, which is a real and useful result, not a failed run. A direction is only reported when the difference survives a two-sided permutation test (p<0.05, 20000 resamples) AND exceeds a minimum separation of 0.08. raw_direction_before_gating is the unfiltered sign of the mean difference; it is recorded for transparency and must not be used as a finding."
+  },
+  "signal_scan": {
+    "n_signals_tested": 10,
+    "alpha": 0.05,
+    "correction": "Benjamini-Hochberg FDR",
+    "best_surviving_signal": null,
+    "nominally_significant_but_not_surviving": [
+      "tail_entropy"
+    ],
+    "signals": [
+      {
+        "signal": "tail_entropy",
+        "cohens_d": 0.449,
+        "direction": "high=good",
+        "p_raw": 0.021,
+        "n_ok": 147,
+        "n_fail": 33,
+        "p_adjusted": 0.21,
+        "survives_correction": false,
+        "nominally_significant": true
+      },
+      {
+        "signal": "mean_entropy",
+        "cohens_d": 0.353,
+        "direction": "high=good",
+        "p_raw": 0.0664,
+        "n_ok": 147,
+        "n_fail": 33,
+        "p_adjusted": 0.31,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "n_semantic",
+        "cohens_d": -0.299,
+        "direction": "high=bad",
+        "p_raw": 0.124,
+        "n_ok": 147,
+        "n_fail": 33,
+        "p_adjusted": 0.31,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "n_tokens",
+        "cohens_d": -0.299,
+        "direction": "high=bad",
+        "p_raw": 0.124,
+        "n_ok": 147,
+        "n_fail": 33,
+        "p_adjusted": 0.31,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "spike_quartile",
+        "cohens_d": 0.253,
+        "direction": "high=good",
+        "p_raw": 0.1991,
+        "n_ok": 147,
+        "n_fail": 33,
+        "p_adjusted": 0.3982,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "head_entropy",
+        "cohens_d": -0.221,
+        "direction": "high=bad",
+        "p_raw": 0.2477,
+        "n_ok": 147,
+        "n_fail": 33,
+        "p_adjusted": 0.4128,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "spike_relative_pos",
+        "cohens_d": 0.196,
+        "direction": "high=good",
+        "p_raw": 0.3134,
+        "n_ok": 147,
+        "n_fail": 33,
+        "p_adjusted": 0.4477,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "max_entropy",
+        "cohens_d": 0.169,
+        "direction": "high=good",
+        "p_raw": 0.3868,
+        "n_ok": 147,
+        "n_fail": 33,
+        "p_adjusted": 0.4835,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "spike_token_idx",
+        "cohens_d": 0.062,
+        "direction": "high=good",
+        "p_raw": 0.7514,
+        "n_ok": 147,
+        "n_fail": 33,
+        "p_adjusted": 0.8349,
+        "survives_correction": false,
+        "nominally_significant": false
+      },
+      {
+        "signal": "plateau_start_quartile",
+        "cohens_d": 0.03,
+        "direction": "high=good",
+        "p_raw": 0.8838,
+        "n_ok": 147,
+        "n_fail": 33,
+        "p_adjusted": 0.8838,
+        "survives_correction": false,
+        "nominally_significant": false
+      }
+    ],
+    "note": "10 candidate entropy statistics were tested against the same pass/fail data, so raw p-values are corrected for multiple comparisons (Benjamini-Hochberg). A signal is only reported as usable if its corrected p clears alpha AND |d| >= 0.2. Signals listed in nominally_significant_but_not_surviving cleared p<0.05 on their own but not after correction \u2014 with this many tests, that is the expected behaviour of noise, not a lead. They are candidates for a pre-registered test on a fresh run, never findings."
+  },
+  "spike_location": {
+    "ok_spike_quartiles": [
+      1,
+      1,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      2,
+      2,
+      2,
+      0,
+      2,
+      3,
+      3,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      3,
+      2,
+      2,
+      3,
+      3,
+      2,
+      2,
+      2,
+      2,
+      2,
+      3,
+      0,
+      2,
+      2,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      2,
+      0,
+      0,
+      3,
+      1,
+      1,
+      2,
+      0,
+      0,
+      1,
+      2,
+      0,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      3,
+      3,
+      2,
+      0,
+      2,
+      2,
+      2,
+      0,
+      3,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      3,
+      2,
+      2,
+      2,
+      2,
+      1,
+      2,
+      2,
+      3,
+      2,
+      1,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      3,
+      1,
+      1,
+      3,
+      1,
+      1,
+      1,
+      1,
+      1,
+      3,
+      1,
+      1,
+      3,
+      3,
+      3,
+      3,
+      3,
+      1,
+      3,
+      0,
+      3,
+      1,
+      3
+    ],
+    "fail_spike_quartiles": [
+      0,
+      3,
+      1,
+      1,
+      3,
+      1,
+      1,
+      3,
+      0,
+      2,
+      2,
+      2,
+      2,
+      0,
+      2,
+      0,
+      2,
+      0,
+      2,
+      2,
+      0,
+      0,
+      2,
+      2,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1
+    ],
+    "ok_mean_spike_pos": 0.492,
+    "fail_mean_spike_pos": 0.438,
+    "ok_quartile_entropies": [
+      [
+        0.0737,
+        0.0255,
+        0.0943,
+        0.0261
+      ],
+      [
+        0.0737,
+        0.0255,
+        0.1003,
+        0.0252
+      ],
+      [
+        0.0887,
+        0.0086,
+        0.0668,
+        0.0152
+      ],
+      [
+        0.0823,
+        0.0262,
+        0.0568,
+        0.0049
+      ],
+      [
+        0.0823,
+        0.0262,
+        0.0568,
+        0.0049
+      ],
+      [
+        0.0636,
+        0.0077,
+        0.0175,
+        0.0021
+      ],
+      [
+        0.0669,
+        0.0095,
+        0.0172,
+        0.0015
+      ],
+      [
+        0.0503,
+        0.0057,
+        0.0132,
+        0.0105
+      ],
+      [
+        0.0665,
+        0.0165,
+        0.0117,
+        0.0024
+      ],
+      [
+        0.0503,
+        0.0057,
+        0.0132,
+        0.0105
+      ]
+    ],
+    "fail_quartile_entropies": [
+      [
+        0.0765,
+        0.0271,
+        0.0416,
+        0.0166
+      ],
+      [
+        0.0731,
+        0.029,
+        0.0247,
+        0.0215
+      ],
+      [
+        0.08,
+        0.0264,
+        0.0262,
+        0.0216
+      ],
+      [
+        0.0787,
+        0.026,
+        0.0386,
+        0.0155
+      ],
+      [
+        0.08,
+        0.0264,
+        0.0227,
+        0.0303
+      ],
+      [
+        0.08,
+        0.0264,
+        0.0262,
+        0.0282
+      ],
+      [
+        0.0718,
+        0.0314,
+        0.043,
+        0.0235
+      ],
+      [
+        0.0731,
+        0.029,
+        0.0247,
+        0.0207
+      ],
+      [
+        0.0621,
+        0.0265,
+        0.0707,
+        0.0146
+      ],
+      [
+        0.0771,
+        0.0118,
+        0.0773,
+        0.0216
+      ]
+    ],
+    "note": "spike_quartile: 0=head(early), 3=tail(late). If fail spikes cluster in a different quartile than ok spikes, spike location is a useful incorrectness predictor for this model."
+  },
+  "spike_threshold_calibrated": {
+    "threshold": null,
+    "usable": false,
+    "accuracy": 0,
+    "balanced_accuracy": null,
+    "chance_balanced_accuracy": 0.5,
+    "direction": "none",
+    "reason": "No entropy threshold is shipped for this model: difference is not distinguishable from chance (permutation p=0.387, needs p<0.05). Fitting a cut point to a difference this size would produce a number that looks actionable and is not."
+  },
+  "coverage_matrix": {
+    "test_retry": {
+      "recovered": 18,
+      "unique_recovered": 7,
+      "recovered_keys": [
+        [
+          "filter",
+          0
+        ],
+        [
+          "filter",
+          1
+        ],
+        [
+          "filter",
+          2
+        ],
+        [
+          "filter",
+          3
+        ],
+        [
+          "filter",
+          4
+        ],
+        [
+          "filter",
+          5
+        ],
+        [
+          "filter",
+          6
+        ],
+        [
+          "filter",
+          9
+        ],
+        [
+          "validator",
+          0
+        ],
+        [
+          "validator",
+          1
+        ],
+        [
+          "validator",
+          2
+        ],
+        [
+          "validator",
+          3
+        ],
+        [
+          "validator",
+          4
+        ],
+        [
+          "validator",
+          5
+        ],
+        [
+          "validator",
+          6
+        ],
+        [
+          "validator",
+          7
+        ],
+        [
+          "validator",
+          8
+        ],
+        [
+          "validator",
+          9
+        ]
+      ],
+      "unique_keys": [
+        [
+          "validator",
+          1
+        ],
+        [
+          "validator",
+          4
+        ],
+        [
+          "validator",
+          5
+        ],
+        [
+          "validator",
+          6
+        ],
+        [
+          "validator",
+          7
+        ],
+        [
+          "validator",
+          8
+        ],
+        [
+          "validator",
+          9
+        ]
+      ]
+    },
+    "temp_retry": {
+      "recovered": 9,
+      "unique_recovered": 2,
+      "recovered_keys": [
+        [
+          "filter",
+          6
+        ],
+        [
+          "missing_ranges",
+          0
+        ],
+        [
+          "missing_ranges",
+          1
+        ],
+        [
+          "missing_ranges",
+          5
+        ],
+        [
+          "missing_ranges",
+          8
+        ],
+        [
+          "report",
+          0
+        ],
+        [
+          "report",
+          5
+        ],
+        [
+          "report",
+          7
+        ],
+        [
+          "report",
+          8
+        ]
+      ],
+      "unique_keys": [
+        [
+          "missing_ranges",
+          5
+        ],
+        [
+          "report",
+          0
+        ]
+      ]
+    },
+    "skeleton_fill": {
+      "recovered": 3,
+      "unique_recovered": 2,
+      "recovered_keys": [
+        [
+          "report",
+          1
+        ],
+        [
+          "report",
+          2
+        ],
+        [
+          "report",
+          4
+        ]
+      ],
+      "unique_keys": [
+        [
+          "report",
+          1
+        ],
+        [
+          "report",
+          2
+        ]
+      ]
+    },
+    "arch_design": {
+      "recovered": 7,
+      "unique_recovered": 0,
+      "recovered_keys": [
+        [
+          "filter",
+          3
+        ],
+        [
+          "filter",
+          6
+        ],
+        [
+          "report",
+          4
+        ],
+        [
+          "report",
+          5
+        ],
+        [
+          "report",
+          7
+        ],
+        [
+          "report",
+          8
+        ],
+        [
+          "validator",
+          0
+        ]
+      ],
+      "unique_keys": []
+    },
+    "arch_trace_short": {
+      "recovered": 10,
+      "unique_recovered": 0,
+      "recovered_keys": [
+        [
+          "filter",
+          0
+        ],
+        [
+          "filter",
+          1
+        ],
+        [
+          "filter",
+          2
+        ],
+        [
+          "filter",
+          3
+        ],
+        [
+          "filter",
+          4
+        ],
+        [
+          "filter",
+          5
+        ],
+        [
+          "filter",
+          6
+        ],
+        [
+          "filter",
+          9
+        ],
+        [
+          "missing_ranges",
+          1
+        ],
+        [
+          "report",
+          8
+        ]
+      ],
+      "unique_keys": []
+    },
+    "arch_trace_long": {
+      "recovered": 12,
+      "unique_recovered": 0,
+      "recovered_keys": [
+        [
+          "filter",
+          0
+        ],
+        [
+          "filter",
+          1
+        ],
+        [
+          "filter",
+          2
+        ],
+        [
+          "filter",
+          3
+        ],
+        [
+          "filter",
+          4
+        ],
+        [
+          "filter",
+          5
+        ],
+        [
+          "filter",
+          6
+        ],
+        [
+          "filter",
+          9
+        ],
+        [
+          "missing_ranges",
+          0
+        ],
+        [
+          "missing_ranges",
+          8
+        ],
+        [
+          "validator",
+          2
+        ],
+        [
+          "validator",
+          3
+        ]
+      ],
+      "unique_keys": []
+    },
+    "decompose": {
+      "recovered": 4,
+      "unique_recovered": 1,
+      "recovered_keys": [
+        [
+          "filter",
+          2
+        ],
+        [
+          "missing_ranges",
+          2
+        ],
+        [
+          "missing_ranges",
+          8
+        ],
+        [
+          "report",
+          8
+        ]
+      ],
+      "unique_keys": [
+        [
+          "missing_ranges",
+          2
+        ]
+      ]
+    }
+  },
+  "total_failures": 33,
+  "total_recoverable": 30,
+  "error_type_effectiveness": {
+    "logic": {
+      "test_retry": {
+        "recovered": 18,
+        "attempted": 20,
+        "rate": 0.9
+      },
+      "temp_retry": {
+        "recovered": 3,
+        "attempted": 20,
+        "rate": 0.15
+      },
+      "skeleton_fill": {
+        "recovered": 0,
+        "attempted": 20,
+        "rate": 0.0
+      },
+      "arch_design": {
+        "recovered": 4,
+        "attempted": 20,
+        "rate": 0.2
+      },
+      "arch_trace_short": {
+        "recovered": 8,
+        "attempted": 20,
+        "rate": 0.4
+      },
+      "arch_trace_long": {
+        "recovered": 10,
+        "attempted": 20,
+        "rate": 0.5
+      },
+      "decompose": {
+        "recovered": 1,
+        "attempted": 20,
+        "rate": 0.05
+      }
+    },
+    "assertion": {
+      "test_retry": {
+        "recovered": 0,
+        "attempted": 13,
+        "rate": 0.0
+      },
+      "temp_retry": {
+        "recovered": 6,
+        "attempted": 13,
+        "rate": 0.46
+      },
+      "skeleton_fill": {
+        "recovered": 3,
+        "attempted": 13,
+        "rate": 0.23
+      },
+      "arch_design": {
+        "recovered": 3,
+        "attempted": 13,
+        "rate": 0.23
+      },
+      "arch_trace_short": {
+        "recovered": 2,
+        "attempted": 13,
+        "rate": 0.15
+      },
+      "arch_trace_long": {
+        "recovered": 2,
+        "attempted": 13,
+        "rate": 0.15
+      },
+      "decompose": {
+        "recovered": 3,
+        "attempted": 13,
+        "rate": 0.23
+      }
+    }
+  },
+  "recommended_intervention_order": [
+    {
+      "intervention": "test_retry",
+      "new_coverage": 18
+    },
+    {
+      "intervention": "temp_retry",
+      "new_coverage": 8
+    },
+    {
+      "intervention": "skeleton_fill",
+      "new_coverage": 3
+    },
+    {
+      "intervention": "decompose",
+      "new_coverage": 1
+    }
+  ],
+  "arch_spike_vs_coder_quality": [
+    {
+      "intervention": "arch_design",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.0894378423690796,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.9678976535797119,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.17423677444458,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 2.73549222946167,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.019230842590332,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 0.880251407623291,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.6955443620681763,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.5050537586212158,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 0.6932601928710938,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.144588828086853,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.3217488527297974,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 1.2247107028961182,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.7278307676315308,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.0572350025177002,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.7219641804695129,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.7988165616989136,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.0066487789154053,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 0.7171695232391357,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.2524431943893433,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.3274517059326172,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.682234525680542,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "filter",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.9749727249145508,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.570702075958252,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "filter",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.6717320084571838,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.7233246564865112,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.0727142095565796,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 1.1031272411346436,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.9913930892944336,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.0513795614242554,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.9047542214393616,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.37225341796875,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.4065322875976562,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.8202714920043945,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "report",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.059539794921875,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.4808130264282227,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 1.0319432020187378,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "report",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.0252645015716553,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.523271918296814,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.0631896257400513,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "report",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.2693902254104614,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 1.18342924118042,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.2428767681121826,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "report",
+      "recovered": true,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 1.4933234453201294,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "report",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.3285433053970337,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "report",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.6904668807983398,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "validator",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.8104344606399536,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.4282841682434082,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.8353390693664551,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.2520138025283813,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.6935513019561768,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.4171561002731323,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.9588283896446228,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.790490984916687,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "validator",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.3759840726852417,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.7400913238525391,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.7692251801490784,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "validator",
+      "recovered": true,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.138176679611206,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 0.5739216804504395,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.7151262164115906,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.2181121110916138,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.693454384803772,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.6726620197296143,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.225360631942749,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.3350157737731934,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.082645297050476,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 1.105466365814209,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 0.7705670595169067,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.6938194036483765,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.2573521137237549,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 0.9828122854232788,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 2.073784828186035,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.458173155784607,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 0.9454547166824341,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.8587222099304199,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "validator",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.8137274384498596,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.6696929931640625,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.3291594982147217,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "missing_ranges",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.6531504392623901,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.7487802505493164,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "missing_ranges",
+      "recovered": true,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.8125249743461609,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.5417126417160034,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.9221605062484741,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.0099502801895142,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.958446741104126,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 1.04423987865448,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.772890567779541,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.2832196950912476,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.666694164276123,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.5880826115608215,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.0492233037948608,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.0858056545257568,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 0.9600191116333008,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.8851238489151001,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 0,
+      "arch_max_entropy": 1.1246880292892456,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 1,
+      "arch_max_entropy": 1.152034044265747,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "missing_ranges",
+      "recovered": true,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 0.630153477191925,
+      "arch_plateau": false
+    },
+    {
+      "intervention": "arch_design",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 3,
+      "arch_max_entropy": 1.9399828910827637,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_short",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 2.1621198654174805,
+      "arch_plateau": true
+    },
+    {
+      "intervention": "arch_trace_long",
+      "task_id": "missing_ranges",
+      "recovered": false,
+      "arch_spike_quartile": 2,
+      "arch_max_entropy": 1.4722024202346802,
+      "arch_plateau": true
+    }
+  ],
+  "temp_sweep": {
+    "retry_temp_1": {
+      "attempted": 33,
+      "recovered": 9
+    }
+  },
+  "pipeline_version": "2026.09.04",
+  "reanalyzed_from": "_calibration_qwen3-4b-instruct_raw.jsonl",
+  "config": {
+    "file": "Qwen_Qwen3-4B-Instruct-2507-Q5_K_L.gguf",
+    "label": "qwen3-4b-instruct",
+    "fmt": "chatml",
+    "preset": {
+      "temp": 0.7,
+      "top_p": 0.8,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0
+    },
+    "spike_threshold": 1.0305,
+    "spike_signal": "max_entropy",
+    "retry_temps": [
+      0.0,
+      0.6,
+      0.7
+    ],
+    "_provenance": {
+      "temp": "registry (card-verified)",
+      "top_p": "registry (card-verified)",
+      "top_k": "registry (card-verified)",
+      "min_p": "registry (card-verified)",
+      "repeat_penalty": "registry (card-verified)",
+      "presence_penalty": "registry (card-verified)",
+      "thinking": "registry (card-verified)"
+    },
+    "_registry_hit": true,
+    "struggle_base": 0.8109
+  },
+  "config_provenance": {
+    "temp": "registry (card-verified)",
+    "top_p": "registry (card-verified)",
+    "top_k": "registry (card-verified)",
+    "min_p": "registry (card-verified)",
+    "repeat_penalty": "registry (card-verified)",
+    "presence_penalty": "registry (card-verified)",
+    "thinking": "registry (card-verified)"
+  },
+  "model_file": "Qwen_Qwen3-4B-Instruct-2507-Q5_K_L.gguf",
+  "unverified_preset": false
+}

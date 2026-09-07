@@ -1,12 +1,16 @@
+# Normalize line endings so diffs reflect real changes, not CRLF/LF churn.
 * text=auto eol=lf
+
 *.py text eol=lf
 *.md text eol=lf
 *.json text eol=lf
+*.jsonl text eol=lf
 *.txt text eol=lf
-*.yaml text eol=lf
-*.yml text eol=lf
-*.sh text eol=lf
-*.ps1 text eol=crlf
-*.bat text eol=crlf
+*.gitignore text eol=lf
+*.gitattributes text eol=lf
+
+# Binary — never touch line endings.
 *.gguf binary
-*.bin binary
+*.png binary
+*.jpg binary
+*.jpeg binary

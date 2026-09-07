@@ -1,261 +1,239 @@
 # Local Model Calibration Kit
 
-Calibrate your local GGUF model's coding behavior. Get a model-specific
-analysis file any AI coding agent reads as standing instructions.
+A runtime calibration layer for local coding models. Install it, point your
+coding harness at the proxy, and it watches every generation, scores it with a
+model-specific entropy signal, and re-learns from your recent work every night.
 
-This is the **public evidence repository** — it contains the methodology,
-example analyses, and documentation that prove the concept. The source
-code lives in a private repository you get access to when you buy the kit.
-See [Pricing](#pricing) below.
+It is not a new coding harness. It sits between your existing harness (Aider,
+Continue, Cline, LocalHarness, mini-swe-agent, or any OpenAI-compatible client)
+and your local inference server (llama-server, LM Studio, Ollama, vLLM). One
+URL change and the harness is calibrated.
+
+## What it does
+
+1. **Observes invisibly.** The proxy records token-level logprobs and outcomes
+   from every request. In `observe` mode it does not change behavior; it just
+   builds data.
+2. **Scores live generations.** For every response it returns a
+   `calibration` verdict — `probably_fine`, `likely_wrong`, `uncertain`,
+   `no_signal`, or `out_of_scope` — plus the signal value and the profile it
+   used.
+3. **Passes a plan.** The `intervention_plan` lists ranked recovery strategies
+   and conditional "if the signal reads this way, expect these failure modes,
+   try X first" rules from the model's profile.
+4. **Re-learns overnight.** `calibrate proxy --reanalyze-at 02:00
+   --window-tasks 200` re-runs the calibration pipeline on the last 200 unique
+   tasks every night and promotes a new profile only if it is no worse on
+   held-out data. The fingerprint drifts with your actual task pool.
+5. **Gates only when asked.** `gate` mode regenerates likely-wrong responses
+   with a different seed/temperature, bounded by `--max-regenerations`.
+
+Everything is local: no API calls, no telemetry, no cloud.
+
+## Quickstart
+
+```bash
+# 1. One-time setup: auto-detect backend, match profile, write settings.
+calibrate setup --profiles-dir examples
+
+# 2. Start the proxy using the settings file it wrote.
+calibrate proxy --config /path/to/settings.json
+
+# 3. Point your harness at http://127.0.0.1:9090/v1 and use it normally.
+```
+
+`calibrate setup` probes common local ports (`8080` llama-server, `1234` LM
+Studio, `11434` Ollama, `8000` vLLM), matches the loaded model to a profile in
+`examples/`, writes a settings file, and prints the exact command for Aider,
+Continue, Cline, or a generic start. See
+`examples/harness-integrations/README.md` for harness-specific configs.
+
+### If you do not have a profile yet
+
+The kit can still run in `observe` mode and record data. Once you have a log
+with outcomes, build a profile offline:
+
+```bash
+python calibrate.py learn --log proxy_YYYY-MM-DD.jsonl --output my_profile.json
+```
+
+Or run a full calibration from a task bank to generate a profile from scratch:
+
+```bash
+python calibrate.py run --model your-model.gguf
+python calibrate.py export --profile _calibration_<label>.json --output AgentAnalysis.md
+```
+
+The full calibration is the original offline path. It is still the right way to
+produce a robust profile when no example profile exists for your exact model and
+quantization.
 
 ## Scope
 
-This is not a "know if your model is right about anything" tool. It
-calibrates against **benchmark-verifiable pass/fail tasks** — code with
-automated tests. Every entropy signal, threshold, and intervention rank in
-this kit comes from one question: did the generated code pass its tests,
-yes or no. It has not been tested on open-ended or subjective output
-(freeform Q&A, creative writing, anything without an automated correctness
-check) — the entropy signal there is unproven, not assumed to transfer.
-If your use case doesn't reduce to pass/fail, this isn't calibrated for it.
+This is not a "know if your model is right about anything" tool. It calibrates
+against **benchmark-verifiable pass/fail tasks** — code with automated tests.
+Every entropy signal, threshold, and intervention rank comes from one question:
+did the generated code pass its tests, yes or no. It has not been tested on
+open-ended or subjective output (freeform Q&A, creative writing, anything
+without an automated correctness check) — the entropy signal there is unproven,
+not assumed to transfer. If your use case does not reduce to pass/fail, this is
+not calibrated for it.
 
-## What you get
+## The runtime proxy in detail
 
-After one calibration run:
+### Response headers
 
-- **A signal matched to what *your* model's own right and wrong look like**
-  — or an explicit `none`. The kit searches ~170 candidate statistics over
-  your model's own generations, corrects for having searched them all, and
-  validates the winner two ways: on held-out records (does it separate
-  new generations?) and on held-out *tasks* (does it separate generations
-  of tasks it never saw?). Direction is discovered, never assumed: high can
-  mean wrong, high can mean right, and which one it is differs by model.
-  So far two of four models have a usable signal, and both transfer to
-  unseen tasks — the other two got an honest `none`. Nothing here
-  transfers between models, which is exactly why it has to be run against
-  yours.
-- **The statistical power behind that verdict**, so `none` is
-  interpretable. "This model has no entropy signal" and "this run was too
-  small to see one" are different answers, and the report tells you which,
-  with the observed effect size, the smallest effect the run could have
-  detected, and the `--repeats` setting that would settle it.
-- **An intervention order** — which repair strategies work, ranked by
-  coverage, with per-error-type routing. This works on every model
-  calibrated so far, including the ones with no entropy signal.
-- **Pre-test failure routing** — when a generation is going to fail, the
-  signal often predicts *which kind* of failure it will be (e.g.
-  disengaged/empty output vs a real logic bug) before the tests run, and
-  which intervention to reach for first in each case.
-- **A cost ceiling** — max recovery stages, bail conditions, when to stop
-  trying.
-- **An `AgentAnalysis.md` file** — drop it into any project and Devin,
-  Claude Code, Cursor, or 20+ other agents read it as standing
-  instructions.
+Non-streaming responses carry:
 
-## The evidence
+- `X-Calibration-Verdict`
+- `X-Calibration-Profile`
+- `X-Calibration-Request-Id` — look up the full record later at
+  `/v1/calibration/request/{request_id}`
+- `X-Calibration-Regenerated` / `X-Calibration-Regeneration-Count` when in
+  gate mode
 
-### What you should expect
+Streaming clients get the same `request_id` in the final SSE chunk and can call
+the lookup endpoint after the stream.
 
-| model | bank | probes (unique) | failures | usable signal | recoverable |
-|---|---|---|---|---|---|
-| Qwen3-8B (Q5_K_M, thinking mode) | 224-task (164 HumanEval + 60 built-in) | 224 | 37 | yes — `think_frac`, high=good; **transfers to unseen tasks** (0.838 mean, above chance in 100% of 300 splits) | 17/37 |
-| Qwen3-4B-Instruct-2507 (Q5_K_L) | 60-task | 108 | 20 | yes — `max_entropy`/plateau, high=bad; **transfers to unseen tasks** (0.73, above chance in 92% of splits) | 11/20 |
-| granite-4.1-3b (Q5_K_M) | 60-task | 60 | 8 | none — underpowered (MDE d≥1.06); task-level check: below chance | 4/8 |
-| Qwen3-4B-Instruct-2507 (Q5_K_L) | 18-task (superseded) | 180 ×3 | 32–33 | yes — early-window, replicated *on that bank only* | 30/33 |
-| granite-4.1-3b (Q5_K_M) | 18-task (superseded) | 108 | 29 | none, at MDE d≥0.61 | 18/29 |
-| mini-coder-4b (Q8_0) | 18-task (superseded) | 36 | 11 | none | 4/11 |
+### The `calibration` payload
 
-Across the current banks: two models have usable signals that transfer to
-unseen tasks, two do not.
-**That is the honest number, and it is why you run this rather than copy
-someone's config.** A model with no signal is a real answer — it tells
-you not to spend compute on a gate that buys nothing, and you still get
-the repair routing, which works on all of them.
+When verbose mode is on, the response body includes a `calibration` object:
 
-### Two holdouts, two questions
+```json
+{
+  "verdict": "likely_wrong",
+  "signal": {"name": "plateau_start_quartile", "value": 0.0, "threshold": -0.5, "direction": "high=bad"},
+  "predicted_failure_class": null,
+  "recommended_intervention": "test_retry",
+  "intervention_plan": [
+    {"intervention": "test_retry", "new_coverage": 7, "recovered": 7, "unique_recovered": 4},
+    {"intervention": "temp_retry", "new_coverage": 3, "recovered": 6, "unique_recovered": 1},
+    {"intervention": "test_retry", "when": "n_tokens below 3528.0541",
+     "predicted_error_types": ["assertion"], "recovered": 3, "attempted": 9, "recovery_rate": 0.33}
+  ],
+  "scope_note": "Profile for qwen3-4b-instruct calibrated 2026-09-05 on 108 generations."
+}
+```
 
-The record-level held-out split asks "does this signal separate *new
-generations*?" It cannot ask "does it separate generations of *tasks the
-bank never contained*?" — a held-out record can come from the same task
-as a training record, so a signal that detects task identity (not
-wrongness) passes while being useless on a new task. The profile therefore
-also runs `task_holdout_validation`: whole tasks are excluded from
-selection and fitting, then scored — plus a `transfer_estimate` that
-takes the signal the full run selected and re-scores it on held-out tasks
-across 300 random task splits.
+`intervention_plan` combines the greedy-set-cover escalation order with
+conditional rules from `signal_failure_routing`. That is the pre-test plan:
+before the tests run, the signal predicts which failure modes are likely and
+which repair strategy has the best recovery rate for them.
 
-On the current runs: Qwen3-8B's `think_frac` transfers (0.838 mean
-balanced accuracy on unseen tasks, above chance in 100% of 300 draws),
-Qwen3-4B's `max_entropy`/plateau transfers (0.73, above chance in 92% of
-draws), while granite's task-selected signal went below chance (0.87
-train → 0.47 test) — the failure mode this check exists to catch.
+### Nightly reanalysis
 
-### What keeps per-model honest
+The proxy can re-build the profile from recent records on a schedule:
 
-If every model gets its own story, no story can be wrong. Four checks run
-inside each single run:
+```bash
+calibrate proxy --reanalyze-at 02:00 --window-tasks 200 --window-hours 168
+```
 
-- a **permutation test**, so a direction is never read off the sign of a
-  noisy mean difference;
-- **Benjamini-Hochberg correction** across all ~170 candidate statistics,
-  so scanning cannot manufacture a winner;
-- a **held-out split** — signal chosen and threshold fitted on training
-  records, scored on records neither decision touched;
-- a **task-level holdout** — whole tasks excluded from selection and
-  fitting, then scored, so a signal must generalize to new questions, not
-  just new generations of known ones.
+- `--window-tasks` keeps the N most recent unique tasks. Older tasks fall out of
+  the window.
+- `--window-hours` adds an age cutoff.
+- A candidate profile is promoted only if it is at least as good as the active
+  one on held-out data and not below chance. Older profiles are backed up to
+  `profiles.bak/`.
 
-Findings that survived those got pre-registered and re-tested on fresh
-data anyway. The full chain, including a withdrawn claim and a test that
-was designed wrong, is in the private repo's `research/` directory.
+This is the closed loop: today's work becomes tonight's training data; tomorrow
+uses the updated fingerprint.
 
-### Scope: the file, not the family
+## What the full calibration still gives you
 
-Every result above is scoped to one model, at one size, **at one
-quantization**. Entropy is a property of the logit distribution and
-quantization changes that distribution, so a Q4 of the same weights is a
-different subject and needs its own run. Profiles record the exact
-filename, the detected quantization tag and a file fingerprint; a run
-from a different file will not overwrite an existing profile.
+A full `calibrate run` is the strongest way to build a profile when you do not
+have one. It:
 
-### The examples
+- Searches ~170 candidate statistics in a single generation pass.
+- Corrects for multiple comparisons.
+- Validates the winner on held-out records and held-out *tasks* (task-level
+  holdout is the check for "does this apply to new questions?").
+- Sweeps 7 recovery interventions and ranks them by coverage.
+- Exports `AgentAnalysis.md` that any agent reads as standing instructions.
 
-The `examples/` directory contains pre-rendered analyses:
+```bash
+python calibrate.py run --model your-model.gguf
+python calibrate.py report --profile _calibration_<label>.json
+python calibrate.py export --profile _calibration_<label>.json --output AgentAnalysis.md
+```
 
-- **`qwen3-8b_agents.md`** / **`qwen3-8b_profile.json`** / **`qwen3-8b_report.html`**
-  — the largest bank so far (224 tasks: 164 HumanEval + 60 built-in),
-  Qwen3-8B in thinking mode at its card-recommended sampling settings.
-  `think_frac`, high=good, survives correction and transfers (0.838,
-  100% of splits above chance). Also the first example with **pre-test
-  failure routing**: a generation-length split separates "didn't engage"
-  failures (syntax/empty output) from "thought but got it wrong"
-  (assertion/logic), each with its own first-try intervention.
-- **`qwen_agents.md`** / **`qwen60_profile.json`** / **`qwen60_report.html`**
-  — the model with a signal on this bank: `max_entropy`/plateau, high=bad,
-  and a clear demonstration that a signature is per-model *and
-  per-task-set*: the 18-task early-window result did not replicate here.
-  The signal transfers to unseen tasks (0.73 balanced accuracy, 92% of
-  task splits above chance).
-- **`granite_agents.md`** / **`granite60_profile.json`** / **`granite60_report.html`**
-  — no usable signal, underpowered at 8 failures (MDE d≥1.06), with a
-  working coder-side repair order. The `none` case, delivered honestly.
-  Its task-level check went below chance — the failure mode the check
-  exists to catch.
+`reanalyze` re-runs the analysis on saved raw data with no GPU time:
 
-Same calibrator, opposite conclusions. There is no universal config. Your
-model needs its own calibration.
+```bash
+python calibrate.py reanalyze --raw _calibration_<label>_raw.jsonl
+```
 
-## How it works
+## Reproducibility
 
-1. **Probe:** Run your model on calibration tasks. Capture ~170 candidate
-   statistics in a single generation pass — full-vocab entropy, commitment
-   curves, KL divergence series, sampled-token surprisal and rank,
-   trajectory-shape features, thinking-phase splits. Every signal the
-   logits can support, captured once, reused for every analysis.
-2. **Intervention sweep:** For each failure, try all recovery
-   interventions in isolation (error feedback, temp retry, skeleton-fill,
-   architect prompt, architect trace short/long, decompose).
-3. **Analysis:** Rank entropy signals by separation. Compute coverage
-   matrix. Greedy set cover for intervention order. Per-error-type
-   effectiveness. Both holdout levels (record and task) plus the transfer
-   estimate.
-4. **Export:** Render findings into `AgentAnalysis.md` with specific
-   numbers, negative results, and compute savings estimates.
+Runs are reproducible by default: a fixed sampling seed means the same command
+produces the same generations. That is deliberate — a published result should be
+reproducible. It also means re-running the same command is not a second sample;
+change the seed to draw an independent sample:
 
-See `METHODOLOGY.md` for the full explanation.
+```bash
+python calibrate.py run --model your-model.gguf --repeats 10
+python calibrate.py run --model your-model.gguf --repeats 10 --seed 77
+```
 
-## Task suite
-
-The kit ships with a built-in coding task battery aimed at 2-6B models.
-These are the tasks that broke *my* models — the weak spots I kept hitting
-when trying to get small local models to code competently. They may not
-be your weak spots.
-
-**What's included:**
-- **Assembly tasks** — multi-file wiring problems (import resolution,
-  interface matching, module assembly)
-- **Hard function tasks** — single-function algorithmic problems
-  (rle_decode, missing_ranges, merge_intervals, normalize_path, and 38
-  more) with deterministic eval-based tests
-
-Every task has a deterministic pass/fail signal — the kit executes the
-model's code in a sandbox and checks test cases. No LLM-as-judge, no
-subjective grading.
-
-**Bringing your own tasks:** The task format is simple — a JSON file with
-`id`, `desc`, `filename`, `func_name`, and `tests`. The kit's
-`validate-tasks` command proves each task's reference against its own
-tests before calibration starts, so a broken task can't produce a broken
-signal.
-
-## Security and privacy
-
-- **No network calls at all.** The calibration pipeline, the exporter, the
-  report renderer, and `federation.py` contain no network code. Not
-  gated, not opt-in — there is none.
-- **No telemetry during execution.** Calibration runs entirely locally.
-- **`federation.py`** writes a sanitized contribution file locally. What
-  you do with it is up to you.
-- **Execution sandbox.** Model-generated code runs in a Python-level
-  sandbox that blocks network access, process spawning, `ctypes`, and
-  dangerous `os` functions. The threat model is accidental damage from
-  model output, not a determined adversary — for hard sandboxing, run
-  inside a container or VM.
+Interrupted runs resume themselves from checkpoint. Change any setting and the
+old checkpoint is set aside as `.stale`.
 
 ## Requirements
 
-- Python 3.10+
-- `llama-cpp-python` and `numpy` (see `requirements.txt`)
-- A GGUF model — **2-8B recommended and tested**. Larger models have stronger signals according to the research- but are beyond my current capability to test.
-- The calibration method assumes the model fails often
-  enough to measure failure patterns; very competent models may not
-  produce enough signal.
-- A GPU is recommended but not required. Works on NVIDIA CUDA, AMD ROCm,
-  Apple Metal, or CPU-only. CUDA is fastest; CPU works but takes longer.
+- Python 3.10+ (for the Python workflow), or the `dist/calibrate.exe` binary on
+  Windows.
+- `llama-cpp-python` and `numpy` (see `requirements.txt`) for full calibration.
+- A GGUF model (3-8B recommended).
+- A GPU is recommended but not required. Works on NVIDIA CUDA, AMD ROCm, Apple
+  Metal, or CPU-only.
+
+The runtime proxy itself only needs a local OpenAI-compatible inference server
+and a profile. It does not load the GGUF itself.
+
+## Known limitations
+
+- **The `__subclasses__` sandbox escape is open.** The threat model is
+  accidental damage from model output, not a determined adversary.
+- **Scope is benchmark-verifiable pass/fail code tasks.** The entropy signal is
+  not tested on open-ended or subjective output.
+- **Signals are distribution-level only.** No intermediate-layer hidden states.
+- **The evidence base is small.** See Examples.
 
 ## Before you calibrate
 
-Check your model's config. The calibration sweeps sampling parameters
-around the model's recommended values — wrong starting values produce
-garbage data. Check `CORE_MODEL_CONFIGS.md` for verified configs, or check
-the model's HuggingFace card.
+Check your model's config. The calibration sweeps sampling parameters around the
+model's recommended values — wrong starting values produce garbage data. Check
+`CORE_MODEL_CONFIGS.md` or the model's HuggingFace card.
 
-Common gotchas:
-- **Thinking models** need higher `max_tokens` (4096+) or they produce no
-  output — thinking tokens consume the budget silently
-- **Some models** require `presence_penalty` in instruct mode or outputs
-  degenerate — check the card
-- **Some models** are designed for greedy decoding (`temp=0.0`) — check
-  the card
+## Execution sandbox
 
-See `METHODOLOGY.md` for the full knob reference and `CORE_MODEL_CONFIGS.md`
-for verified configs.
+The calibrator includes a Python-level sandbox that blocks network access,
+process spawning, `ctypes`, and file writes outside the task temp directory.
+See `METHODOLOGY.md` for the threat model and what is not blocked.
 
-## Pricing
+## Examples
 
-**$59.99, one time** — with launch pricing for early buyers (currently  50%- less than $30 to test every model you own or run through Ollama). That buys the kit and
-collaborator access to the private repository, so updates arrive with
-`git pull`. No subscription, no seats, no usage metering. 
+`examples/` holds every calibration run, with raw records. Read these before
+buying. They disagree with each other, and that is the point.
 
-**[Buy it here →](https://buy.polar.sh/polar_cl_oPEsqZL29Nvuo6oX0GRF1DHDXgE75NOFAmy7V3oAjcU)**
+### Verified signals
 
-Sold through [Polar](https://polar.sh), which is the merchant of record —
-they handle payment and sales tax, and your purchase triggers the GitHub
-invite automatically.
+| model | bank | probes | failures | signal | transfer | recoverable |
+|---|---|---|---|---|---|---|
+| Qwen3-8B Q5_K_M (thinking) | 224-task | 224 | 37 | `think_frac` high=good | 0.838 mean, 100% above chance | 17/37 |
+| Qwen3-4B-Instruct-2507 Q5_K_L | 60-task | 108 | 20 | `max_entropy`/plateau high=bad | 0.73 mean, 92% above chance | 11/20 |
+| granite-4.1-3b Q5_K_M | 60-task | 60 | 8 | none — below chance | — | 4/8 |
+| mini-coder-4b Q8_0 | 18-task | 36 | 11 | none | — | 4/11 |
 
-### What is guaranteed
+Two models have usable signals that transfer to unseen tasks; two do not. That
+is the honest number, and it is why you run this rather than copy someone else's
+config.
 
-The kit runs on your model and returns a **definite, statistically-backed
-verdict**: either a signal with a threshold you can implement, or an
-explicit `none` with the effect size observed, the smallest effect the run
-could have detected, and the `--repeats` setting that would settle it.
+On the same data, the statistics everyone reports find nothing: `max_entropy`
+d=+0.17, `mean_entropy` d=+0.15. A short opening spike plus a long calm tail
+averages to the same number as a flat middling trajectory. Averaging across a
+generation destroys the signal; pooling across models cancels what survives. One
+prominent measure advertises being "comparable across models and tasks without
+threshold recalibration" — that is the assumption these results contradict.
 
-If a completed run gives you neither a usable signal **nor** a repair
-order that beats doing nothing — that is, nothing you can act on — email
-the address in `SUPPORT.md` with your Polar order number for a full
-refund. The guarantee is in `REFUND_POLICY.md` (shipped with the kit).
-
-## License
-
-Custom source-available EULA with a grant-back clause. See `LICENSE.md`
-for full terms.
+See `CHANGELOG.md` for feature history and `METHODOLOGY.md` for the full
+statistical pipeline.

@@ -2,7 +2,15 @@
 
 This document explains what the calibration kit does, what the knobs are,
 and how the search/filter/calibrate process works. It's the building-blocks
-reference -- read this to understand what you're tuning and why.
+reference — read this to understand what you're tuning and why.
+
+There are two ways to use the kit:
+
+1. **Runtime proxy** (fastest path): `calibrate setup` + `calibrate proxy`.
+   The proxy scores live generations and re-learns from recent work on a
+   nightly schedule.
+2. **Full calibration** (strongest profile): `calibrate run` sweeps a task
+   bank, interventions, and signals to build a profile from scratch.
 
 ---
 
@@ -674,6 +682,25 @@ implementation, and `python _task_bank.py` runs each reference against that
 task's own tests. A task whose expected value is wrong would be recorded as
 a model failure and would corrupt every statistic derived from it, silently.
 The validator is what rules that out; run it after editing or adding a task.
+
+---
+
+## Runtime proxy and continuous re-calibration
+
+The same signals, thresholds, and intervention ordering can be used on live
+generations through the OpenAI-compatible proxy (`calibrate proxy`).
+
+- **Setup:** `calibrate setup --profiles-dir <path>` auto-detects a local
+  backend, matches a profile, and writes a `settings.json`.
+- **Recording:** the proxy injects `logprobs` into every request and appends
+  the entropy trajectory plus verdict to a JSONL log.
+- **Live verdicts:** each response carries `X-Calibration-Verdict` and the
+  `calibration` payload, which now includes `intervention_plan` — the ranked
+  escalation order plus conditional signal-failure routing rules.
+- **Nightly re-learn:** `calibrate proxy --reanalyze-at 02:00 --window-tasks
+  200` re-runs the calibration pipeline on the last 200 unique tasks every
+  night, promoting a new profile only if it is no worse on held-out data. The
+  fingerprint drifts with the actual task pool.
 
 ### Adding your own tasks
 

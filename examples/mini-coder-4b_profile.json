@@ -1,0 +1,338 @@
+{
+  "model_label": "mini-coder-4b-q8-0",
+  "calibration_date": "2026-09-04 13:03",
+  "n_probe_runs": 36,
+  "n_failures": 11,
+  "n_intervention_runs": 44,
+  "entropy_direction": {
+    "direction": "none",
+    "raw_direction_before_gating": "high=good",
+    "gate_reason": "difference is not distinguishable from chance (permutation p=0.807, needs p<0.05)",
+    "permutation_p": 0.8069,
+    "separation": 0.026,
+    "ok_mean_max_entropy": 1.5583,
+    "fail_mean_max_entropy": 1.5178,
+    "n_ok_samples": 25,
+    "n_fail_samples": 11,
+    "observed_effect_cohens_d": 0.091,
+    "min_detectable_effect_d": 1.013,
+    "power_verdict": "underpowered",
+    "power_note": "This run could only reliably detect an effect of d>=1.01; the effect it saw was d=+0.09. That means this run cannot tell 'no entropy signal' apart from 'too few failures to see one'. Re-running with --repeats 249 (this run used 2) would give ~80% power on an effect that size.",
+    "repeats_used": 2,
+    "repeats_for_80pct_power": 249,
+    "note": "high=bad means high entropy predicts failure -> bail early on high-entropy generations. high=good means high entropy predicts success -> verify high-entropy candidates first instead of bailing. none means entropy is not a usable signal for this model, which is a real and useful result, not a failed run. A direction is only reported when the difference survives a two-sided permutation test (p<0.05, 20000 resamples) AND exceeds a minimum separation of 0.08. raw_direction_before_gating is the unfiltered sign of the mean difference; it is recorded for transparency and must not be used as a finding."
+  },
+  "spike_location": {
+    "ok_spike_quartiles": [
+      0,
+      1,
+      0,
+      2,
+      1,
+      3,
+      2,
+      3,
+      2,
+      1,
+      3,
+      2,
+      2,
+      1,
+      2,
+      3,
+      3,
+      2,
+      3,
+      0,
+      2,
+      0,
+      1,
+      1,
+      3
+    ],
+    "fail_spike_quartiles": [
+      1,
+      3,
+      0,
+      3,
+      3,
+      1,
+      1,
+      1,
+      1,
+      3,
+      0
+    ],
+    "ok_mean_spike_pos": 0.579,
+    "fail_mean_spike_pos": 0.497,
+    "ok_quartile_entropies": [
+      [
+        0.1251,
+        0.0469,
+        0.0251,
+        0.0396
+      ],
+      [
+        0.0865,
+        0.1425,
+        0.0492,
+        0.0
+      ],
+      [
+        0.0975,
+        0.0172,
+        0.0024,
+        0.0528
+      ],
+      [
+        0.103,
+        0.1114,
+        0.1047,
+        0.0053
+      ],
+      [
+        0.0986,
+        0.1762,
+        0.0937,
+        0.0007
+      ],
+      [
+        0.0901,
+        0.0735,
+        0.0527,
+        0.0797
+      ],
+      [
+        0.1121,
+        0.0368,
+        0.1032,
+        0.0952
+      ],
+      [
+        0.1339,
+        0.0458,
+        0.1735,
+        0.3588
+      ],
+      [
+        0.0716,
+        0.0386,
+        0.0789,
+        0.0451
+      ],
+      [
+        0.057,
+        0.0924,
+        0.1129,
+        0.0366
+      ]
+    ],
+    "fail_quartile_entropies": [
+      [
+        0.0588,
+        0.1244,
+        0.0316,
+        0.0881
+      ],
+      [
+        0.0956,
+        0.034,
+        0.0441,
+        0.1585
+      ],
+      [
+        0.1419,
+        0.0409,
+        0.1046,
+        0.0764
+      ],
+      [
+        0.0917,
+        0.0669,
+        0.0616,
+        0.0381
+      ],
+      [
+        0.0873,
+        0.0724,
+        0.0521,
+        0.0953
+      ],
+      [
+        0.0929,
+        0.0755,
+        0.0286,
+        0.0523
+      ],
+      [
+        0.1315,
+        0.0639,
+        0.0634,
+        0.0555
+      ],
+      [
+        0.0629,
+        0.0949,
+        0.1419,
+        0.0326
+      ],
+      [
+        0.1264,
+        0.1043,
+        0.1037,
+        0.0496
+      ],
+      [
+        0.1103,
+        0.1051,
+        0.0617,
+        0.2201
+      ]
+    ],
+    "note": "spike_quartile: 0=head(early), 3=tail(late). If fail spikes cluster in a different quartile than ok spikes, spike location is a useful incorrectness predictor for this model."
+  },
+  "spike_threshold_calibrated": {
+    "threshold": null,
+    "usable": false,
+    "accuracy": 0,
+    "balanced_accuracy": null,
+    "chance_balanced_accuracy": 0.5,
+    "direction": "none",
+    "reason": "No entropy threshold is shipped for this model: difference is not distinguishable from chance (permutation p=0.807, needs p<0.05). Fitting a cut point to a difference this size would produce a number that looks actionable and is not."
+  },
+  "coverage_matrix": {
+    "test_retry": {
+      "recovered": 4,
+      "unique_recovered": 3,
+      "recovered_keys": [
+        [
+          "filter",
+          0
+        ],
+        [
+          "filter",
+          1
+        ],
+        [
+          "normalize_path",
+          0
+        ],
+        [
+          "pipeline",
+          0
+        ]
+      ],
+      "unique_keys": [
+        [
+          "filter",
+          0
+        ],
+        [
+          "filter",
+          1
+        ],
+        [
+          "normalize_path",
+          0
+        ]
+      ]
+    },
+    "skeleton_fill": {
+      "recovered": 1,
+      "unique_recovered": 0,
+      "recovered_keys": [
+        [
+          "pipeline",
+          0
+        ]
+      ],
+      "unique_keys": []
+    }
+  },
+  "total_failures": 11,
+  "total_recoverable": 4,
+  "error_type_effectiveness": {
+    "logic": {
+      "test_retry": {
+        "recovered": 3,
+        "attempted": 4,
+        "rate": 0.75
+      },
+      "temp_retry": {
+        "recovered": 0,
+        "attempted": 4,
+        "rate": 0.0
+      },
+      "skeleton_fill": {
+        "recovered": 1,
+        "attempted": 4,
+        "rate": 0.25
+      },
+      "decompose": {
+        "recovered": 0,
+        "attempted": 4,
+        "rate": 0.0
+      }
+    },
+    "assertion": {
+      "test_retry": {
+        "recovered": 1,
+        "attempted": 7,
+        "rate": 0.14
+      },
+      "temp_retry": {
+        "recovered": 0,
+        "attempted": 7,
+        "rate": 0.0
+      },
+      "skeleton_fill": {
+        "recovered": 0,
+        "attempted": 7,
+        "rate": 0.0
+      },
+      "decompose": {
+        "recovered": 0,
+        "attempted": 7,
+        "rate": 0.0
+      }
+    }
+  },
+  "recommended_intervention_order": [
+    {
+      "intervention": "test_retry",
+      "new_coverage": 4
+    }
+  ],
+  "arch_spike_vs_coder_quality": [],
+  "temp_sweep": {
+    "retry_temp_1": {
+      "attempted": 11,
+      "recovered": 0
+    }
+  },
+  "pipeline_version": "2026.09.04",
+  "reanalyzed_from": "_calibration_mini-coder-4b-q8-0_raw.jsonl",
+  "config": {
+    "file": "mini-coder-4b-q8_0.gguf",
+    "label": "mini-coder-4b-q8-0",
+    "fmt": "chatml",
+    "preset": {
+      "temp": 0.7,
+      "top_p": 0.8,
+      "top_k": 20,
+      "min_p": 0.0,
+      "repeat_penalty": 1.0,
+      "presence_penalty": 0.0
+    },
+    "spike_threshold": 1.8367,
+    "spike_signal": "max_entropy",
+    "retry_temps": [
+      0.0,
+      0.3,
+      0.6
+    ],
+    "thinking": false,
+    "struggle_base": 2.2511
+  },
+  "model_file": "mini-coder-4b-q8_0.gguf"
+}

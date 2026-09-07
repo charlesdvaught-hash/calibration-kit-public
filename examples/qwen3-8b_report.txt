@@ -1,0 +1,369 @@
+Calibration Report: Qwen3-8B-Q5-K-M
+======================================================================
+Date: 2026-09-06 02:16
+Probe runs: 224  Failures: 37  Intervention runs: 111
+
+ENTROPY DIRECTION
+----------------------------------------
+  Direction: high=bad
+  Basis: permutation p=0.000, separation 0.206
+  Separation: 0.206
+  Permutation p: 0.0
+  Statistical power: signal detected
+    Observed effect d=-1.36; this run could detect d>=0.50.
+  OK mean max_entropy: 1.6896
+  Fail mean max_entropy: 2.129
+  Samples: 187 ok, 37 fail
+
+HELD-OUT VALIDATION
+----------------------------------------
+  Split: 157 train (26 failures) / 67 test (11 failures)
+  Selected on train: think_frac (high=good), threshold 0.4281
+  Balanced accuracy: train 0.971 -> test 0.809  (chance 0.5)
+  Verdict: held up on data it never saw
+
+TASK-LEVEL HOLDOUT (new-task transfer)
+----------------------------------------
+  Split: 37 failing tasks / 67 tasks held out (11 of them failing)
+  Selected on training tasks: think_frac (high=good)
+  Balanced accuracy: train 0.949 -> test 0.773  (chance 0.5)
+  Verdict: generalized to tasks it never saw
+  Transfer of the run's selected signal (think_frac, high=good): mean 0.838 balanced accuracy on unseen tasks over 300 task splits [0.722–0.941], above chance in 100% of draws.
+
+HOW TO USE THIS MODEL'S SIGNAL
+----------------------------------------
+  224 unique generations, 37 failures. One signal, one curve --
+  what changes is where you cut it and what you do with each side.
+
+  CATCH WRONG  (early_vs_rest, chosen in 5/5 folds)
+    rule   : regenerate when early_vs_rest <= -0.1324
+    catches: 95% of failures
+    costs  : 32% of correct work regenerated needlessly
+
+  TRUST RIGHT  (full_ent_std, chosen in 3/5 folds)
+    rule   : ship untested when full_ent_std <= 0.4061
+    covers : 85% of generations
+    purity : 94.9% of those are correct
+
+  BOTH  (full_ent_mean, chosen in 4/5 folds)
+    ship untested : full_ent_mean <= 0.2369
+                    77% of output, 97.1% correct
+    regenerate    : full_ent_mean > 0.2369
+                    catches 87% of failures
+    still test    : between them, 0% of output
+
+SIGNAL COMBINATION (cross-validated)
+----------------------------------------
+  5-fold CV, combination rebuilt in every fold
+  Label-shuffle null: 40 shuffles, median 0.506, max 0.617
+  Beats 40/40 shuffles, empirical p=0.0244 (floor 0.024)
+  Failures caught : 76%
+  Correct flagged : 5%  (cost of the gate)
+  Balanced acc    : 0.856  (chance 0.5)
+  Typical size    : 2.4 signals
+
+  Signal stability across folds:
+    kl_cent_late_minus_early 4/5 ####
+    full_ent_std             4/5 ####
+    kl_step_mean             3/5 ###
+    full_ent_mean            1/5 #
+
+  Combination to ship (flag a generation if ANY fires):
+    full_ent_mean            above  0.3226
+    kl_step_mean             below  19.1198
+    kl_cent_late_minus_early above  -0.3856
+
+SIGNAL SCAN (all candidates, corrected)
+----------------------------------------
+  183 signals tested, Benjamini-Hochberg FDR, alpha=0.05
+  signal                         d        p    p_adj  usable
+  early_vs_rest             +1.709   0.0000   0.0000  YES
+  full_ent_early_vs_rest    +1.710   0.0000   0.0000  YES
+  full_ent_late_minus_early  -0.911   0.0000   0.0000  YES
+  full_ent_max              -1.374   0.0000   0.0000  YES
+  full_ent_mean             -1.827   0.0000   0.0000  YES
+  full_ent_min              -0.756   0.0000   0.0000  YES
+  full_ent_std              -1.697   0.0000   0.0000  YES
+  head_entropy              -1.465   0.0000   0.0000  YES
+  kl_cent_early_vs_rest     -1.009   0.0000   0.0000  YES
+  kl_cent_late_minus_early  -1.193   0.0000   0.0000  YES
+  kl_cent_mean              +1.274   0.0000   0.0000  YES
+  kl_cent_std               +1.439   0.0000   0.0000  YES
+  kl_step_early_vs_rest     -1.722   0.0000   0.0000  YES
+  kl_step_late_minus_early  +0.910   0.0000   0.0000  YES
+  kl_step_mean              +1.699   0.0000   0.0000  YES
+  kl_step_std               -1.421   0.0000   0.0000  YES
+  kl_uniform_early_vs_rest  -1.709   0.0000   0.0000  YES
+  kl_uniform_late_minus_early  +0.906   0.0000   0.0000  YES
+  kl_uniform_max            +0.781   0.0000   0.0000  YES
+  kl_uniform_mean           +1.826   0.0000   0.0000  YES
+  kl_uniform_min            +1.363   0.0000   0.0000  YES
+  kl_uniform_std            -1.695   0.0000   0.0000  YES
+  late_vs_early_half        -0.906   0.0000   0.0000  YES
+  margin_early_vs_rest      -1.402   0.0000   0.0000  YES
+  margin_mean               +1.780   0.0000   0.0000  YES
+  margin_std                -1.577   0.0000   0.0000  YES
+  mass1_early_vs_rest       -1.545   0.0000   0.0000  YES
+  mass1_late_minus_early    +0.813   0.0000   0.0000  YES
+  mass1_max                 +0.800   0.0000   0.0000  YES
+  mass1_mean                +1.806   0.0000   0.0000  YES
+  mass1_min                 +1.290   0.0000   0.0000  YES
+  mass1_std                 -1.646   0.0000   0.0000  YES
+  mass20_early_vs_rest      -1.742   0.0000   0.0000  YES
+  mass20_late_minus_early   +1.455   0.0000   0.0000  YES
+  mass20_mean               +1.742   0.0000   0.0000  YES
+  mass20_min                +1.356   0.0000   0.0000  YES
+  mass20_std                -1.505   0.0000   0.0000  YES
+  mass5_early_vs_rest       -1.978   0.0000   0.0000  YES
+  mass5_late_minus_early    +1.664   0.0000   0.0000  YES
+  mass5_mean                +1.979   0.0000   0.0000  YES
+  mass5_min                 +1.499   0.0000   0.0000  YES
+  mass5_std                 -1.829   0.0000   0.0000  YES
+  max_entropy               -1.363   0.0000   0.0000  YES
+  mean_entropy              -1.826   0.0000   0.0000  YES
+  mono_down_frac            +0.830   0.0000   0.0000  YES
+  n_semantic                -1.674   0.0000   0.0000  YES
+  n_spikes                  +0.792   0.0000   0.0000  YES
+  n_tokens                  -1.674   0.0000   0.0000  YES
+  phi_mean                  +1.806   0.0000   0.0000  YES
+  q1                        -1.465   0.0000   0.0000  YES
+  q2                        -1.649   0.0000   0.0000  YES
+  q3                        -1.644   0.0000   0.0000  YES
+  q4                        -1.939   0.0000   0.0000  YES
+  q_early_drop              +1.148   0.0000   0.0000  YES
+  q_range                   -1.228   0.0000   0.0000  YES
+  q_slope                   -1.373   0.0000   0.0000  YES
+  rank_early_vs_rest        +0.825   0.0000   0.0000  YES
+  rank_late_minus_early     -0.898   0.0000   0.0000  YES
+  rank_max                  -1.419   0.0000   0.0000  YES
+  rank_mean                 -1.809   0.0000   0.0000  YES
+  rank_std                  -1.707   0.0000   0.0000  YES
+  spike_height              +0.867   0.0000   0.0000  YES
+  spike_token_idx           -1.512   0.0000   0.0000  YES
+  surprisal_early_vs_rest   +1.387   0.0000   0.0000  YES
+  surprisal_late_minus_early  -0.870   0.0000   0.0000  YES
+  surprisal_max             -1.174   0.0000   0.0000  YES
+  surprisal_mean            -1.814   0.0000   0.0000  YES
+  surprisal_std             -1.648   0.0000   0.0000  YES
+  tail_entropy              -1.941   0.0000   0.0000  YES
+  tail_mass_early_vs_rest   +1.742   0.0000   0.0000  YES
+  tail_mass_late_minus_early  -1.455   0.0000   0.0000  YES
+  tail_mass_max             -1.356   0.0000   0.0000  YES
+  tail_mass_mean            -1.742   0.0000   0.0000  YES
+  tail_mass_std             -1.505   0.0000   0.0000  YES
+  think_boundary            +0.781   0.0000   0.0000  YES
+  think_ent_mean            -1.479   0.0000   0.0000  YES
+  think_ent_std             -1.317   0.0000   0.0000  YES
+  think_frac                +2.072   0.0000   0.0000  YES
+  think_full_ent_mean       -1.479   0.0000   0.0000  YES
+  think_full_ent_std        -1.318   0.0000   0.0000  YES
+  think_margin_mean         +1.422   0.0000   0.0000  YES
+  think_margin_std          -1.213   0.0000   0.0000  YES
+  think_phi_mean            +1.454   0.0000   0.0000  YES
+  think_phi_std             -1.275   0.0000   0.0000  YES
+  trend_rho                 -0.942   0.0000   0.0000  YES
+  kl_cent_max               +0.727   0.0001   0.0002  YES
+  kl_step_max               +0.635   0.0001   0.0002  YES
+  think_kl_step_mean        +1.134   0.0001   0.0002  YES
+  margin_late_minus_early   +0.703   0.0002   0.0004  YES
+  think_kl_cent_std         +1.061   0.0003   0.0006  YES
+  margin_max                +0.704   0.0009   0.0018  YES
+  think_kl_step_std         -0.921   0.0013   0.0026  YES
+  q_curvature               +0.567   0.0018   0.0035  YES
+  think_kl_cent_mean        +0.932   0.0025   0.0049  YES
+  tail_mass_min             -0.502   0.0059   0.0114  YES
+  kl_cent_f10_max           +0.533   0.0061   0.0116  YES
+  margin_min                +0.522   0.0070   0.0132  YES
+  q_argmax                  -0.467   0.0099   0.0185  YES
+  kl_step_f10_max           +0.410   0.0133   0.0243  YES
+  kl_uniform_f10_max        +0.484   0.0133   0.0243  YES
+  mass1_f10_max             +0.462   0.0134   0.0243  YES
+  margin_f10_max            +0.469   0.0136   0.0244  YES
+  kl_step_min               +0.431   0.0162   0.0288  YES
+  mass20_f10_max            +0.444   0.0177   0.0311  YES
+  rank_f10_mean             -0.439   0.0215   0.0375  YES
+  rank_f5_mean              -0.456   0.0230   0.0397  YES
+  q1_over_mean              +0.400   0.0250   0.0428  YES
+  surprisal_min             -0.545   0.0258   0.0435  YES
+  rank_f10_max              -0.422   0.0259   0.0435  YES
+  total_variation           -0.391   0.0297   0.0494  YES
+  first3_mean               -0.376   0.0352   0.0577  
+  q4_over_mean              -0.374   0.0353   0.0577  
+  first_to_max_ratio        +0.371   0.0365   0.0591  
+  plateau_start_quartile    +0.384   0.0384   0.0616  
+  surprisal_f10_max         -0.357   0.0436   0.0688  
+  surprisal_f10_mean        -0.359   0.0436   0.0688  
+  kl_step_f10_mean          +0.361   0.0441   0.0690  
+  spike_relative_pos        -0.322   0.0754   0.1169  
+  kl_step_slope             +0.298   0.0872   0.1341  
+  surprisal_f5_mean         -0.302   0.0900   0.1372  
+  spike_quartile            -0.309   0.0957   0.1447  
+  q_monotone_down           +0.311   0.1072   0.1608  
+  path_ratio                +0.267   0.1195   0.1778  
+  mass5_f10_max             +0.238   0.1789   0.2640  
+  early_slope               -0.214   0.2312   0.3331  
+  full_ent_slope            -0.214   0.2312   0.3331  
+  kl_uniform_slope          +0.214   0.2312   0.3331  
+  first10_mean              -0.171   0.3329   0.4686  
+  full_ent_f10_mean         -0.171   0.3329   0.4686  
+  kl_uniform_f10_mean       +0.171   0.3329   0.4686  
+  margin_first              -0.161   0.3750   0.5239  
+  mass1_slope               +0.158   0.3787   0.5250  
+  margin_slope              +0.156   0.3849   0.5296  
+  mass5_f10_mean            +0.156   0.3926   0.5362  
+  kl_step_f5_mean           +0.143   0.4229   0.5733  
+  mass5_f5_mean             +0.144   0.4269   0.5742  
+  answer_kl_cent_mean       -0.240   0.4299   0.5742  
+  answer_phi_std            -0.242   0.4582   0.5999  
+  mass1_f10_mean            +0.131   0.4636   0.5999  
+  phi_first10_mean          +0.131   0.4636   0.5999  
+  answer_ent_std            -0.221   0.4655   0.5999  
+  answer_full_ent_std       -0.221   0.4655   0.5999  
+  margin_f10_mean           +0.129   0.4731   0.6039  
+  phi_first                 -0.131   0.4752   0.6039  
+  surprisal_slope           -0.128   0.4837   0.6105  
+  first_token_entropy       +0.121   0.5078   0.6322  
+  kl_uniform_first          -0.121   0.5078   0.6322  
+  answer_margin_std         -0.199   0.5348   0.6613  
+  answer_kl_cent_std        +0.180   0.5543   0.6808  
+  mass5_slope               -0.098   0.5939   0.7201  
+  answer_kl_step_mean       -0.179   0.5942   0.7201  
+  answer_phi_mean           +0.165   0.6039   0.7271  
+  first10_max               -0.089   0.6209   0.7344  
+  full_ent_f10_max          -0.089   0.6209   0.7344  
+  first10_std               -0.088   0.6256   0.7344  
+  tail_mass_f10_max         +0.089   0.6288   0.7344  
+  kl_cent_f10_mean          +0.085   0.6369   0.7344  
+  mass20_first              +0.085   0.6413   0.7344  
+  tail_mass_first           -0.085   0.6413   0.7344  
+  answer_kl_step_std        +0.160   0.6421   0.7344  
+  kl_cent_f5_mean           +0.079   0.6551   0.7446  
+  answer_ent_mean           -0.132   0.6653   0.7469  
+  answer_full_ent_mean      -0.132   0.6653   0.7469  
+  answer_margin_mean        +0.129   0.6801   0.7589  
+  mass20_slope              +0.070   0.7028   0.7744  
+  tail_mass_slope           -0.070   0.7028   0.7744  
+  mass5_first               +0.069   0.7067   0.7744  
+  osc_rate                  +0.039   0.8325   0.9014  
+  osc_sign_changes          +0.039   0.8454   0.9014  
+  first5_mean               -0.035   0.8472   0.9014  
+  full_ent_f5_mean          -0.035   0.8472   0.9014  
+  kl_uniform_f5_mean        +0.035   0.8472   0.9014  
+  mass1_f5_mean             +0.030   0.8725   0.9175  
+  mass1_first               -0.028   0.8803   0.9175  
+  surprisal_first           +0.028   0.8803   0.9175  
+  margin_f5_mean            +0.027   0.8824   0.9175  
+  mass20_f10_mean           +0.016   0.9347   0.9530  
+  tail_mass_f10_mean        -0.016   0.9347   0.9530  
+  mass20_f5_mean            +0.014   0.9423   0.9530  
+  tail_mass_f5_mean         -0.014   0.9423   0.9530  
+  kl_cent_slope             +0.013   0.9426   0.9530  
+  full_ent_first            +0.009   0.9609   0.9662  
+  rank_slope                -0.011   1.0000   1.0000  
+  --> Usable signal: think_frac (high=good, d=+2.072, p_adj=0.0)
+
+SPIKE LOCATION
+----------------------------------------
+  OK spike quartiles: [2, 1, 1, 0, 3, 3, 2, 3, 1, 1, 2, 3, 1, 2, 3, 3, 1, 1, 3, 0, 3, 2, 3, 2, 2, 2, 0, 3, 3, 3, 3, 1, 1, 3, 2, 3, 3, 1, 1, 2, 2, 2, 1, 3, 2, 2, 1, 1, 2, 3, 3, 1, 3, 1, 3, 3, 3, 3, 2, 1, 0, 1, 3, 1, 3, 3, 2, 2, 3, 3, 1, 1, 2, 2, 1, 1, 3, 3, 2, 2, 2, 3, 3, 2, 1, 2, 2, 3, 3, 3, 1, 2, 2, 2, 2, 0, 1, 1, 3, 1, 1, 2, 1, 2, 3, 0, 3, 2, 2, 0, 3, 2, 3, 2, 3, 2, 2, 2, 1, 3, 2, 2, 2, 3, 1, 0, 2, 1, 3, 2, 0, 3, 3, 3, 1, 0, 2, 2, 3, 0, 3, 1, 0, 1, 2, 0, 2, 0, 2, 1, 1, 3, 2, 2, 1, 1, 3, 3, 3, 2, 2, 3, 2, 3, 2, 2, 2, 3, 3, 1, 0, 1, 0, 1, 3, 1, 2, 1, 2, 2, 1, 1, 2, 3, 1, 0, 3]
+  Fail spike quartiles: [1, 2, 3, 3, 3, 2, 3, 3, 3, 1, 2, 3, 3, 1, 3, 1, 3, 1, 2, 2, 1, 3, 3, 1, 3, 0, 3, 2, 3, 1, 1, 3, 3, 3, 3, 3, 0]
+  OK mean spike pos: 0.602
+  Fail mean spike pos: 0.679
+  Location difference: 0.077 (small)
+
+SPIKE THRESHOLD (CALIBRATED)
+----------------------------------------
+  Threshold: 0.4281
+  Balanced accuracy: 0.95  (chance = 0.5)
+  For reference, always guessing 'pass' scores 0.835 raw — a different metric, shown so the number above isn't read as beating it.
+  Direction: high=good
+
+COVERAGE MATRIX
+----------------------------------------
+  Total failures: 37
+  Total recoverable: 17
+  Intervention            Recovered   Unique
+  test_retry                     13        6
+  temp_retry                      8        2
+  skeleton_fill                   7        1
+
+PER-ERROR-TYPE EFFECTIVENESS
+----------------------------------------
+  logic:
+    test_retry             1/3 (33%)
+    temp_retry             1/3 (33%)
+    skeleton_fill          0/3 (0%)
+  syntax:
+    test_retry             8/15 (53%)
+    temp_retry             4/15 (27%)
+    skeleton_fill          5/15 (33%)
+  assertion:
+    test_retry             2/4 (50%)
+    temp_retry             2/4 (50%)
+    skeleton_fill          1/4 (25%)
+  empty_output:
+    test_retry             2/12 (17%)
+    temp_retry             1/12 (8%)
+    skeleton_fill          1/12 (8%)
+  type_error:
+    test_retry             0/1 (0%)
+    temp_retry             0/1 (0%)
+    skeleton_fill          0/1 (0%)
+  name_error:
+    test_retry             0/2 (0%)
+    temp_retry             0/2 (0%)
+    skeleton_fill          0/2 (0%)
+
+SIGNAL-BASED FAILURE ROUTING (pre-test)
+----------------------------------------
+  Split signal: n_tokens (separation 1.93)
+  Threshold: 3528.0541
+
+  Cluster: low_signal (9 failures)
+    Signal range: 882–3243 (mean 2379.556)
+    Dominant errors: assertion(4), logic(2), name_error(2)
+    Recovery rate: 44%
+    Best intervention: test_retry (3/9 = 33%)
+    Full ranking:
+      test_retry             3/9 (33%)
+      temp_retry             3/9 (33%)
+      skeleton_fill          1/9 (11%)
+
+  Cluster: high_signal (28 failures)
+    Signal range: 3642–3960 (mean 3897.214)
+    Dominant errors: syntax(15), empty_output(12), logic(1)
+    Recovery rate: 46%
+    Best intervention: test_retry (10/28 = 36%)
+    Full ranking:
+      test_retry             10/28 (36%)
+      skeleton_fill          6/28 (21%)
+      temp_retry             5/28 (18%)
+
+  Routing rules:
+    IF n_tokens below 3528.0541 → likely: assertion
+      → try test_retry first (33% recovery, 3/9)
+    IF n_tokens above 3528.0541 → likely: syntax, empty_output
+      → try test_retry first (36% recovery, 10/28)
+
+  Note: Failures split into 2 clusters on n_tokens (separation score 1.93). Each cluster has a different best intervention. Based on 37 failures — treat as provisional when any cluster has fewer than 5 members.
+
+RECOMMENDED INTERVENTION ORDER (greedy set cover)
+----------------------------------------
+  1. test_retry             +13 new recoveries
+  2. temp_retry             +3 new recoveries
+  3. skeleton_fill          +1 new recoveries
+
+RECOMMENDED COMBO
+----------------------------------------
+  Creation (initial gen):
+    - Use calibrated gate: signal=think_frac threshold=0.4281 (high=good)
+    - If think_frac < 0.4281, discard and regen (low = bad for this model)
+  Coding (main approach):
+    - Initial gen with interface block (condition B)
+    - On failure: test_retry (feed failures back)
+  Deconstruction:
+    - Decompose did NOT recover any failures for this model
+    - Skip decomposition for this model
+  Repair (escalation order):
+    1. test_retry
+    2. temp_retry
+    3. skeleton_fill
