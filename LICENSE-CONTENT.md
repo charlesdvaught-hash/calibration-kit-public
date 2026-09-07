@@ -1,4 +1,4 @@
-# Content License — CC BY 4.0
+# Probe and Content License — CC BY 4.0
 
 The contents of this repository — including but not limited to the
 methodology documents, research notes, preregistrations, example profiles,
