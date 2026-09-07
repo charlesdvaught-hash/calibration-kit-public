@@ -1644,10 +1644,30 @@ The full calibration kit (170 signals, intervention routing, live proxy):
             baseline_acc = (sum(1 for h in holdout_results if h["ok"] == majority_pass)
                            / total_h if total_h > 0 else 0.0)
 
+            # Sensitivity / specificity for whether the rule actually helps
+            tp = sum(1 for h in holdout_results if not h["ok"] and not h["predicted_pass"])  # predicted FAIL, actual FAIL
+            fn = sum(1 for h in holdout_results if not h["ok"] and h["predicted_pass"])     # predicted PASS, actual FAIL
+            tn = sum(1 for h in holdout_results if h["ok"] and h["predicted_pass"])         # predicted PASS, actual PASS
+            fp = sum(1 for h in holdout_results if h["ok"] and not h["predicted_pass"])     # predicted FAIL, actual PASS
+            n_actual_fail_h = tp + fn
+            n_actual_pass_h = tn + fp
+            sensitivity = (tp / n_actual_fail_h) if n_actual_fail_h > 0 else None
+            specificity = (tn / n_actual_pass_h) if n_actual_pass_h > 0 else None
+            balanced_acc = ((sensitivity + specificity) / 2.0
+                            if sensitivity is not None and specificity is not None
+                            else None)
+
             print(f"\n  Holdout accuracy:   {correct}/{total_h} = {accuracy:.0%}")
             print(f"  Baseline (majority): {baseline_acc:.0%} (always predict "
                   f"{'PASS' if majority_pass else 'FAIL'})")
             print(f"  Lift over baseline:  {accuracy - baseline_acc:+.0%}")
+            if sensitivity is not None:
+                print(f"  Sensitivity (failures caught): {tp}/{n_actual_fail_h} = {sensitivity:.0%}")
+            if specificity is not None:
+                print(f"  Specificity (passes allowed):  {tn}/{n_actual_pass_h} = {specificity:.0%}")
+            if balanced_acc is not None:
+                print(f"  Balanced accuracy: {balanced_acc:.0%} (random = 50%)")
+                print(f"  Lift over random:  {balanced_acc - 0.5:+.0%}")
 
             if args.holdout_rerank > 0:
                 first_passes = sum(1 for h in holdout_results if h["first_ok"])
@@ -1712,15 +1732,28 @@ The full calibration kit (170 signals, intervention routing, live proxy):
                 else:
                     print(f"\n  ✗ Signal did worse than random. The signal may be too noisy "
                           f"at this threshold for reranking on these demo tasks.")
-            elif accuracy > baseline_acc:
-                print(f"\n  ✓ The signal generalized to unseen tasks near the cusp.")
-                print(f"    This is evidence the calibration has practical value:")
+            if n_actual_fail_h == 0:
+                print(f"\n  ~ The holdout set had no actual failures.")
+                print(f"    The signal's ability to catch failures was not tested.")
+                print(f"    Accuracy = baseline because the only correct prediction is PASS.")
+            elif args.holdout_rerank > 0:
+                # rerank branch is handled above; this branch is for no rerank
+                pass
+            elif balanced_acc is not None and balanced_acc > 0.55:
+                print(f"\n  ✓ The rule improves over random guessing on the holdout.")
+                print(f"    Balanced accuracy {balanced_acc:.0%} (random = 50%).")
+                print(f"    It caught {tp}/{n_actual_fail_h} holdout failures.")
+                print(f"    This is evidence the rule has practical value:")
                 print(f"    it can predict failures before the test runs.")
-            elif accuracy == baseline_acc:
-                print(f"\n  ~ The signal matched baseline. No practical benefit shown")
-                print(f"    on this holdout set, though the signal may still be real.")
+            elif balanced_acc is not None and balanced_acc >= 0.45:
+                print(f"\n  ~ The rule is about as good as random on this holdout.")
+                print(f"    Balanced accuracy {balanced_acc:.0%} (random = 50%).")
+                print(f"    It caught {tp}/{n_actual_fail_h} holdout failures.")
+                print(f"    No practical benefit shown here, though the signal may still be real.")
             else:
-                print(f"\n  ✗ The signal did worse than baseline on holdout.")
+                print(f"\n  ✗ The rule is worse than random on the holdout.")
+                print(f"    Balanced accuracy {balanced_acc:.0%} (random = 50%).")
+                print(f"    It caught {tp}/{n_actual_fail_h} holdout failures.")
                 print(f"    It may be overfit to the training tasks, or the effect")
                 print(f"    is too small to predict individual outcomes.")
     elif holdout_n and not holdout_results:

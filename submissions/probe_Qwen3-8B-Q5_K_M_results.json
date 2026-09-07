@@ -12,7 +12,7 @@
   "n_ok": 20,
   "n_fail": 20,
   "stopped_early": false,
-  "target_failures": 15,
+  "target_failures": 1000,
   "scan_rows": [
     {
       "signal": "kl_cent_f10_mean",
@@ -883,9 +883,9 @@
       "total": 3,
       "error_type": "assertion",
       "failures": [
-        "set_get_roundtrip: Traceback (most recent call last):\n  File \"<string>\", line 7, in <module>\nAssertionError: set failed: C:\\Users\\charl\\AppData\\Local\\Programs\\Python\\Python312\\python.exe: can't open file 'C:\\\\Users\\\\charl\\\\AppData\\\\Local\\\\Temp\\\\tmpmwavd874\\\\run_cache.p",
+        "set_get_roundtrip: Traceback (most recent call last):\n  File \"<string>\", line 7, in <module>\nAssertionError: set failed: C:\\Users\\charl\\AppData\\Local\\Programs\\Python\\Python312\\python.exe: can't open file 'C:\\\\Users\\\\charl\\\\AppData\\\\Local\\\\Temp\\\\tmph2ivq6iq\\\\run_cache.p",
         "get_missing: Traceback (most recent call last):\n  File \"<string>\", line 6, in <module>\nAssertionError: expected exit 1, got 2",
-        "delete: Traceback (most recent call last):\n  File \"<string>\", line 5, in <module>\nAssertionError: set failed: C:\\Users\\charl\\AppData\\Local\\Programs\\Python\\Python312\\python.exe: can't open file 'C:\\\\Users\\\\charl\\\\AppData\\\\Local\\\\Temp\\\\tmprxv2a3ha\\\\run_cache.p"
+        "delete: Traceback (most recent call last):\n  File \"<string>\", line 5, in <module>\nAssertionError: set failed: C:\\Users\\charl\\AppData\\Local\\Programs\\Python\\Python312\\python.exe: can't open file 'C:\\\\Users\\\\charl\\\\AppData\\\\Local\\\\Temp\\\\tmptjqa0ysv\\\\run_cache.p"
       ],
       "n_semantic": 330,
       "trajectory_ds": [
