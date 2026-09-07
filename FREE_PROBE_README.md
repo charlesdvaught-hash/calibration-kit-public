@@ -191,7 +191,7 @@ looks useful. The full kit turns it into a product.
 
 ## Validating the task bank
 
-The probe includes reference implementations for all 100 tasks. You can
+The probe includes reference implementations for all 150 tasks. You can
 verify they all pass before running:
 
 ```bash

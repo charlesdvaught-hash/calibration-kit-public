@@ -26,8 +26,8 @@ build/
 dist/
 *.spec
 
-# Local probe run outputs (polished copies go in submissions/)
-probe_*_results.json
+# Local probe run outputs in repo root (polished copies go in submissions/)
+/probe_*_results.json
 
 # Local harness/proxy scratch (buyer/dev runs, not shipped)
 aider_dryrun/

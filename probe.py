@@ -69,7 +69,7 @@ _PUNCT_CHARS = frozenset('.,;:!?()[]{}=+-*/<>|&"\'@#`~^%\\')
 # If empty, the upload step is skipped entirely.
 DEFAULT_UPLOAD_URL = os.environ.get("PROBE_UPLOAD_URL", "")
 
-# Hard tasks (74 HumanEval-derived tasks with adversarial edge cases).
+# Hard tasks (HumanEval-derived tasks with adversarial edge cases).
 # Merged with FUNCTION_TASKS into ALL_TASKS, sorted easy→hard.
 # The probe stops after collecting enough failures (--target-failures),
 # so strong models skip tasks they'd obviously pass and weak models
@@ -298,13 +298,11 @@ def _difficulty_score(task):
     desc_len = len(task.get("desc", ""))
     return ref_len * 0.5 + n_tests * 50 + desc_len * 0.1
 
-# All benchmark tasks (150 total), difficulty-sorted by the build script.
-# Includes the original 42 easy tasks plus 108 harder HumanEval-derived tasks.
-ALL_TASKS = list(HARD_TASKS)
-
-# Minimum failures needed for statistical power.
-# Below this, the probe reports UNDERPOWERED regardless of signal strength.
-DEFAULT_TARGET_FAILURES = 15
+# All benchmark tasks (150 total), difficulty-sorted.
+# HARD_TASKS already subsumes 30 of the 42 easy FUNCTION_TASKS that were used
+# in the original build; the remaining 12 easy-only tasks are exercised via
+# `python probe.py --validate` and are not duplicated here.
+ALL_TASKS = sorted(HARD_TASKS, key=_difficulty_score)
 
 # Minimum failures needed for statistical power.
 # Below this, the probe reports UNDERPOWERED regardless of signal strength.
@@ -453,9 +451,10 @@ class EntropyTrajectory:
                 run = 0
         # Spike location
         max_idx = int(max(range(n), key=lambda i: s[i]))
-        spike_quartile = min(3, max_idx * 4 // n)
-        # Per-quartile averages
+        # Quartile chunk size used for quartile_ents below
         qsize = max(1, n // 4)
+        spike_quartile = min(3, max_idx // qsize)
+        # Per-quartile averages
         quartile_ents = []
         for q in range(4):
             start = q * qsize
@@ -668,7 +667,9 @@ def _shape_features(ent: Dict[str, Any]) -> Dict[str, float]:
             rank_of[i] = pos
         mean_r = (n_t - 1) / 2.0
         num = sum((i - mean_r) * (rank_of[i] - mean_r) for i in range(n_t))
-        den = sum((i - mean_r) ** 2 for i in range(n_t))
+        den_i = sum((i - mean_r) ** 2 for i in range(n_t))
+        den_r = sum((rank_of[i] - mean_r) ** 2 for i in range(n_t))
+        den = (den_i * den_r) ** 0.5
         out["trend_rho"] = (num / den) if den else 0.0
         base = sum(t) / n_t
         sd_t = (sum((v - base) ** 2 for v in t) / n_t) ** 0.5
@@ -702,16 +703,21 @@ def permutation_p(group_a: List[float], group_b: List[float],
 
 
 def cohens_d(group_a: List[float], group_b: List[float]) -> float:
+    """Correct Cohen's d: difference in means divided by pooled within-group SD."""
     n_a, n_b = len(group_a), len(group_b)
     if n_a < 2 or n_b < 2:
         return 0.0
-    pooled = group_a + group_b
-    mean = sum(pooled) / len(pooled)
-    var = sum((x - mean) ** 2 for x in pooled) / len(pooled)
-    sd = var ** 0.5
+    mean_a = sum(group_a) / n_a
+    mean_b = sum(group_b) / n_b
+    var_a = sum((x - mean_a) ** 2 for x in group_a) / (n_a - 1)
+    var_b = sum((x - mean_b) ** 2 for x in group_b) / (n_b - 1)
+    if n_a + n_b - 2 <= 0:
+        return 0.0
+    pooled_var = ((n_a - 1) * var_a + (n_b - 1) * var_b) / (n_a + n_b - 2)
+    sd = pooled_var ** 0.5
     if sd == 0:
         return 0.0
-    return (sum(group_a) / n_a - sum(group_b) / n_b) / sd
+    return (mean_a - mean_b) / sd
 
 
 def min_detectable_effect(n_ok: int, n_fail: int) -> Optional[float]:
@@ -770,14 +776,30 @@ def build_structural_blacklist(llm) -> frozenset:
 # ─── Code extraction and testing ──────────────────────────────────────────────
 
 def strip_thinking(text: str) -> str:
-    """Strip thinking blocks from model output."""
+    """Strip thinking blocks from model output.
+
+    Removes everything up to and including the closing thinking tag. If the
+    closing tag is missing, we try to find the start of the actual answer
+    (first code fence or blank line) and discard the unclosed thinking prefix
+    rather than returning the whole text.
+    """
     _THINK_END = "\u003c\u002fthink\u003e"
     _THINK_START = "\u003cthink\u003e"
     thinking_end = text.find(_THINK_END)
     if thinking_end != -1:
         return text[thinking_end + len(_THINK_END):].strip()
-    if text.lstrip().startswith(_THINK_START):
-        return text.strip()
+    text_stripped = text.lstrip()
+    if text_stripped.startswith(_THINK_START):
+        rest = text_stripped[len(_THINK_START):].lstrip()
+        # Best effort: answer is usually after the first code fence or blank line
+        code_start = rest.find('```')
+        if code_start != -1:
+            return rest[code_start:].strip()
+        blank = rest.find('\n\n')
+        if blank != -1:
+            return rest[blank + 2:].strip()
+        # No clear answer boundary; drop the thinking text rather than pass it
+        return ""
     return text.strip()
 
 
