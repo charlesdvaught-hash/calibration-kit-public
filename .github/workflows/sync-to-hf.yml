@@ -1,0 +1,94 @@
+name: Sync submissions to HuggingFace dataset
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'submissions/**'
+  workflow_dispatch:
+
+jobs:
+  sync-to-hf:
+    runs-on: ubuntu-latest
+    # Only run if the HF dataset repo is configured
+    if: vars.HF_DATASET_REPO != ''
+    permissions:
+      contents: read
+      # OIDC permission for trusted publisher exchange with HuggingFace
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install huggingface_hub
+        run: pip install huggingface_hub
+
+      - name: Sync submissions to HF dataset
+        env:
+          HF_DATASET_REPO: ${{ vars.HF_DATASET_REPO }}
+        run: |
+          python - <<'PYEOF'
+          import os
+          import json
+          import glob
+          from huggingface_hub import HfApi, login
+
+          repo_id = os.environ["HF_DATASET_REPO"]
+          if not repo_id:
+              print("HF_DATASET_REPO not set, skipping")
+              exit(0)
+
+          # Login via OIDC trusted publisher (no token needed)
+          # This exchanges the GitHub OIDC token for HF access.
+          # Requires the workflow to be registered as a trusted publisher on HF.
+          login(add_to_git_credential=False)
+
+          api = HfApi()
+
+          # Find all submission JSONs
+          files = sorted(glob.glob("submissions/*.json"))
+          if not files:
+              print("No submissions to sync")
+              exit(0)
+
+          print(f"Found {len(files)} submission(s) to sync")
+
+          for fpath in files:
+              fname = os.path.basename(fpath)
+              path_in_repo = f"data/submissions/{fname}"
+
+              # Validate it's a proper probe result
+              try:
+                  with open(fpath, "r", encoding="utf-8") as f:
+                      data = json.load(f)
+                  required = ["model_label", "n_ok", "n_fail"]
+                  missing = [k for k in required if k not in data]
+                  if missing:
+                      print(f"  SKIP {fname}: missing fields {missing}")
+                      continue
+              except Exception as e:
+                  print(f"  SKIP {fname}: invalid JSON ({e})")
+                  continue
+
+              print(f"  Uploading {fname} -> {path_in_repo}")
+              try:
+                  api.upload_file(
+                      path_or_fileobj=fpath,
+                      path_in_repo=path_in_repo,
+                      repo_id=repo_id,
+                      repo_type="dataset",
+                      commit_message=f"Sync {fname} from GitHub submissions/",
+                  )
+                  print(f"    OK")
+              except Exception as e:
+                  print(f"    FAILED: {e}")
+
+          print(f"\nSync complete. View at: https://huggingface.co/datasets/{repo_id}")
+          PYEOF
