@@ -73,7 +73,8 @@ pip install llama-cpp-python numpy
 python probe.py --model your-model.gguf
 ```
 
-Then upload your results:
+Then upload your results as a pull request (you just need a free HuggingFace
+account — no write access required):
 
 ```bash
 pip install huggingface_hub
@@ -81,6 +82,14 @@ python upload_to_hf.py probe_your-model_results.json --token hf_xxxxx
 ```
 
 Get a token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens).
+This opens a PR that the dataset owner reviews and merges. You don't need
+write access to the dataset — just a HF account.
+
+If you are the dataset owner and want to commit directly:
+
+```bash
+python upload_to_hf.py probe_your-model_results.json --token hf_xxxxx --direct
+```
 
 ## Methodology
 

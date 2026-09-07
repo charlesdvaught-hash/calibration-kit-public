@@ -57,8 +57,16 @@ def sanitize_filename(s: str) -> str:
 
 
 def upload_to_hf(results_path: str, repo_id: str, token: str,
-                 private: bool = False) -> bool:
-    """Upload a probe results JSON to a HuggingFace dataset repo."""
+                 private: bool = False, create_pr: bool = True) -> bool:
+    """Upload a probe results JSON to a HuggingFace dataset repo.
+
+    By default uses create_pr=True, which opens a pull request instead of
+    committing directly. This means submitters DON'T need write access to
+    your dataset — they just need a HF account. You review and merge PRs,
+    which gives you quality control over what enters the dataset.
+
+    Set create_pr=False only if you own the repo and want to commit directly.
+    """
     try:
         from huggingface_hub import HfApi, create_repo
     except ImportError:
@@ -121,17 +129,30 @@ def upload_to_hf(results_path: str, repo_id: str, token: str,
             repo_id=repo_id,
             repo_type="dataset",
             token=token,
+            create_pr=create_pr,
+            commit_message=f"Add probe results for {model_label}",
         )
         os.unlink(tmp_path)
     except Exception as e:
         print(f"  Upload failed: {e}")
+        if "403" in str(e) or "Forbidden" in str(e):
+            print(f"\n  This usually means you don't have write access to {repo_id}.")
+            print(f"  If this is not your repo, make sure create_pr=True (default).")
+            print(f"  If it IS your repo, check that your token has write permissions.")
         return False
 
-    print(f"\n  Uploaded successfully!")
-    print(f"  View at: https://huggingface.co/datasets/{repo_id}")
-    print(f"\n  Other researchers can now load this dataset with:")
-    print(f"    from datasets import load_dataset")
-    print(f'    ds = load_dataset("{repo_id}")')
+    if create_pr:
+        print(f"\n  Pull request opened! The dataset owner will review and merge it.")
+        print(f"  View PRs at: https://huggingface.co/datasets/{repo_id}/pulls")
+        print(f"\n  Once merged, other researchers can load the dataset with:")
+        print(f"    from datasets import load_dataset")
+        print(f'    ds = load_dataset("{repo_id}")')
+    else:
+        print(f"\n  Uploaded successfully!")
+        print(f"  View at: https://huggingface.co/datasets/{repo_id}")
+        print(f"\n  Other researchers can now load this dataset with:")
+        print(f"    from datasets import load_dataset")
+        print(f'    ds = load_dataset("{repo_id}")')
     return True
 
 
@@ -141,11 +162,16 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python upload_to_hf.py probe_qwen3-4b_results.json
+  # As a contributor (opens a PR for the owner to review):
   python upload_to_hf.py probe_qwen3-4b_results.json --token hf_xxxxx
-  python upload_to_hf.py probe_qwen3-4b_results.json --repo your-name/your-dataset
 
-After uploading, anyone can load the dataset:
+  # As the dataset owner (commits directly, no PR):
+  python upload_to_hf.py probe_qwen3-4b_results.json --token hf_xxxxx --direct
+
+  # To your own dataset repo:
+  python upload_to_hf.py probe_qwen3-4b_results.json --repo your-name/your-dataset --direct
+
+After the PR is merged, anyone can load the dataset:
   from datasets import load_dataset
   ds = load_dataset("charlesdvaught-hash/calibration-probe-results")
 """)
@@ -156,6 +182,8 @@ After uploading, anyone can load the dataset:
                         help="HuggingFace API token (or set HF_TOKEN env var)")
     parser.add_argument("--private", action="store_true",
                         help="Create the dataset as private (default: public)")
+    parser.add_argument("--direct", action="store_true",
+                        help="Commit directly instead of opening a PR (use this only if you own the repo)")
     args = parser.parse_args()
 
     if not os.path.isfile(args.results_file):
@@ -172,7 +200,8 @@ After uploading, anyone can load the dataset:
         print("    python upload_to_hf.py results.json")
         sys.exit(1)
 
-    ok = upload_to_hf(args.results_file, args.repo, args.token, args.private)
+    ok = upload_to_hf(args.results_file, args.repo, args.token,
+                      args.private, create_pr=not args.direct)
     sys.exit(0 if ok else 1)
 
 

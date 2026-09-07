@@ -1206,10 +1206,11 @@ The full calibration kit (170 signals, intervention routing, live proxy):
         pass  # Already prompted above
     else:
         print(f"  Two ways to share your results:")
-        print(f"\n  1. HuggingFace Dataset (makes it a citable public artifact):")
+        print(f"\n  1. HuggingFace Dataset (opens a PR, owner reviews & merges):")
         print(f"     pip install huggingface_hub")
         print(f"     python upload_to_hf.py {outfile} --token hf_YOUR_TOKEN")
         print(f"     # Get a token at huggingface.co/settings/tokens")
+        print(f"     # You just need a HF account — no write access required.")
         print(f"\n  2. Cloudflare Worker (faster, but needs a deployed worker):")
         print(f"     Set PROBE_UPLOAD_URL or pass --upload-url")
         print(f"\n  What gets shared: entropy trajectories + pass/fail + signal scan.")
