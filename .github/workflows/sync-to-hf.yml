@@ -32,23 +32,38 @@ jobs:
 
       - name: Sync submissions to HF dataset
         env:
-          HF_DATASET_REPO: ${{ vars.HF_DATASET_REPO }}
+          # This is the key: huggingface_hub detects this env var + GitHub Actions
+          # and automatically exchanges the GitHub OIDC token for a short-lived HF token.
+          # No HF_TOKEN secret needed. Requires trusted publisher configured on HF.
+          # For datasets, prefix with "datasets/"
+          HF_OIDC_RESOURCE: datasets/${{ vars.HF_DATASET_REPO }}
         run: |
           python - <<'PYEOF'
           import os
           import json
           import glob
-          from huggingface_hub import HfApi, login
+          from huggingface_hub import HfApi
 
-          repo_id = os.environ["HF_DATASET_REPO"]
+          repo_id = os.environ.get("HF_OIDC_RESOURCE", "").replace("datasets/", "")
           if not repo_id:
               print("HF_DATASET_REPO not set, skipping")
               exit(0)
 
-          # Login via OIDC trusted publisher (no token needed)
-          # This exchanges the GitHub OIDC token for HF access.
-          # Requires the workflow to be registered as a trusted publisher on HF.
-          login(add_to_git_credential=False)
+          # huggingface_hub auto-exchanges the OIDC token when HF_OIDC_RESOURCE is set.
+          # get_token() will trigger the exchange if needed.
+          from huggingface_hub.utils import get_token
+          token = get_token()
+          if not token:
+              print("ERROR: Could not obtain HF token via OIDC exchange.")
+              print("Make sure the trusted publisher is configured on HF:")
+              print(f"  https://huggingface.co/datasets/{repo_id}/settings")
+              print("  Provider: GitHub Actions")
+              print("  Repository: charlesdvaught-hash/calibration-kit-public")
+              print("  Workflow: sync-to-hf.yml")
+              print("  Branch: main")
+              exit(1)
+
+          print(f"OIDC token exchange successful. Uploading to {repo_id}")
 
           api = HfApi()
 
