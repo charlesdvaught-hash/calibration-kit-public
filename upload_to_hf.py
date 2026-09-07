@@ -7,7 +7,7 @@ Turns your local probe results JSON into a permanent, citable public artifact
 that other researchers can load with:
 
     from datasets import load_dataset
-    ds = load_dataset("charlesdvaught-hash/calibration-probe-results")
+    ds = load_dataset("Redchigh/calibration-probe-results")
 
 Usage:
     # After running probe.py (which creates probe_<model>_results.json):
@@ -48,7 +48,7 @@ import time
 from pathlib import Path
 
 # Default dataset repo. Change this if you fork to your own HF account.
-DEFAULT_DATASET_REPO = "charlesdvaught-hash/calibration-probe-results"
+DEFAULT_DATASET_REPO = "Redchigh/calibration-probe-results"
 
 
 def sanitize_filename(s: str) -> str:
@@ -173,7 +173,7 @@ Examples:
 
 After the PR is merged, anyone can load the dataset:
   from datasets import load_dataset
-  ds = load_dataset("charlesdvaught-hash/calibration-probe-results")
+  ds = load_dataset("Redchigh/calibration-probe-results")
 """)
     parser.add_argument("results_file", help="Path to probe results JSON file")
     parser.add_argument("--repo", default=DEFAULT_DATASET_REPO,

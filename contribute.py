@@ -82,7 +82,7 @@ Examples:
 
 When your PR is merged, the results auto-sync to the HuggingFace dataset:
   from datasets import load_dataset
-  ds = load_dataset("charlesdvaught-hash/calibration-probe-results")
+  ds = load_dataset("Redchigh/calibration-probe-results")
 """)
     parser.add_argument("results_file", help="Path to probe results JSON file")
     parser.add_argument("--print-only", action="store_true",
@@ -185,7 +185,7 @@ When your PR is merged, the results auto-sync to the HuggingFace dataset:
     print(f"  3. GitHub will prompt you to create a branch — accept it")
     print(f"  4. Open a pull request from that branch")
     print(f"\n  When merged, GitHub Actions auto-syncs to the HF dataset.")
-    print(f"  View the dataset at: https://huggingface.co/datasets/charlesdvaught-hash/calibration-probe-results")
+    print(f"  View the dataset at: https://huggingface.co/datasets/Redchigh/calibration-probe-results")
     sys.exit(0)
 
 
