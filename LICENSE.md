@@ -1,4 +1,4 @@
-# Local Model Calibration Kit — Source-Available EULA
+# Local Model Calibration Kit (Pro Version) — Source-Available EULA
 
 > **Scope note:** This EULA governs the Local Model Calibration Kit *software*
 > distributed to buyers. It does **not** govern the contents of this public
