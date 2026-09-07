@@ -43,6 +43,8 @@ import argparse
 import tempfile
 import subprocess
 import random
+import ast
+from collections import Counter
 from typing import List, Dict, Any, Tuple, Optional
 
 for _stream in (sys.stdout, sys.stderr):
@@ -57,6 +59,14 @@ ALPHA = 0.05
 PERM_ITERS = 10000
 PERM_SEED = 20260904
 MDE_CONST = 2.80  # z(0.975) + z(0.80)
+
+# Structural / behavioral / length signals that may correlate with failure but are
+# not entropy-based wrongness signatures. The probe reports them, but does not
+# select them as the gating signal.
+NON_ENTROPY_BEHAVIORAL = frozenset([
+    "n_tokens", "n_semantic",
+    "think_frac", "think_boundary",
+])
 TOPK = 20
 PLATEAU_THRESHOLD = 0.5
 PLATEAU_MIN_RUN = 3
@@ -679,6 +689,23 @@ def _shape_features(ent: Dict[str, Any]) -> Dict[str, float]:
         out["spike_height"] = (max(t) - base) / sd_t if sd_t > 1e-9 else 0.0
         out["late_vs_early_half"] = (sum(t[n_t // 2:]) / (n_t - n_t // 2)
                                      - sum(t[:n_t // 2]) / (n_t // 2))
+    # Composite structural/entropy signals: structural/length features are not
+    # used alone, but their product or ratio with an entropy feature is allowed
+    # if it survives correction. Only n_tokens and think_frac are used as the
+    # structural side of composites.
+    structural = ["n_tokens", "think_frac"]
+    entropy_keys = ["mean_entropy", "q3", "full_ent_mean",
+                    "tail_mass_mean", "kl_uniform_mean"]
+    for s in structural:
+        sv = ent.get(s)
+        if not isinstance(sv, (int, float)):
+            continue
+        for e in entropy_keys:
+            ev = ent.get(e)
+            if not isinstance(ev, (int, float)):
+                continue
+            out[f"{s}_x_{e}"] = sv * ev
+            out[f"{s}_div_{e}"] = sv / (ev + 1e-9)
     return out
 
 
@@ -840,6 +867,51 @@ def test_function_code(code: str, task: Dict, tmpdir: str) -> Tuple[int, int, Li
     return passed, total, failures
 
 
+def classify_error(failures: List[str], code: str) -> str:
+    """Classify the dominant error type from test failures.
+
+    Simplified educational version. Returns one of:
+    syntax, name_error, type_error, index_error, value_error, key_error,
+    assertion, structural, timeout, empty_output, logic, other.
+    """
+    if not code or len(code.strip()) < 10:
+        return "empty_output"
+    try:
+        ast.parse(code)
+    except SyntaxError:
+        return "syntax"
+    if not failures:
+        return "logic" if code.strip() else "empty_output"
+    counts = Counter()
+    for f in failures:
+        text = f.lower()
+        if "timeout" in text:
+            counts["timeout"] += 1
+        elif "syntaxerror" in text:
+            counts["syntax"] += 1
+        elif "nameerror" in text:
+            counts["name_error"] += 1
+        elif "typeerror" in text:
+            counts["type_error"] += 1
+        elif "indexerror" in text:
+            counts["index_error"] += 1
+        elif "valueerror" in text:
+            counts["value_error"] += 1
+        elif "keyerror" in text:
+            counts["key_error"] += 1
+        elif "importerror" in text or "modulenotfounderror" in text:
+            counts["structural"] += 1
+        elif "attributeerror" in text:
+            counts["structural"] += 1
+        elif "assertionerror" in text or "assert" in text or "expected" in text:
+            counts["assertion"] += 1
+        elif "traceback" in text:
+            counts["other"] += 1
+        else:
+            counts["logic"] += 1
+    return counts.most_common(1)[0][0]
+
+
 # ─── Signal scan ──────────────────────────────────────────────────────────────
 
 def scan_signals(probe_results: List[Dict]) -> Tuple[List[Dict], Optional[Dict]]:
@@ -881,8 +953,15 @@ def scan_signals(probe_results: List[Dict]) -> Tuple[List[Dict], Optional[Dict]]
     rows.sort(key=lambda r: r["p_raw"])
     winners = [r for r in rows
                if r["survives_correction"] and abs(r["cohens_d"]) >= 0.2]
-    best = max(winners, key=lambda r: abs(r["cohens_d"])) if winners else None
-    return rows, best
+    entropy_winners = [r for r in winners
+                       if r["signal"] not in NON_ENTROPY_BEHAVIORAL]
+    structural_winners = [r for r in winners
+                          if r["signal"] in NON_ENTROPY_BEHAVIORAL]
+    best = (max(entropy_winners, key=lambda r: abs(r["cohens_d"]))
+            if entropy_winners else None)
+    structural_best = (max(structural_winners, key=lambda r: abs(r["cohens_d"]))
+                       if structural_winners else None)
+    return rows, best, structural_best
 
 
 # ─── Generation ───────────────────────────────────────────────────────────────
@@ -957,7 +1036,8 @@ def build_prompt(task: Dict, no_think: bool = False) -> str:
 # ─── Upload ───────────────────────────────────────────────────────────────────
 
 def try_upload(results: List[Dict], scan_rows: List[Dict],
-               best: Optional[Dict], model_label: str, upload_url: str) -> bool:
+               best: Optional[Dict], structural_best: Optional[Dict],
+               model_label: str, upload_url: str) -> bool:
     """Offer opt-in upload. Returns True if uploaded, False otherwise."""
     if not upload_url:
         return False
@@ -1003,6 +1083,7 @@ person with your model doesn't have to run this themselves.
             {
                 "task_id": r["task_id"],
                 "ok": r["ok"],
+                "error_type": r.get("error_type", "logic"),
                 "n_semantic": r["entropy"].get("n_semantic", 0),
                 "trajectory_ds": r["entropy"].get("trajectory_ds", []),
                 "think_frac": r["entropy"].get("think_frac", 0),
@@ -1019,6 +1100,9 @@ person with your model doesn't have to run this themselves.
                          "direction": best["direction"],
                          "p_adj": best["p_adjusted"]}
                         if best else None),
+        "structural_best": ({"signal": structural_best["signal"], "d": structural_best["cohens_d"],
+                             "p_adj": structural_best["p_adjusted"]}
+                            if structural_best else None),
     }
     try:
         import urllib.request
@@ -1205,9 +1289,11 @@ The full calibration kit (170 signals, intervention routing, live proxy):
             with tempfile.TemporaryDirectory() as td:
                 passed, total, failures = test_function_code(code, task, td)
             ok = (passed == total)
+            error_type = classify_error(failures, code)
             results.append({
                 "task_id": task["id"], "ok": ok,
                 "passed": passed, "total": total,
+                "failures": failures, "error_type": error_type,
                 "entropy": entropy, "elapsed": elapsed,
             })
             status = "PASS" if ok else f"FAIL ({passed}/{total})"
@@ -1230,11 +1316,14 @@ The full calibration kit (170 signals, intervention routing, live proxy):
     print(f"\n{'=' * 70}")
     print(f"RESULTS: {n_ok} passed, {n_fail} failed, {total_elapsed:.0f}s total"
           + (f" (stopped early at {target_failures} failures)" if stopped_early else ""))
+    if n_fail:
+        fail_types = Counter(r["error_type"] for r in results if not r["ok"])
+        print(f"  Failure types: {dict(fail_types)}")
     print(f"{'=' * 70}\n")
 
     # Scan signals
     print("Scanning candidate signals...", flush=True)
-    scan_rows, best = scan_signals(results)
+    scan_rows, best, structural_best = scan_signals(results)
 
     if scan_rows:
         print(f"\n  Top 10 signals (of {len(scan_rows)} tested):")
@@ -1281,11 +1370,26 @@ The full calibration kit (170 signals, intervention routing, live proxy):
         print(f"  it means this run couldn't see one.")
     else:
         mde = min_detectable_effect(n_ok, n_fail)
-        print(f"  NO SIGNAL FOUND.")
+        print(f"  NO ENTROPY-BASED SIGNAL FOUND.")
         print(f"  Scanned {len(scan_rows)} candidate signals, none survived")
         print(f"  Benjamini-Hochberg correction at alpha={ALPHA}.")
         if mde:
             print(f"  Minimum detectable effect: d >= {mde:.2f}")
+        if structural_best:
+            print(f"\n  Note: a non-entropy/structural signal '{structural_best['signal']}'")
+            print(f"  survived correction (d={structural_best['cohens_d']:+.3f}, "
+                  f"p_adj={structural_best['p_adjusted']:.4f}).")
+            print(f"  It is reported for transparency, but the probe does not use")
+            print(f"  structural/length signals as gating signals.")
+        fail_counts = Counter(r["error_type"] for r in results if not r["ok"])
+        if fail_counts:
+            dominant = fail_counts.most_common(1)[0]
+            if dominant[1] == n_fail:
+                print(f"\n  Note: all {n_fail} failures are '{dominant[0]}'.")
+                print(f"  A model that only fails one way may not reveal a robust")
+                print(f"  wrongness signature; try --repeats or a harder task bank.")
+            else:
+                print(f"\n  Failure-type mix: {dict(fail_counts)}")
         print(f"\n  This is an honest null result on these {len(ALL_TASKS)} demo tasks.")
         print(f"  Some models genuinely don't have a usable entropy signal on")
         print(f"  the demo task distribution. The full kit learns a signal on")
@@ -1541,7 +1645,7 @@ The full calibration kit (170 signals, intervention routing, live proxy):
 
     # Upload
     if not args.no_upload and args.upload_url:
-        try_upload(results, scan_rows, best, model_label, args.upload_url)
+        try_upload(results, scan_rows, best, structural_best, model_label, args.upload_url)
     elif not args.no_upload and not args.upload_url:
         print("\n  (Set PROBE_UPLOAD_URL or pass --upload-url to contribute")
         print("   results to the public evidence corpus.)")
@@ -1558,10 +1662,13 @@ The full calibration kit (170 signals, intervention routing, live proxy):
             "target_failures": target_failures,
             "scan_rows": scan_rows[:20],
             "best_signal": best,
+            "structural_best": structural_best,
             "holdout": holdout_results if holdout_results else None,
             "per_task": [
                 {"task_id": r["task_id"], "ok": r["ok"],
                  "passed": r["passed"], "total": r["total"],
+                 "error_type": r.get("error_type", "logic"),
+                 "failures": r.get("failures", []),
                  "n_semantic": r["entropy"].get("n_semantic", 0),
                  "trajectory_ds": r["entropy"].get("trajectory_ds", []),
                  "think_frac": r["entropy"].get("think_frac", 0)}
