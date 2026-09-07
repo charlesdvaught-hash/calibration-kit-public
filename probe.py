@@ -69,6 +69,19 @@ _PUNCT_CHARS = frozenset('.,;:!?()[]{}=+-*/<>|&"\'@#`~^%\\')
 # If empty, the upload step is skipped entirely.
 DEFAULT_UPLOAD_URL = os.environ.get("PROBE_UPLOAD_URL", "")
 
+# Hard tasks (74 HumanEval-derived tasks with adversarial edge cases).
+# Merged with FUNCTION_TASKS into ALL_TASKS, sorted easy→hard.
+# The probe stops after collecting enough failures (--target-failures),
+# so strong models skip tasks they'd obviously pass and weak models
+# stop early once they've failed enough.
+_HARD_TASKS_AVAILABLE = False
+try:
+    from _hard_tasks import HARD_TASKS, HARD_REFERENCES, validate_hard
+    _HARD_TASKS_AVAILABLE = True
+except ImportError:
+    HARD_TASKS = []
+    HARD_REFERENCES = {}
+
 # ─── Task bank (42 single-function coding tasks) ──────────────────────────────
 
 FUNCTION_TASKS = [
@@ -272,7 +285,33 @@ def validate(tasks=None, verbose=True):
     return all_ok
 
 
-# ─── Entropy trajectory collector (stripped from the full kit) ────────────────
+# ─── Unified task bank (easy→hard, with early stop) ───────────────────────────
+
+# Merge the 42 easy tasks with the 74 hard tasks into one list,
+# sorted by difficulty (code length + test count + spec complexity).
+# The probe stops after collecting --target-failures failures, so strong
+# models skip tasks they'd obviously pass and weak models stop early.
+# The holdout tasks (next N after early stop) land near the model's cusp.
+def _difficulty_score(task):
+    ref_len = len(task.get("reference", ""))
+    n_tests = len(task.get("tests", []))
+    desc_len = len(task.get("desc", ""))
+    return ref_len * 0.5 + n_tests * 50 + desc_len * 0.1
+
+_sorted_all = sorted(list(FUNCTION_TASKS) + list(HARD_TASKS), key=_difficulty_score)
+
+# Drop the easiest 16 (so the bank starts at 100 tasks and stays in the range
+# where modern models are calibrated — not trivially easy, not impossible).
+ALL_TASKS = _sorted_all[max(0, len(_sorted_all) - 100):]
+
+# Minimum failures needed for statistical power.
+# Below this, the probe reports UNDERPOWERED regardless of signal strength.
+DEFAULT_TARGET_FAILURES = 15
+
+# Minimum failures needed for statistical power.
+# Below this, the probe reports UNDERPOWERED regardless of signal strength.
+DEFAULT_TARGET_FAILURES = 15
+
 
 class GenTimeout(Exception):
     pass
@@ -767,9 +806,13 @@ def test_function_code(code: str, task: Dict, tmpdir: str) -> Tuple[int, int, Li
     for expr, expected in task["tests"]:
         test_code = (runner + f"\nresult = repr({expr})\nexpected = repr({expected})"
                      f"\nassert result == expected, f'got {{result}}, expected {{expected}}'\nprint('PASS')\n")
-        r = subprocess.run([sys.executable, "-c", test_code],
-                           capture_output=True, text=True, timeout=10,
-                           cwd=tmpdir)
+        try:
+            r = subprocess.run([sys.executable, "-c", test_code],
+                               capture_output=True, text=True, timeout=10,
+                               cwd=tmpdir)
+        except subprocess.TimeoutExpired:
+            failures.append(f"{expr}: TIMEOUT (10s)")
+            continue
         if r.returncode == 0:
             passed += 1
         else:
@@ -989,6 +1032,16 @@ The full calibration kit (170 signals, intervention routing, live proxy):
                         help="Model is a thinking model (uses 4096 max_tokens, strips thinking blocks)")
     parser.add_argument("--repeats", type=int, default=1,
                         help="Repeat each task N times (default 1; use 2+ for stochastic models)")
+    parser.add_argument("--target-failures", type=int, default=DEFAULT_TARGET_FAILURES,
+                        help=f"Stop after collecting this many failures (default {DEFAULT_TARGET_FAILURES}). "
+                             f"Tasks are sorted easy→hard; strong models skip easy wins, "
+                             f"weak models stop early once enough failures are collected.")
+    parser.add_argument("--holdout", type=int, default=10,
+                        help="After early stop, run N more tasks as holdout to test "
+                             "whether the discovered signal predicts out-of-sample (default 10). "
+                             "Set to 0 to disable.")
+    parser.add_argument("--no-early-stop", action="store_true",
+                        help="Run all tasks even after reaching target failures (use with --repeats for full sweeps)")
     parser.add_argument("--n-gpu-layers", type=int, default=-1,
                         help="GPU layers for llama-cpp-python (default -1 = all)")
     parser.add_argument("--upload-url", default=DEFAULT_UPLOAD_URL,
@@ -1021,8 +1074,12 @@ The full calibration kit (170 signals, intervention routing, live proxy):
     print("CALIBRATION PROBE — Signal Discovery Tool")
     print("=" * 70)
     print(f"Model:  {model_label}")
-    print(f"Tasks:  {len(FUNCTION_TASKS)} standard coding tasks")
+    print(f"Tasks:  {len(ALL_TASKS)} coding tasks (easy→hard)")
     print(f"Repeats: {args.repeats}")
+    if not args.no_early_stop:
+        print(f"Early stop: after {args.target_failures} failures")
+    else:
+        print(f"Early stop: disabled (running all tasks)")
     print(f"Thinking mode: {'yes' if args.thinking else 'no'}")
     print(f"Sampling: temp={args.temp} top_p={args.top_p} top_k={args.top_k}")
     if args.presence_penalty > 0:
@@ -1081,13 +1138,21 @@ The full calibration kit (170 signals, intervention routing, live proxy):
 
     # Run tasks
     results = []
-    n_tasks = len(FUNCTION_TASKS) * args.repeats
-    print(f"\nRunning {n_tasks} generations...", flush=True)
+    n_tasks = len(ALL_TASKS) * args.repeats
+    early_stop = not args.no_early_stop
+    target_failures = args.target_failures
+    failure_count = 0
+    stopped_early = False
+    print(f"\nRunning up to {n_tasks} generations...", flush=True)
+    if early_stop:
+        print(f"(will stop after {target_failures} failures)\n", flush=True)
+    else:
+        print(flush=True)
     t_start = time.time()
 
     for repeat in range(args.repeats):
-        for i, task in enumerate(FUNCTION_TASKS):
-            idx = repeat * len(FUNCTION_TASKS) + i + 1
+        for i, task in enumerate(ALL_TASKS):
+            idx = repeat * len(ALL_TASKS) + i + 1
             prompt = build_prompt(task)
             print(f"  [{idx}/{n_tasks}] {task['id']:<28} ", end="", flush=True)
             text, entropy, elapsed = generate(
@@ -1104,13 +1169,23 @@ The full calibration kit (170 signals, intervention routing, live proxy):
             status = "PASS" if ok else f"FAIL ({passed}/{total})"
             print(f"{status}  ({elapsed:.1f}s, {entropy.get('n_semantic', 0)} sem tokens)",
                   flush=True)
+            if not ok:
+                failure_count += 1
+                if early_stop and failure_count >= target_failures:
+                    print(f"\n  Early stop: reached {target_failures} failures. "
+                          f"Stopping after {len(results)} generations.", flush=True)
+                    stopped_early = True
+                    break
+        if stopped_early:
+            break
 
     total_elapsed = time.time() - t_start
     n_ok = sum(1 for r in results if r["ok"])
     n_fail = sum(1 for r in results if not r["ok"])
 
     print(f"\n{'=' * 70}")
-    print(f"RESULTS: {n_ok} passed, {n_fail} failed, {total_elapsed:.0f}s total")
+    print(f"RESULTS: {n_ok} passed, {n_fail} failed, {total_elapsed:.0f}s total"
+          + (f" (stopped early at {target_failures} failures)" if stopped_early else ""))
     print(f"{'=' * 70}\n")
 
     # Scan signals
@@ -1170,6 +1245,125 @@ The full calibration kit (170 signals, intervention routing, live proxy):
         print(f"  repair routing rules that may be useful even without a gate:")
         print(f"    https://github.com/charlesdvaught-hash/calibration-kit-public")
 
+    # ─── Holdout: test the signal on unseen tasks near the cusp ──────────────
+    holdout_results = []
+    if best and args.holdout > 0 and stopped_early:
+        # The holdout tasks are the next N tasks in the bank after early stop.
+        # These are naturally near the model's difficulty cusp — harder than
+        # the tasks it breezed through, but not impossibly hard.
+        n_train = len(results)
+        holdout_start_idx = n_train  # next task in ALL_TASKS
+        holdout_tasks = ALL_TASKS[holdout_start_idx:holdout_start_idx + args.holdout]
+
+        if not holdout_tasks:
+            print(f"\n{'=' * 70}")
+            print("HOLDOUT")
+            print(f"{'=' * 70}\n")
+            print("  No holdout tasks available (ran past end of bank).")
+        else:
+            print(f"\n{'=' * 70}")
+            print(f"HOLDOUT: testing signal '{best['signal']}' on {len(holdout_tasks)} unseen tasks")
+            print(f"{'=' * 70}\n")
+
+            # Compute signal values for training set to find the decision threshold.
+            # We use the midpoint between the mean of pass-group and fail-group
+            # as the decision boundary. Direction comes from Cohen's d sign.
+            train_signal_vals = []
+            for r in results:
+                e = dict(r["entropy"])
+                e.update(_shape_features(r["entropy"]))
+                val = e.get(best["signal"])
+                if val is not None:
+                    train_signal_vals.append((val, r["ok"]))
+
+            pass_vals = [v for v, ok in train_signal_vals if ok]
+            fail_vals = [v for v, ok in train_signal_vals if not ok]
+            if pass_vals and fail_vals:
+                threshold = (sum(pass_vals) / len(pass_vals)
+                             + sum(fail_vals) / len(fail_vals)) / 2.0
+            elif pass_vals:
+                threshold = sum(pass_vals) / len(pass_vals)
+            else:
+                threshold = 0.0
+
+            # d > 0 means high signal = more likely correct.
+            # Predict pass if signal is on the "good" side of threshold.
+            high_is_good = best["cohens_d"] > 0
+
+            print(f"  Signal:     {best['signal']} ({best['direction']})")
+            print(f"  Threshold:  {threshold:.4f} (midpoint of pass/fail means)")
+            print(f"  Training:   {len(pass_vals)} pass, {len(fail_vals)} fail")
+            print()
+
+            correct = 0
+            total_h = 0
+            for i, task in enumerate(holdout_tasks):
+                idx = n_train + i + 1
+                prompt = build_prompt(task)
+                print(f"  [{idx}] {task['id']:<28} ", end="", flush=True)
+                text, entropy, elapsed = generate(
+                    llm, prompt, preset, blacklist, args.thinking, think_marker_ids)
+                code = extract_code(text)
+                with tempfile.TemporaryDirectory() as td:
+                    passed, total_t, failures = test_function_code(code, task, td)
+                ok = (passed == total_t)
+
+                # Compute signal value for this holdout task
+                e = dict(entropy)
+                e.update(_shape_features(entropy))
+                sig_val = e.get(best["signal"], 0.0)
+
+                # Predict using the threshold
+                if high_is_good:
+                    predicted_pass = sig_val >= threshold
+                else:
+                    predicted_pass = sig_val <= threshold
+
+                prediction = "PASS" if predicted_pass else "FAIL"
+                actual = "PASS" if ok else "FAIL"
+                hit = predicted_pass == ok
+                if hit:
+                    correct += 1
+                total_h += 1
+
+                holdout_results.append({
+                    "task_id": task["id"], "ok": ok,
+                    "signal_value": sig_val,
+                    "predicted_pass": predicted_pass,
+                    "correct_prediction": hit,
+                })
+
+                mark = "✓" if hit else "✗"
+                print(f"{actual:>4}  signal={sig_val:+.6f}  pred={prediction:>4}  {mark}")
+
+            accuracy = correct / total_h if total_h > 0 else 0.0
+            # Baseline: always predict the majority class from training
+            majority_pass = len(pass_vals) >= len(fail_vals)
+            baseline_acc = (sum(1 for h in holdout_results if h["ok"] == majority_pass)
+                           / total_h if total_h > 0 else 0.0)
+
+            print(f"\n  Holdout accuracy:   {correct}/{total_h} = {accuracy:.0%}")
+            print(f"  Baseline (majority): {baseline_acc:.0%} (always predict "
+                  f"{'PASS' if majority_pass else 'FAIL'})")
+            print(f"  Lift over baseline:  {accuracy - baseline_acc:+.0%}")
+
+            if accuracy > baseline_acc:
+                print(f"\n  ✓ The signal generalized to unseen tasks near the cusp.")
+                print(f"    This is evidence the calibration has practical value:")
+                print(f"    it can predict failures before the test runs.")
+            elif accuracy == baseline_acc:
+                print(f"\n  ~ The signal matched baseline. No practical benefit shown")
+                print(f"    on this holdout set, though the signal may still be real.")
+            else:
+                print(f"\n  ✗ The signal did worse than baseline on holdout.")
+                print(f"    It may be overfit to the training tasks, or the effect")
+                print(f"    is too small to predict individual outcomes.")
+    elif args.holdout > 0 and not best:
+        print(f"\n  (Holdout skipped: no signal found to test.)")
+    elif args.holdout > 0 and not stopped_early:
+        print(f"\n  (Holdout skipped: early stop was not triggered. "
+              f"Use --target-failures to enable holdout testing.)")
+
     # Upload
     if not args.no_upload and args.upload_url:
         try_upload(results, scan_rows, best, model_label, args.upload_url)
@@ -1185,8 +1379,11 @@ The full calibration kit (170 signals, intervention routing, live proxy):
             "preset": preset,
             "thinking": args.thinking,
             "n_ok": n_ok, "n_fail": n_fail,
+            "stopped_early": stopped_early,
+            "target_failures": target_failures,
             "scan_rows": scan_rows[:20],
             "best_signal": best,
+            "holdout": holdout_results if holdout_results else None,
             "per_task": [
                 {"task_id": r["task_id"], "ok": r["ok"],
                  "passed": r["passed"], "total": r["total"],
@@ -1221,3 +1418,6 @@ The full calibration kit (170 signals, intervention routing, live proxy):
 
 if __name__ == "__main__":
     main()
+
+
+
