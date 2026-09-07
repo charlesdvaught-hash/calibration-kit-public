@@ -80,10 +80,7 @@ _PUNCT_CHARS = frozenset('.,;:!?()[]{}=+-*/<>|&"\'@#`~^%\\')
 DEFAULT_UPLOAD_URL = os.environ.get("PROBE_UPLOAD_URL", "")
 
 # Hard tasks (HumanEval-derived tasks with adversarial edge cases).
-# Merged with FUNCTION_TASKS into ALL_TASKS, sorted easy→hard.
-# The probe stops after collecting enough failures (--target-failures),
-# so strong models skip tasks they'd obviously pass and weak models
-# stop early once they've failed enough.
+# Used only with --bank human.
 _HARD_TASKS_AVAILABLE = False
 try:
     from _hard_tasks import HARD_TASKS, HARD_REFERENCES, validate_hard
@@ -91,6 +88,15 @@ try:
 except ImportError:
     HARD_TASKS = []
     HARD_REFERENCES = {}
+
+# Realistic 60-task bank (14 assembly + 46 single-function) — the default demo bank.
+_REALISTIC_AVAILABLE = False
+try:
+    from _realistic_tasks import REALISTIC_TASKS
+    _REALISTIC_AVAILABLE = True
+except ImportError:
+    REALISTIC_TASKS = []
+
 
 # ─── Task bank (42 single-function coding tasks) ──────────────────────────────
 
@@ -270,17 +276,20 @@ REFERENCES = {
 
 def validate(tasks=None, verbose=True):
     """Validate the task bank by running each reference implementation against
-    its own tests. Returns True if all tasks pass."""
+    its own tests. Returns True if all tested tasks pass."""
     if tasks is None:
-        tasks = FUNCTION_TASKS
+        tasks = ALL_TASKS
     import tempfile
     all_ok = True
+    n_tested = n_skipped = 0
     for task in tasks:
-        ref = REFERENCES.get(task["id"])
+        ref = REFERENCES.get(task["id"]) or task.get("reference")
         if ref is None:
+            n_skipped += 1
             if verbose:
                 print(f"  {task['id']:<28} SKIP (no reference)")
             continue
+        n_tested += 1
         with tempfile.TemporaryDirectory() as td:
             passed, total, failures = test_function_code(ref, task, td)
         ok = (passed == total)
@@ -292,6 +301,8 @@ def validate(tasks=None, verbose=True):
             if failures:
                 for f in failures[:2]:
                     print(f"    {f}")
+    if verbose:
+        print(f"\n{n_tested} tasks validated, {n_skipped} skipped without reference.")
     return all_ok
 
 
@@ -305,14 +316,23 @@ def validate(tasks=None, verbose=True):
 def _difficulty_score(task):
     ref_len = len(task.get("reference", ""))
     n_tests = len(task.get("tests", []))
-    desc_len = len(task.get("desc", ""))
+    desc_len = len(task.get("desc", task.get("task_desc", "")))
+    if task.get("type") == "assembly":
+        # Assembly tasks have no reference implementation; CLI wiring is
+        # generally harder per test, so weight tests more heavily.
+        return n_tests * 100 + desc_len * 0.1
     return ref_len * 0.5 + n_tests * 50 + desc_len * 0.1
 
-# All benchmark tasks (150 total), difficulty-sorted.
-# HARD_TASKS already subsumes 30 of the 42 easy FUNCTION_TASKS that were used
-# in the original build; the remaining 12 easy-only tasks are exercised via
-# `python probe.py --validate` and are not duplicated here.
-ALL_TASKS = sorted(HARD_TASKS, key=_difficulty_score)
+# All benchmark tasks, difficulty-sorted.
+# The default 60-task bank mixes small CLI/data tools (assembly) with single-function
+# algorithmic tasks (function), which is closer to a single user's repeated asks
+# than the broad 150-task HumanEval sweep. Use --bank human to fall back.
+if _REALISTIC_AVAILABLE:
+    ALL_TASKS = sorted(REALISTIC_TASKS, key=_difficulty_score)
+elif _HARD_TASKS_AVAILABLE:
+    ALL_TASKS = sorted(HARD_TASKS, key=_difficulty_score)
+else:
+    ALL_TASKS = list(FUNCTION_TASKS)
 
 # Minimum failures needed for statistical power.
 # Below this, the probe reports UNDERPOWERED regardless of signal strength.
@@ -840,8 +860,38 @@ def extract_code(text: str) -> str:
     return text
 
 
+def test_assembly_code(code: str, task: Dict, tmpdir: str) -> Tuple[int, int, List[str]]:
+    """Write wiring file + siblings, then run the assembly test scripts."""
+    wiring_fp = os.path.join(tmpdir, task["wiring_file"])
+    with open(wiring_fp, "w", encoding="utf-8") as f:
+        f.write(code)
+    for sib in task.get("siblings", []):
+        sib_fp = os.path.join(tmpdir, sib["filename"])
+        with open(sib_fp, "w", encoding="utf-8") as f:
+            f.write(sib["source"])
+    passed = 0
+    total = len(task["tests"])
+    failures = []
+    for name, test_code in task["tests"]:
+        try:
+            r = subprocess.run([sys.executable, "-c", test_code],
+                               capture_output=True, text=True, timeout=15,
+                               cwd=tmpdir)
+        except subprocess.TimeoutExpired:
+            failures.append(f"{name}: TIMEOUT (15s)")
+            continue
+        if r.returncode == 0:
+            passed += 1
+        else:
+            err = r.stderr.strip()[:250] if r.stderr.strip() else r.stdout.strip()[:250]
+            failures.append(f"{name}: {err}")
+    return passed, total, failures
+
+
 def test_function_code(code: str, task: Dict, tmpdir: str) -> Tuple[int, int, List[str]]:
     """Write code to file, import, run eval tests. Returns (passed, total, failures)."""
+    if task.get("type") == "assembly":
+        return test_assembly_code(code, task, tmpdir)
     fp = os.path.join(tmpdir, task["filename"])
     with open(fp, "w", encoding="utf-8") as f:
         f.write(code)
@@ -1028,6 +1078,14 @@ def normalize_model_label(model_path: str) -> str:
 
 def build_prompt(task: Dict, no_think: bool = False) -> str:
     suffix = "\n/no_think" if no_think else ""
+    if task.get("type") == "assembly":
+        iface = "Available modules:\n" + "\n".join(
+            f"  {sib['interfaces']}" for sib in task.get("siblings", []))
+        return (f"{iface}\n\n"
+                f"Task: {task['task_desc']}{suffix}\n\n"
+                f"Write {task['wiring_file']}. Import from the modules above. "
+                f"Use their functions — do NOT reinvent them. "
+                f"Output only the code.")
     return (f"Task: {task['desc']}{suffix}\n\n"
             f"Write {task['filename']} with the function {task['func_name']}. "
             f"Output only the code in a ```python block.")
@@ -1140,6 +1198,8 @@ The full calibration kit (170 signals, intervention routing, live proxy):
   https://github.com/charlesdvaught-hash/calibration-kit-public
 """)
     parser.add_argument("--model", required=False, help="Path to GGUF model file")
+    parser.add_argument("--bank", choices=["realistic", "human", "easy"], default="realistic",
+                        help="Task bank: realistic (60 tasks, default), human (150 HumanEval), easy (42 easy)")
     parser.add_argument("--validate", action="store_true",
                         help="Validate the task bank (run references against tests) and exit")
     parser.add_argument("--temp", type=float, default=0.7, help="Temperature (default 0.7)")
@@ -1178,11 +1238,28 @@ The full calibration kit (170 signals, intervention routing, live proxy):
                         help="Skip the upload prompt entirely")
     args = parser.parse_args()
 
+    global ALL_TASKS
+    if args.bank == "human":
+        if _HARD_TASKS_AVAILABLE:
+            ALL_TASKS = sorted(HARD_TASKS, key=_difficulty_score)
+        else:
+            print("ERROR: --bank human requested but _hard_tasks.py is not available.")
+            sys.exit(1)
+    elif args.bank == "easy":
+        ALL_TASKS = list(FUNCTION_TASKS)
+    else:
+        if _REALISTIC_AVAILABLE:
+            ALL_TASKS = sorted(REALISTIC_TASKS, key=_difficulty_score)
+        else:
+            print("ERROR: --bank realistic requested but _realistic_tasks.py is not available.")
+            sys.exit(1)
+
     if args.validate:
         print("Validating task bank (running reference implementations)...")
         ok = validate()
         if ok:
-            print(f"\nAll {len(FUNCTION_TASKS)} tasks validated successfully.")
+            print(f"\nAll available reference tasks validated successfully.")
+            print(f"(Skipped tasks have no reference implementation in this demo.)")
             sys.exit(0)
         else:
             print("\nSome tasks FAILED validation. Check the output above.")
