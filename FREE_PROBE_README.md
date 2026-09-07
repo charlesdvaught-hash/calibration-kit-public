@@ -1,8 +1,8 @@
 # Calibration Probe
 
 A free, standalone tool that tests whether your local GGUF coding model has a
-usable entropy-based wrongness signal. It runs 42 standard coding tasks against
-your model, captures per-token entropy trajectories, scans ~30 candidate
+usable entropy-based wrongness signal worth investigating further. It runs 42 standard coding tasks against
+your model (designed to target 1-4b models), captures per-token entropy trajectories, scans ~30 candidate
 signals with permutation tests and Benjamini-Hochberg correction, and prints an
 honest verdict.
 
