@@ -1,5 +1,12 @@
 # Local Model Calibration Kit — Source-Available EULA
 
+> **Scope note:** This EULA governs the Local Model Calibration Kit *software*
+> distributed to buyers. It does **not** govern the contents of this public
+> repository — the methodology, research notes, example profiles, reports, and
+> other documentation and data in this repo are licensed separately under
+> CC-BY-4.0 (see `LICENSE-CONTENT.md`). Nothing in this repository is the
+> software itself.
+
 **Version 1.0 — Grant-Back License**
 
 _by using, modifying, or distributing this software, you agree to these terms._

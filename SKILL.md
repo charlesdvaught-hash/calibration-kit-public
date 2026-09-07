@@ -1,6 +1,6 @@
 ---
 name: local-model-calibration-kit
-version: 1.0.0
+version: 2.0.0
 category: developer-tools
 price_usd: 59.99
 storefront: polar
@@ -77,14 +77,21 @@ do it.
 
 ## What you get
 
-After one calibration run (time depends on your hardware — minutes on a recent
-GPU, longer on CPU):
+The runtime proxy plus one calibration run (time depends on your hardware —
+minutes on a recent GPU, longer on CPU):
 
+- **An OpenAI-compatible runtime proxy** — `calibrate setup` + `calibrate proxy`
+  auto-detects a local backend, matches the profile, records every request,
+  scores generations in real time, and re-learns from the last N tasks on a
+  nightly schedule.
 - **A tested verdict on whether entropy predicts correctness for your model.**
-  On every model calibrated so far the answer has been no — see "The core
+  Two of four models calibrated so far have a usable signal — see "The core
   claim" below. The kit reports a direction and threshold only when the
   difference survives a permutation test and a multiple-comparison
-  correction; otherwise it reports `none` and ships no threshold.
+  correction; otherwise it reports `none` and ships no threshold. A `none`
+  on the entropy signal still comes with a full repair routing rule — the
+  kit always tells you what to do with failures, just not always how to
+  predict them before tests run.
 - **The statistical power behind that verdict**, so `none` is interpretable:
   observed effect size, the smallest effect the run could have detected, and
   the `--repeats` setting that would settle it
@@ -98,10 +105,6 @@ GPU, longer on CPU):
   time on it
 - **An `AgentAnalysis.md` file** — drop it into any project and Devin, Claude
   Code, Cursor, or 20+ other agents read it as standing instructions.
-- **An OpenAI-compatible runtime proxy** — `calibrate setup` + `calibrate proxy`
-  auto-detects a local backend, matches the profile, records every request,
-  scores generations in real time, and re-learns from the last N tasks on a
-  nightly schedule.
 
 If you provide an architect/planner model, you also get:
 
@@ -147,6 +150,13 @@ A correct generation opens with a brief sharp burst of genuine uncertainty and
 then settles; an incorrect one opens flat and uniformly committed. **Early
 confidence predicts wrongness.**
 
+The same per-model, validated-signal pattern held on `Qwen3-8B` (Q5_K_M,
+thinking mode, 224-task bank): `think_frac` (fraction of generation spent in
+reasoning tokens) separates pass from fail at d=+2.07 and transfers to unseen
+tasks — 0.838 mean balanced accuracy across 300 task splits, above chance in
+100% of draws. Different model, different signal, same methodology: the kit
+finds whatever signature exists for *your* model, or reports `none`.
+
 On the same data, the reported statistics find nothing: `max_entropy` d=+0.17
 (p=0.39), `mean_entropy` d=+0.15 (p=0.46). A short opening spike plus a long
 calm tail averages to the same number as a flat middling trajectory. Averaging
@@ -157,11 +167,15 @@ contradicts.
 
 ### Honest hit rate
 
-One of three models calibrated has a usable signal. Granite and mini-coder
-come back `none`, and that is a real answer — it tells you not to spend
-compute on a gate that buys nothing. **You cannot know which case you are in
-without measuring your own model**, which is the reason this runs on your
-machine against your file.
+Two of four models calibrated have a usable entropy signal — Qwen3-8B
+(thinking mode) and Qwen3-4B-Instruct-2507. Granite-4.1-3b has neither a
+signal nor a sharp repair edge. Mini-coder-4b has no entropy signal but
+returns a working repair routing rule (test_retry first, logic vs assertion
+routing, stop after chain). A `none` on the entropy signal is not a `none`
+on the calibration — the kit still tells you what to do with failures, just
+not how to predict them before tests run. **You cannot know which case you
+are in without measuring your own model**, which is the reason this runs on
+your machine against your file.
 
 ### Scope
 
@@ -220,7 +234,23 @@ than a one-time script purchase.
 
 ## How to run it (full instructions for agents)
 
-### Prerequisites
+There are two paths. **The runtime proxy is the product** — the full
+calibration exists to build a profile for it.
+
+- **Path 1 — runtime proxy (primary).** `calibrate setup` + `calibrate proxy`,
+  point the harness at the proxy URL, done. If a profile matching your model
+  exists, live scoring starts immediately. If not, run the proxy in `observe`
+  mode and it records data anyway; `calibrate learn` turns a labeled proxy log
+  into a profile with no GPU time.
+- **Path 2 — full calibration (profile builder).** The offline pipeline below:
+  probe a task bank, sweep recovery interventions, analyze, export. This is
+  still the strongest way to build a robust profile from scratch when no
+  example profile exists for your model and quantization.
+
+Path 1 is covered in the Quickstart above and expanded under "The runtime
+proxy" below. The steps that follow are Path 2.
+
+### Prerequisites (for Path 2 — full calibration)
 
 - Python 3.10+
 - A local GGUF model file (the coder model you want to calibrate)
@@ -356,19 +386,19 @@ where it runs as long as it can load the model and execute Python.
 **Coder-only calibration:**
 
 ```bash
-python _calibrate_pipeline.py --model /path/to/your-model.gguf
+python calibrate.py run --model /path/to/your-model.gguf
 ```
 
 **With an architect/planner model:**
 
 ```bash
-python _calibrate_pipeline.py --model /path/to/coder.gguf --architect /path/to/architect.gguf
+python calibrate.py run --model /path/to/coder.gguf --architect /path/to/architect.gguf
 ```
 
 **Adaptive (minimum-compute) calibration** — stops early when it has enough data:
 
 ```bash
-python _calibrate_adaptive.py --model /path/to/your-model.gguf
+python calibrate.py adaptive --model /path/to/your-model.gguf
 ```
 
 The calibrator runs 4 phases:
@@ -381,15 +411,15 @@ The calibrator runs 4 phases:
 ### Step 5: Export the analysis
 
 ```bash
-python export_playbook.py --profile _calibration_profile_<label>.json --output AgentAnalysis.md
+python calibrate.py export --profile _calibration_<label>.json --output AgentAnalysis.md
 ```
 
 **With an architect profile:**
 
 ```bash
-python export_playbook.py \
-    --profile _calibration_profile_<coder>.json \
-    --architect _calibration_profile_<architect>.json \
+python calibrate.py export \
+    --profile _calibration_<coder>.json \
+    --architect _calibration_<architect>.json \
     --output AgentAnalysis.md
 ```
 
@@ -401,10 +431,11 @@ The output file is named `AgentAnalysis.md` to avoid overwriting an existing
 Copy `AgentAnalysis.md` to your project root (or append to an existing
 `AGENTS.md`). Your coding agent reads it as standing instructions.
 
-### Step 6.5: Runtime proxy (optional but recommended)
+### Step 6.5: The runtime proxy — the primary use of the kit
 
 The kit ships an OpenAI-compatible proxy that scores live generations with the
-profile and re-learns from recent work overnight.
+profile and re-learns from recent work overnight. This is the day-to-day
+interface: once a profile exists, the proxy is what you run.
 
 One-time setup:
 
@@ -533,8 +564,10 @@ See `LICENSE.md` for the legal terms (grant-back clause, Track A/B).
 | `METHODOLOGY.md` | The building blocks: every knob, every phase, every signal. Read this to understand what the calibration actually does. |
 | `CORE_MODEL_CONFIGS.md` | Verified sampling configs for common GGUF models. Check before calibrating. |
 | `requirements.txt` | Python dependencies (llama-cpp-python, numpy). |
-| `_calibrate_pipeline.py` | Full 4-phase calibration runner (probe -> sweep -> analyze -> recommend). |
-| `_calibrate_adaptive.py` | Minimum-compute adaptive calibration (stops early when enough data). |
+| `calibrate.py` | The CLI entry point — `run`, `adaptive`, `export`, `report`, `learn`, `reanalyze`, `converge`, `setup`, `proxy`. |
+| `calibration_proxy/` | The runtime proxy: OpenAI-compatible server, verdict scoring, profile manager, gate mode, nightly reanalysis. |
+| `_calibrate_pipeline.py` | Full 4-phase calibration runner (probe -> sweep -> analyze -> recommend), behind `calibrate.py run`. |
+| `_calibrate_adaptive.py` | Minimum-compute adaptive calibration (stops early when enough data), behind `calibrate.py adaptive`. |
 | `_calibration_signals.py` | Signal analysis, early-exit logic, bail thresholds. |
 | `_multifile_assembly.py` | Model loading, task definitions, prompts, code extraction, thinking stripping. |
 | `_solve_pipeline.py` | Entropy capture, generation with trajectories, architect generation, test execution. |
@@ -543,39 +576,53 @@ See `LICENSE.md` for the legal terms (grant-back clause, Track A/B).
 | `_task_bank.py` | The rest of the single-function task bank (42 tasks), each with a reference implementation. Run `python _task_bank.py` to verify every expected value. |
 | `_test_harness.py` | Test harness used by the solving pipeline. |
 | `_sandbox.py` | Python-level execution sandbox — blocks network, subprocess, ctypes, writes outside temp dir in model-generated code. |
-| `export_playbook.py` | Profile JSON -> AgentAnalysis.md exporter (the renderer). |
+| `export_playbook.py` | Profile JSON -> AgentAnalysis.md exporter (the renderer), behind `calibrate.py export`. |
 | `core_sweep.py` | Reflective prompt injection — asks you to analyze trends and propose experiments. |
-| `federation.py` | Local verification gate — benchmarks, sanitizes, human y/n, Track A/B submission. Submits to a webhook the developer operates separately. |
-| `examples/granite_profile.json` | Example profile: Granite 4.1 3B (entropy: none; interventions usable). |
-| `examples/granite_agents.md` | Example analysis generated from the Granite profile. |
-| `examples/qwen_profile.json` | Example profile: Qwen3-4B-Instruct, run at --repeats 10 (entropy: none, adequately powered). |
-| `examples/qwen_agents.md` | Example analysis generated from the Qwen profile. |
-| `examples/CORE_MODEL_CONFIGS.md` | Copy of the model config reference. |
+| `federation.py` | Local verification gate — benchmarks, sanitizes, human y/n, writes a local file. You send it by opening a PR or issue; nothing is transmitted automatically. |
+| `examples/qwen3-8b_*` | Qwen3-8B Q5_K_M thinking-mode run on the 224-task bank — signal found, transfers to unseen tasks (0.838). |
+| `examples/qwen60_*` | Qwen3-4B-Instruct-2507 on the 60-task bank — signal found, transfers (0.73). |
+| `examples/granite60_*` | Granite-4.1-3b on the 60-task bank — `none`, task-level holdout caught a false positive. |
+| `examples/mini-coder-4b_*` | mini-coder-4b on the 18-task bank — `none`. |
+| `examples/qwen_*`, `examples/granite_*` | Early 18-task runs, kept for history — superseded by the 60-task sets. |
+| `examples/harness-integrations/` | Copy-paste proxy configs for LocalHarness, mini-swe-agent, Aider, Continue, Cline, plus backend notes. |
 
 ## Example outputs
 
-**Granite 4.1 3B** (36 probes, 9 failures):
-- Entropy: **none.** max_entropy d=+0.16, permutation p=0.69. Ten candidate
-  statistics tested; three cleared p<0.05 individually and none survived
-  correction for having tested ten. Those three are reported as candidates
-  for a pre-registered check, not as findings.
-- Run was underpowered (could only detect d>=1.08) and the report says so,
-  and says the effect is too small for any practical run to settle.
-- Recovery: 5 of 9 failures recoverable. `skeleton_fill` recovers all 5;
-  `arch_trace_long` recovers 4. By error type, `skeleton_fill` is 3/3 on
-  assertion errors versus 2/6 on logic. **This is the actionable output.**
+**Qwen3-8B Q5_K_M, thinking mode** (224-task bank — 164 HumanEval + 60
+built-in, 224 probes, 37 failures):
+- Signal: `think_frac`, high=good, d=+2.07, survives correction.
+- Transfers to unseen tasks: 0.838 mean balanced accuracy across 300 task
+  splits, above chance in 100% of draws.
+- Pre-test failure routing: `think_frac` splits "didn't engage" failures
+  (syntax/empty output) from "thought but wrong" (assertion/logic/name/type),
+  each cluster with its own first-try intervention.
+- Recovery: 17 of 37 failures recoverable coder-side.
 
-**Qwen3-4B-Instruct** (180 probes at `--repeats 10`, 33 failures):
-- Entropy: **none**, and this time adequately powered — the run could detect
-  d>=0.54 and measured d=+0.17, p=0.39.
-- This run exists to answer one question honestly: the earlier 36-probe run
-  showed d=+0.61 off five failures and looked like a signal. Six times the
-  sample collapsed it to +0.17. That is what small-sample effect inflation
-  looks like, and it is why the default `--repeats 2` is not enough to
-  publish an entropy claim from.
+**Qwen3-4B-Instruct-2507 Q5_K_L** (60-task bank, 108 probes, 20 failures):
+- Signal: `max_entropy`/plateau shape, high=bad, d≈−1.0.
+- Transfers to unseen tasks: 0.73 mean balanced accuracy, above chance in
+  92% of draws.
+- Recovery: 11 of 20 failures recoverable.
 
-Same pipeline, same tasks. The interventions differ by model; entropy has so
-far come back none on all of them. Both halves of that are results.
+**Granite-4.1-3b Q5_K_M** (60-task bank, 60 probes, 8 failures):
+- Signal: **none** — underpowered at 8 failures (MDE d≥1.06), and the
+  task-level holdout caught a false positive (0.87 train → 0.47 test).
+- Recovery: 4 of 8 failures recoverable coder-side.
+
+**mini-coder-4b Q8_0** (18-task bank, 36 probes, 11 failures):
+- Entropy signal: **none** (d=+0.09, underpowered — could only detect d≥1.01).
+- But the repair rule is real and actionable: `test_retry` recovers 4/11,
+  logic errors route to `test_retry` first (3/4, 75%), assertion errors are
+  mostly unrecoverable (1/7, 14% — try once then escalate). The kit told
+  the user exactly what to do with failures; what it couldn't do was gate
+  generation preemptively, because 11 failures wasn't enough to sharpen a
+  signal from.
+
+Two of four models have entropy signals that hold up on tasks they never
+saw; granite has neither signal nor a sharp repair edge; mini-coder has no
+entropy signal but a usable repair routing rule. The kit tells you which
+case you are in — and "no gating signal, here's your repair order" is still
+a real result.
 
 ## Security and privacy
 
