@@ -1,10 +1,14 @@
 # Calibration Probe
 
 A free, standalone tool that tests whether your local GGUF coding model has a
-usable entropy-based wrongness signal worth investigating further. It runs 42 standard coding tasks against
-your model (designed to target 1-4b models), captures per-token entropy trajectories, scans ~30 candidate
+usable entropy-based wrongness signal worth investigating further. It runs 100 standard coding tasks against
+your model, sorted from easy to hard, captures per-token entropy trajectories, scans ~160 candidate
 signals with permutation tests and Benjamini-Hochberg correction, and prints an
 honest verdict.
+
+The probe stops after it collects enough failures (default 15) to look for a
+signal, then runs up to 10 extra holdout tasks to test whether the discovered
+signal predicts out-of-sample outcomes at the cusp of the model's capability.
 
 ## Quick start
 
@@ -18,16 +22,18 @@ That's it. No API keys, no cloud, no accounts. Everything runs locally.
 ## What it does
 
 1. Loads your GGUF model via `llama-cpp-python`
-2. Generates code for 42 standard Python function tasks (the same public task
-   bank used in the calibration kit research)
+2. Generates code for 100 standard Python function tasks, sorted by difficulty
+   (easy → hard)
 3. Captures per-token entropy trajectories during generation (top-20 cropped
    softmax entropy, structural/semantic token split, plateau/spike detection,
    thinking-phase boundaries, and one-pass series summaries)
 4. Tests each generated solution against the task's test cases
-5. Scans ~30 candidate entropy signals for separation between passing and
+5. Scans ~160 candidate entropy signals for separation between passing and
    failing generations
 6. Corrects for multiple comparisons (Benjamini-Hochberg, alpha=0.05)
-7. Prints one of four honest verdicts:
+7. Stops once `--target-failures` (default 15) failures are collected
+8. Runs `--holdout` (default 10) extra unseen tasks to test the signal
+9. Prints one of four honest verdicts:
    - **SIGNAL FOUND** — a signal survived correction with |d| >= 0.2
    - **NO SIGNAL FOUND** — nothing survived (honest null result)
    - **UNDERPOWERED** — too few failures to detect anything
@@ -66,6 +72,9 @@ python probe.py --model your-model.gguf [options]
   --presence-penalty F  Presence penalty (default 0)
   --thinking            Model is a thinking model (4096 max_tokens, strips <think> blocks)
   --repeats INT         Repeat each task N times (default 1; use 2+ for stochastic models)
+  --target-failures INT Stop after this many failures (default 15)
+  --holdout INT         Run this many extra holdout tasks after early stop (default 10; 0 to disable)
+  --no-early-stop       Run all 100 tasks even after reaching target failures
   --n-gpu-layers INT    GPU layers for llama-cpp-python (default -1 = all)
   --upload-url URL      Opt-in upload endpoint (or set PROBE_UPLOAD_URL env var)
   --no-upload           Skip the upload prompt entirely
@@ -89,12 +98,14 @@ consume the entire 1200-token budget.
 parameters. Qwen3 thinking uses temp=0.6, but Qwen3.5 thinking uses
 temp=1.0. Using the wrong temperature produces bad results.
 
-## Repeats and stochastic models
+## Repeats and early stop
 
-With `--repeats 1` (default), each task is run once. If your model passes
-all 42 tasks, you'll get NO FAILURES and no signal can be detected. Use
-`--repeats 2` or `--repeats 3` with a higher temperature to generate more
-variance and produce some failures.
+With `--repeats 1` (default), each task is run once. The probe stops after
+`--target-failures` (default 15) failures are collected, then runs `--holdout`
+(default 10) extra tasks to test the signal on unseen near-cusp work. If your
+model passes all 100 tasks, you will get NO FAILURES and no signal can be
+detected. Use `--repeats 2` or `--repeats 3` with a higher temperature to
+generate more variance, or `--no-early-stop` to force a full sweep.
 
 ## Contributing your results
 
@@ -148,9 +159,7 @@ you with `[y/N]` before uploading.
 
 This probe is a stripped-down discovery tool. The full calibration kit adds:
 
-- 170-candidate signal scan (vs ~30 here)
-- Task-level holdout and transfer estimation (does the signal generalize
-  to unseen tasks?)
+- 170-candidate signal scan (vs ~160 here)
 - Intervention routing (retry, repair, rephrase strategies)
 - Repair strategy sweeps (test_retry, rephrase, scaffold)
 - Live OpenAI-compatible proxy with real-time gating
@@ -158,11 +167,12 @@ This probe is a stripped-down discovery tool. The full calibration kit adds:
 - HTML reports and AgentAnalysis.md export
 - Custom task support
 
-The probe finds the signal. The full kit turns it into a product.
+The probe finds the signal, tests it on a small holdout, and reports whether it
+looks useful. The full kit turns it into a product.
 
 ## Validating the task bank
 
-The probe includes reference implementations for all 42 tasks. You can
+The probe includes reference implementations for all 100 tasks. You can
 verify they all pass before running:
 
 ```bash
