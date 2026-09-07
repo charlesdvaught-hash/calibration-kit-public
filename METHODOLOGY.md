@@ -323,13 +323,14 @@ record level (d = −0.94, adjusted p = 0.008) and nothing survives for
 granite-4.1-3b. The earlier 18-task early-window finding did not
 replicate across task sets — see `research/OUTCOME_005`.
 
-**Two holdouts, two questions.** The record-level held-out split asks
-"does this signal separate *new generations*?" It cannot ask "does it
-separate generations of *tasks the bank never contained*?" — a held-out
+**Two holdouts, two questions — reliability and validity.** The
+record-level held-out split is a *reliability* check: does this signal
+separate *new generations* of tasks the model has already seen? A held-out
 record can come from the same task as a training record, so a signal that
 detects task identity (not wrongness) passes while being useless on a new
-task. The profile therefore also runs `task_holdout_validation`: whole
-tasks are excluded from selection and fitting, then scored — plus a
+task — it repeats, but it doesn't generalize. The profile therefore also
+runs `task_holdout_validation`, the *validity* check: whole tasks are
+excluded from selection and fitting, then scored — plus a
 `transfer_estimate` that takes the signal the full run selected and
 re-scores it on held-out tasks across 300 random task splits. On the
 current runs: qwen's selected signal **does** transfer (0.73 mean
@@ -339,6 +340,13 @@ test) — the failure mode this check exists to catch. With ~10 failing
 tasks the selection path is low-power: a pass is meaningful, a fail means
 "not proven", not "proven false"; the transfer estimate is the usable
 number at this scale.
+
+The filter for both checks: *what observable signature would this claim's
+failure leave, and did you agree to look for it before you had the result?*
+If the failure leaves no trace you pre-committed to inspect, you measured
+agreement and called it truth. The permutation test, BH correction, and
+both holdouts are pre-committed checks — they were decided before the
+result was known, not selected after.
 
 **What the disagreement means.** Pool those three models' records together
 and the per-model effects cancel — `spike_relative_pos` runs +0.196, +0.306
