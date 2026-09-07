@@ -96,19 +96,46 @@ all 42 tasks, you'll get NO FAILURES and no signal can be detected. Use
 `--repeats 2` or `--repeats 3` with a higher temperature to generate more
 variance and produce some failures.
 
-## Opt-in data upload
+## Contributing your results
 
-If you set `PROBE_UPLOAD_URL` or pass `--upload-url`, the probe will offer
-to upload your results to a public evidence corpus. This helps map which
-models have signals and which don't.
+After running the probe, you can share your results to help map which models
+have signals and which don't. Two options:
 
-**What gets sent:**
-- Model filename and quant label (parsed from filename)
+### Option 1: HuggingFace Dataset (citable public artifact)
+
+```bash
+pip install huggingface_hub
+python upload_to_hf.py probe_your-model_results.json --token hf_YOUR_TOKEN
+```
+
+Get a token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens).
+Your results become part of a public dataset that other researchers can load:
+
+```python
+from datasets import load_dataset
+ds = load_dataset("charlesdvaught-hash/calibration-probe-results")
+```
+
+### Option 2: Cloudflare Worker (faster, needs deployed worker)
+
+If the project maintainer has deployed the Cloudflare Worker (see
+`worker/README.md`), you can upload directly:
+
+```bash
+python probe.py --model your-model.gguf \
+  --upload-url https://calibration-probe-collector.workers.dev/submit
+```
+
+Or set `PROBE_UPLOAD_URL` as an environment variable. The probe will prompt
+you with `[y/N]` before uploading.
+
+**What gets shared (both options):**
+- Model filename and quant label
 - Per-task 16-point downsampled entropy trajectory + pass/fail
 - Signal scan results (which signals survived, d values, p values)
 - Timestamp
 
-**What does NOT get sent:**
+**What does NOT get shared:**
 - NO prompts or task descriptions (standard public tasks only)
 - NO generated code
 - NO user identity or account info

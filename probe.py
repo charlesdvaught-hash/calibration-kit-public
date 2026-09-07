@@ -1198,6 +1198,23 @@ The full calibration kit (170 signals, intervention routing, live proxy):
         }, f, indent=2)
     print(f"\n  Results saved to {outfile}")
 
+    # Print contribution instructions
+    print(f"\n{'─' * 70}")
+    print(f"  CONTRIBUTE TO THE PUBLIC DATASET")
+    print(f"{'─' * 70}")
+    if not args.no_upload and args.upload_url:
+        pass  # Already prompted above
+    else:
+        print(f"  Two ways to share your results:")
+        print(f"\n  1. HuggingFace Dataset (makes it a citable public artifact):")
+        print(f"     pip install huggingface_hub")
+        print(f"     python upload_to_hf.py {outfile} --token hf_YOUR_TOKEN")
+        print(f"     # Get a token at huggingface.co/settings/tokens")
+        print(f"\n  2. Cloudflare Worker (faster, but needs a deployed worker):")
+        print(f"     Set PROBE_UPLOAD_URL or pass --upload-url")
+        print(f"\n  What gets shared: entropy trajectories + pass/fail + signal scan.")
+        print(f"  What does NOT: no code, no prompts, no identity, no IP.")
+
 
 if __name__ == "__main__":
     main()
