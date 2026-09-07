@@ -334,9 +334,10 @@ elif _HARD_TASKS_AVAILABLE:
 else:
     ALL_TASKS = list(FUNCTION_TASKS)
 
-# Minimum failures needed for statistical power.
-# Below this, the probe reports UNDERPOWERED regardless of signal strength.
-DEFAULT_TARGET_FAILURES = 15
+# Default target failures. A very large value means the probe runs the full
+# training set by default and only stops early if the user passes a lower
+# --target-failures value.
+DEFAULT_TARGET_FAILURES = 1000
 
 
 class GenTimeout(Exception):
@@ -1217,9 +1218,10 @@ The full calibration kit (170 signals, intervention routing, live proxy):
     parser.add_argument("--repeats", type=int, default=1,
                         help="Repeat each task N times (default 1; use 2+ for stochastic models)")
     parser.add_argument("--target-failures", type=int, default=DEFAULT_TARGET_FAILURES,
-                        help=f"Stop after collecting this many failures (default {DEFAULT_TARGET_FAILURES}). "
-                             f"Tasks are sorted easy→hard; strong models skip easy wins, "
-                             f"weak models stop early once enough failures are collected.")
+                        help="Stop after collecting this many failures during the training "
+                             "set (default 1000; effectively no early stop on the 60-bank). "
+                             "Use a small value like 15 for a quick stop once a signal might "
+                             "be detectable, or pass --no-early-stop to force a full sweep.")
     parser.add_argument("--holdout", type=int, default=20,
                         help="Reserve the last N tasks of the bank as a holdout set "
                              "to test whether the discovered signal generalizes (default 20). "

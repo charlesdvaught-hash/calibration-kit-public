@@ -37,7 +37,7 @@ That's it. No API keys, no cloud, no accounts. Everything runs locally.
 5. Scans ~170 candidate entropy signals for separation between passing and
    failing generations
 6. Corrects for multiple comparisons (Benjamini-Hochberg, alpha=0.05)
-7. Trains on the first 40 tasks (or stops early at `--target-failures`)
+7. Trains on the first 40 tasks (default: full 40; stop early with `--target-failures N`)
 8. Tests the discovered signal on the reserved 20 holdout tasks
 9. Optionally reranks predicted failures on the holdout with `--holdout-rerank N`
 10. Prints one of four honest verdicts:
@@ -96,7 +96,8 @@ python probe.py --model your-model.gguf [options]
   --presence-penalty F  Presence penalty (default 0)
   --thinking            Model is a thinking model (4096 max_tokens, strips <think> blocks)
   --repeats INT         Repeat each task N times (default 1; use 2+ for stochastic models)
-  --target-failures INT Stop after this many failures (default 15)
+  --target-failures INT Stop after this many failures during training (default 1000;
+                        effectively no early stop on the 60-bank; use 15 for quick stop)
   --holdout INT         Reserve this many of the bank's hardest tasks as holdout
                         (default 20; 0 to disable)
   --holdout-rerank INT  For predicted failures, generate 1 + N samples, keep best signal, compare to random (0 to disable; 2 for best-of-3)
@@ -127,12 +128,12 @@ temp=1.0. Using the wrong temperature produces bad results.
 ## Repeats and early stop
 
 With `--repeats 1` (default), each task is run once. The probe trains on the
-first 40 tasks of the 60-task bank and stops after `--target-failures` (default 15)
-failures unless `--no-early-stop` is passed. It then runs the reserved 20 holdout
-tasks to test the signal on unseen near-cusp work. If your model passes all 60
-tasks, you will get NO FAILURES and no signal can be detected. Use `--repeats 2`
-or `--repeats 3` with a higher temperature to generate more variance, or
-`--no-early-stop` to force a full sweep.
+first 40 tasks of the 60-task bank and, by default, does **not** stop early.
+It then runs the reserved 20 holdout tasks to test the signal on unseen
+near-cusp work. If your model passes all 60 tasks, you will get NO FAILURES and
+no signal can be detected. Use `--repeats 2` or `--repeats 3` with a higher
+temperature to generate more variance, or `--target-failures 15` to stop early
+as soon as a detectable signal might be available.
 
 ## Reranking with the signal
 
