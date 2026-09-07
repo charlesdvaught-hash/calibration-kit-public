@@ -26,6 +26,9 @@ build/
 dist/
 *.spec
 
+# Local probe run outputs (polished copies go in submissions/)
+probe_*_results.json
+
 # Local harness/proxy scratch (buyer/dev runs, not shipped)
 aider_dryrun/
 aider_dryrun.jsonl
