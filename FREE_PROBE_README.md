@@ -1,14 +1,20 @@
 # Calibration Probe
 
-A free, standalone tool that tests whether your local GGUF coding model has a
-usable entropy-based wrongness signal worth investigating further. It runs 100 standard coding tasks against
-your model, sorted from easy to hard, captures per-token entropy trajectories, scans ~160 candidate
-signals with permutation tests and Benjamini-Hochberg correction, and prints an
-honest verdict.
+A free, standalone demo that tests whether your local GGUF coding model has a
+usable entropy-based wrongness signal on 150 example coding tasks. It runs the
+standard public task bank, captures per-token entropy trajectories, scans ~160
+candidate signals with permutation tests and Benjamini-Hochberg correction, and
+prints an honest verdict.
+
+This is a **hobbyist science kit**, not a lab implementation. It proves the
+method can find a signal on example tasks. The full calibration kit learns the
+signal on your own tasks and turns it into a live gate:
+  https://github.com/charlesdvaught-hash/calibration-kit-public
 
 The probe stops after it collects enough failures (default 15) to look for a
-signal, then runs up to 10 extra holdout tasks to test whether the discovered
-signal predicts out-of-sample outcomes at the cusp of the model's capability.
+signal, then runs up to 30 extra holdout tasks to test whether the discovered
+signal predicts out-of-sample outcomes at the cusp of the model's capability on
+the demo task distribution.
 
 ## Quick start
 
@@ -22,8 +28,8 @@ That's it. No API keys, no cloud, no accounts. Everything runs locally.
 ## What it does
 
 1. Loads your GGUF model via `llama-cpp-python`
-2. Generates code for 100 standard Python function tasks, sorted by difficulty
-   (easy → hard)
+2. Generates code for 150 standard Python function tasks, sorted by difficulty
+   (easy → hard) on the demo task bank
 3. Captures per-token entropy trajectories during generation (top-20 cropped
    softmax entropy, structural/semantic token split, plateau/spike detection,
    thinking-phase boundaries, and one-pass series summaries)
@@ -32,8 +38,9 @@ That's it. No API keys, no cloud, no accounts. Everything runs locally.
    failing generations
 6. Corrects for multiple comparisons (Benjamini-Hochberg, alpha=0.05)
 7. Stops once `--target-failures` (default 15) failures are collected
-8. Runs `--holdout` (default 10) extra unseen tasks to test the signal
-9. Prints one of four honest verdicts:
+8. Runs `--holdout` (default 30) extra unseen tasks to test the signal
+9. Optionally reranks predicted failures on the holdout with `--holdout-rerank N`
+10. Prints one of four honest verdicts:
    - **SIGNAL FOUND** — a signal survived correction with |d| >= 0.2
    - **NO SIGNAL FOUND** — nothing survived (honest null result)
    - **UNDERPOWERED** — too few failures to detect anything
@@ -41,16 +48,18 @@ That's it. No API keys, no cloud, no accounts. Everything runs locally.
 
 ## What the verdict means
 
-**SIGNAL FOUND** means: on this specific model, on this specific task
-distribution, in this specific run, there is an entropy trajectory feature
-whose value systematically differs between correct and incorrect generations.
-This is a fingerprint, not a universal rule. It may not transfer to other
-models, other task types, or even other runs of the same model.
+**SIGNAL FOUND** means: on this specific model, on these 150 demo tasks, in
+this specific run, there is an entropy trajectory feature whose value
+systematically differs between correct and incorrect generations. This is a
+fingerprint on the demo bank, not a universal rule. It may not transfer to your
+actual tasks, other models, or other task types. The full calibration kit
+learns the signal on your own tasks.
 
-**NO SIGNAL FOUND** means: this run did not detect a usable signal. This is
-an honest null result. Some models genuinely don't have a usable entropy
-signal on this task distribution. The full calibration kit also checks for
-repair routing rules that may be useful even when no gating signal exists.
+**NO SIGNAL FOUND** means: this run did not detect a usable signal on the demo
+tasks. This is an honest null result. Some models genuinely don't have a usable
+entropy signal on this task distribution, or need more failures. The full
+calibration kit also checks for repair routing rules that may be useful even
+when no gating signal exists.
 
 **UNDERPOWERED** means: there weren't enough failures to detect anything.
 Try `--repeats 2` or `--repeats 3` with a higher temperature to generate
@@ -73,8 +82,9 @@ python probe.py --model your-model.gguf [options]
   --thinking            Model is a thinking model (4096 max_tokens, strips <think> blocks)
   --repeats INT         Repeat each task N times (default 1; use 2+ for stochastic models)
   --target-failures INT Stop after this many failures (default 15)
-  --holdout INT         Run this many extra holdout tasks after early stop (default 10; 0 to disable)
-  --no-early-stop       Run all 100 tasks even after reaching target failures
+  --holdout INT         Run this many extra holdout tasks after early stop (default 30; 0 to disable)
+  --holdout-rerank INT  For predicted failures, generate 1 + N samples, keep best signal, compare to random (0 to disable; 2 for best-of-3)
+  --no-early-stop       Run all 150 tasks even after reaching target failures
   --n-gpu-layers INT    GPU layers for llama-cpp-python (default -1 = all)
   --upload-url URL      Opt-in upload endpoint (or set PROBE_UPLOAD_URL env var)
   --no-upload           Skip the upload prompt entirely
@@ -102,10 +112,19 @@ temp=1.0. Using the wrong temperature produces bad results.
 
 With `--repeats 1` (default), each task is run once. The probe stops after
 `--target-failures` (default 15) failures are collected, then runs `--holdout`
-(default 10) extra tasks to test the signal on unseen near-cusp work. If your
-model passes all 100 tasks, you will get NO FAILURES and no signal can be
-detected. Use `--repeats 2` or `--repeats 3` with a higher temperature to
-generate more variance, or `--no-early-stop` to force a full sweep.
+(default 30) extra tasks to test the signal on unseen near-cusp work on the demo
+task bank. If your model passes all 150 tasks, you will get NO FAILURES and no
+signal can be detected. Use `--repeats 2` or `--repeats 3` with a higher temperature
+to generate more variance, or `--no-early-stop` to force a full sweep.
+
+## Reranking with the signal
+
+If you want to test whether the discovered signal can actually select better
+answers on the example tasks, pass `--holdout-rerank 2` (or 1, 3, etc.). When the
+first sample's signal predicts failure, the probe generates N more samples,
+picks the best one by the signal, and compares it to a random control. This is
+best-of-(N+1) selection on the demo bank. It costs extra generations only for
+predicted failures. Your own task distribution may need a different signal.
 
 ## Contributing your results
 

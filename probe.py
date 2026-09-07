@@ -298,11 +298,9 @@ def _difficulty_score(task):
     desc_len = len(task.get("desc", ""))
     return ref_len * 0.5 + n_tests * 50 + desc_len * 0.1
 
-_sorted_all = sorted(list(FUNCTION_TASKS) + list(HARD_TASKS), key=_difficulty_score)
-
-# Drop the easiest 16 (so the bank starts at 100 tasks and stays in the range
-# where modern models are calibrated — not trivially easy, not impossible).
-ALL_TASKS = _sorted_all[max(0, len(_sorted_all) - 100):]
+# All benchmark tasks (150 total), difficulty-sorted by the build script.
+# Includes the original 42 easy tasks plus 108 harder HumanEval-derived tasks.
+ALL_TASKS = list(HARD_TASKS)
 
 # Minimum failures needed for statistical power.
 # Below this, the probe reports UNDERPOWERED regardless of signal strength.
@@ -910,8 +908,26 @@ def generate(llm, prompt: str, preset: Dict, blacklist: frozenset,
     return text, collector.stats(), elapsed
 
 
-def build_prompt(task: Dict) -> str:
-    return (f"Task: {task['desc']}\n\n"
+def normalize_model_label(model_path: str) -> str:
+    """Make a clean, searchable label from a GGUF filename.
+
+    Removes the .gguf extension, strips redundant vendor prefixes
+    (e.g. 'Qwen_Qwen3...' -> 'Qwen3...'), and replaces dots/odd
+    separators with underscores so the result filename is safe.
+    """
+    name = os.path.basename(model_path)
+    name = re.sub(r'(?i)\.gguf$', '', name)
+    # Strip a redundant vendor prefix like Qwen_Qwen3, Meta_Llama, etc.
+    name = re.sub(r'(?i)^(Qwen|Meta|Microsoft|IBM|NVIDIA|Nemotron|Google)_(Qwen|Llama|Phi|Granite|Nemotron|Gemma)',
+                  r'\2', name)
+    # Replace dots with underscores (e.g. granite-4.1 -> granite-4_1)
+    name = name.replace('.', '_')
+    return name
+
+
+def build_prompt(task: Dict, no_think: bool = False) -> str:
+    suffix = "\n/no_think" if no_think else ""
+    return (f"Task: {task['desc']}{suffix}\n\n"
             f"Write {task['filename']} with the function {task['func_name']}. "
             f"Output only the code in a ```python block.")
 
@@ -1030,16 +1046,22 @@ The full calibration kit (170 signals, intervention routing, live proxy):
                         help="Presence penalty (default 0)")
     parser.add_argument("--thinking", action="store_true",
                         help="Model is a thinking model (uses 4096 max_tokens, strips thinking blocks)")
+    parser.add_argument("--no-think", action="store_true",
+                        help="Append /no_think to prompts (for Qwen3 dual-mode models) to disable thinking")
     parser.add_argument("--repeats", type=int, default=1,
                         help="Repeat each task N times (default 1; use 2+ for stochastic models)")
     parser.add_argument("--target-failures", type=int, default=DEFAULT_TARGET_FAILURES,
                         help=f"Stop after collecting this many failures (default {DEFAULT_TARGET_FAILURES}). "
                              f"Tasks are sorted easy→hard; strong models skip easy wins, "
                              f"weak models stop early once enough failures are collected.")
-    parser.add_argument("--holdout", type=int, default=10,
-                        help="After early stop, run N more tasks as holdout to test "
-                             "whether the discovered signal predicts out-of-sample (default 10). "
+    parser.add_argument("--holdout", type=int, default=30,
+                        help="After early stop, run up to N more tasks as holdout to test "
+                             "whether the discovered signal predicts out-of-sample (default 30). "
                              "Set to 0 to disable.")
+    parser.add_argument("--holdout-rerank", type=int, default=0,
+                        help="After the holdout prediction, generate up to N extra samples "
+                             "for each task (same temperature) and keep the one with the "
+                             "best signal value. Set to 0 to disable, 2 for best-of-3.")
     parser.add_argument("--no-early-stop", action="store_true",
                         help="Run all tasks even after reaching target failures (use with --repeats for full sweeps)")
     parser.add_argument("--n-gpu-layers", type=int, default=-1,
@@ -1068,7 +1090,7 @@ The full calibration kit (170 signals, intervention routing, live proxy):
         print(f"Error: model file not found: {model_path}")
         sys.exit(1)
 
-    model_label = os.path.basename(model_path)
+    model_label = normalize_model_label(model_path)
 
     print("=" * 70)
     print("CALIBRATION PROBE — Signal Discovery Tool")
@@ -1153,7 +1175,7 @@ The full calibration kit (170 signals, intervention routing, live proxy):
     for repeat in range(args.repeats):
         for i, task in enumerate(ALL_TASKS):
             idx = repeat * len(ALL_TASKS) + i + 1
-            prompt = build_prompt(task)
+            prompt = build_prompt(task, args.no_think)
             print(f"  [{idx}/{n_tasks}] {task['id']:<28} ", end="", flush=True)
             text, entropy, elapsed = generate(
                 llm, prompt, preset, blacklist, args.thinking, think_marker_ids)
@@ -1213,9 +1235,12 @@ The full calibration kit (170 signals, intervention routing, live proxy):
         print(f"  p (adjusted): {best['p_adjusted']:.4f}")
         print(f"  This means: when '{best['signal']}' is {'high' if best['cohens_d'] > 0 else 'low'},")
         print(f"  the model is {'more' if best['cohens_d'] > 0 else 'less'} likely to be correct.")
-        print(f"\n  This is a fingerprint on THIS model on THIS task distribution.")
-        print(f"  It may not transfer to other models or other task types.")
-        print(f"\n  The full calibration kit can turn this into a live gate:")
+        print(f"\n  This is a fingerprint on THIS model on THESE {len(ALL_TASKS)} demo tasks.")
+        print(f"  It is NOT a universal signal for this model, and it is NOT a")
+        print(f"  signal for your actual tasks. It only shows the method can find")
+        print(f"  a pattern on this example task distribution.")
+        print(f"\n  The full calibration kit learns the signal on your real tasks")
+        print(f"  and turns it into a live gate:")
         print(f"    https://github.com/charlesdvaught-hash/calibration-kit-public")
     elif n_fail < 3:
         print(f"  NO FAILURES TO ANALYZE.")
@@ -1239,10 +1264,11 @@ The full calibration kit (170 signals, intervention routing, live proxy):
         print(f"  Benjamini-Hochberg correction at alpha={ALPHA}.")
         if mde:
             print(f"  Minimum detectable effect: d >= {mde:.2f}")
-        print(f"\n  This is an honest null result, not a failure of the method.")
-        print(f"  Some models genuinely don't have a usable entropy signal")
-        print(f"  on this task distribution. The full kit also checks for")
-        print(f"  repair routing rules that may be useful even without a gate:")
+        print(f"\n  This is an honest null result on these {len(ALL_TASKS)} demo tasks.")
+        print(f"  Some models genuinely don't have a usable entropy signal on")
+        print(f"  the demo task distribution. The full kit learns a signal on")
+        print(f"  your own tasks and checks for repair-routing rules that may")
+        print(f"  still be useful even without a gate:")
         print(f"    https://github.com/charlesdvaught-hash/calibration-kit-public")
 
     # ─── Holdout: test the signal on unseen tasks near the cusp ──────────────
@@ -1299,7 +1325,7 @@ The full calibration kit (170 signals, intervention routing, live proxy):
             total_h = 0
             for i, task in enumerate(holdout_tasks):
                 idx = n_train + i + 1
-                prompt = build_prompt(task)
+                prompt = build_prompt(task, args.no_think)
                 print(f"  [{idx}] {task['id']:<28} ", end="", flush=True)
                 text, entropy, elapsed = generate(
                     llm, prompt, preset, blacklist, args.thinking, think_marker_ids)
@@ -1308,12 +1334,62 @@ The full calibration kit (170 signals, intervention routing, live proxy):
                     passed, total_t, failures = test_function_code(code, task, td)
                 ok = (passed == total_t)
 
-                # Compute signal value for this holdout task
+                # Compute signal value for the first holdout attempt
                 e = dict(entropy)
                 e.update(_shape_features(entropy))
                 sig_val = e.get(best["signal"], 0.0)
 
-                # Predict using the threshold
+                # Optional: conditional best-of-N rerank using the discovered signal.
+                # If the first sample's signal predicts PASS, we keep it (no extra compute).
+                # If it predicts FAIL, we generate N more samples, then compare:
+                #   - signal-guided: pick the sample with the best signal value
+                #   - random control: pick one of the samples uniformly at random
+                # This makes rerank compute proportional to predicted failures,
+                # and gives a proper A/B control.
+                first_ok = ok
+                first_sig = sig_val
+                samples = [(sig_val, entropy, code, ok)]
+                random_idx = 0
+                best_idx = 0
+                if args.holdout_rerank > 0:
+                    # Predict on first sample
+                    if high_is_good:
+                        predicted_fail = first_sig < threshold
+                    else:
+                        predicted_fail = first_sig > threshold
+
+                    if not predicted_fail:
+                        # Signal is confident this is a pass — keep first sample
+                        pass
+                    else:
+                        print(f" (predicted FAIL, generating {args.holdout_rerank} extra samples)",
+                              end="", flush=True)
+                        for _ in range(args.holdout_rerank):
+                            text_r, entropy_r, elapsed_r = generate(
+                                llm, prompt, preset, blacklist, args.thinking, think_marker_ids)
+                            code_r = extract_code(text_r)
+                            with tempfile.TemporaryDirectory() as td:
+                                passed_r, total_r, _ = test_function_code(code_r, task, td)
+                            ok_r = (passed_r == total_r)
+                            e_r = dict(entropy_r)
+                            e_r.update(_shape_features(entropy_r))
+                            sig_val_r = e_r.get(best["signal"], 0.0)
+                            samples.append((sig_val_r, entropy_r, code_r, ok_r))
+
+                        # Signal-guided: pick the best signal value
+                        if high_is_good:
+                            best_idx = max(range(len(samples)), key=lambda i: samples[i][0])
+                        else:
+                            best_idx = min(range(len(samples)), key=lambda i: samples[i][0])
+
+                        # Random control: pick one uniformly
+                        random_idx = random.randrange(len(samples))
+
+                        # Use signal-guided as the chosen sample
+                        sig_val, entropy, code, ok = samples[best_idx]
+                        print(f"  kept signal sample {best_idx + 1}/{len(samples)}", flush=True)
+
+                # Predict using the threshold on the chosen sample
                 if high_is_good:
                     predicted_pass = sig_val >= threshold
                 else:
@@ -1328,13 +1404,27 @@ The full calibration kit (170 signals, intervention routing, live proxy):
 
                 holdout_results.append({
                     "task_id": task["id"], "ok": ok,
+                    "first_ok": first_ok,
+                    "ok_after_rerank": ok if args.holdout_rerank > 0 else None,
+                    "random_ok": samples[random_idx][3] if args.holdout_rerank > 0 and len(samples) > 1 else first_ok,
+                    "random_idx": random_idx if args.holdout_rerank > 0 and len(samples) > 1 else 0,
                     "signal_value": sig_val,
+                    "first_signal_value": first_sig,
                     "predicted_pass": predicted_pass,
                     "correct_prediction": hit,
+                    "n_samples": len(samples) if args.holdout_rerank > 0 else 1,
+                    "sample_outcomes": [s[3] for s in samples],
+                    "sample_signals": [s[0] for s in samples],
+                    "selected_idx": best_idx,
                 })
 
                 mark = "✓" if hit else "✗"
-                print(f"{actual:>4}  signal={sig_val:+.6f}  pred={prediction:>4}  {mark}")
+                if args.holdout_rerank > 0 and len(samples) > 1:
+                    control = samples[random_idx][3]
+                    print(f"{actual:>4}  signal={sig_val:+.6f}  pred={prediction:>4}  {mark}  "
+                          f"(random control: {'PASS' if control else 'FAIL'})")
+                else:
+                    print(f"{actual:>4}  signal={sig_val:+.6f}  pred={prediction:>4}  {mark}")
 
             accuracy = correct / total_h if total_h > 0 else 0.0
             # Baseline: always predict the majority class from training
@@ -1347,7 +1437,70 @@ The full calibration kit (170 signals, intervention routing, live proxy):
                   f"{'PASS' if majority_pass else 'FAIL'})")
             print(f"  Lift over baseline:  {accuracy - baseline_acc:+.0%}")
 
-            if accuracy > baseline_acc:
+            if args.holdout_rerank > 0:
+                first_passes = sum(1 for h in holdout_results if h["first_ok"])
+                rerank_passes = sum(1 for h in holdout_results if h["ok"])
+                random_passes = sum(1 for h in holdout_results if h.get("random_ok"))
+                rescued = sum(1 for h in holdout_results
+                              if not h["first_ok"] and h["ok"])
+                random_rescued = sum(1 for h in holdout_results
+                                     if not h["first_ok"] and h.get("random_ok"))
+                worsened = sum(1 for h in holdout_results
+                               if h["first_ok"] and not h["ok"])
+
+                # Conditional rerank: count how many tasks triggered extra samples
+                reranked_tasks = [h for h in holdout_results if h.get("n_samples", 1) > 1]
+                n_reranked = len(reranked_tasks)
+
+                # Did the signal select a passing sample when one existed?
+                selectable = [h for h in holdout_results if True in h["sample_outcomes"]]
+                selected_passing = sum(
+                    1 for h in selectable if h["sample_outcomes"][h["selected_idx"]])
+                random_selected_passing = sum(
+                    1 for h in selectable if h["sample_outcomes"][h["random_idx"]])
+                rerank_precision = (selected_passing / len(selectable)
+                                    if selectable else 0.0)
+                random_precision = (random_selected_passing / len(selectable)
+                                    if selectable else 0.0)
+
+                # Expected random from distribution (n_pass / n_total)
+                random_hits = 0.0
+                for h in selectable:
+                    n_pass = sum(h["sample_outcomes"])
+                    n_total = len(h["sample_outcomes"])
+                    random_hits += n_pass / n_total
+                expected_random = random_hits / len(selectable) if selectable else 0.0
+
+                # Average samples per task (conditional rerank lowers this)
+                avg_samples = sum(h["n_samples"] for h in holdout_results) / total_h
+
+                print(f"\n  Conditional best-of-(1+{args.holdout_rerank}) rerank results:")
+                print(f"    Tasks reranked (predicted FAIL):   {n_reranked}/{total_h}")
+                print(f"    Avg samples per holdout task:      {avg_samples:.2f}")
+                print(f"    First-sample pass rate:            {first_passes}/{total_h} ({first_passes/total_h:.0%})")
+                print(f"    Signal-guided pass rate:           {rerank_passes}/{total_h} ({rerank_passes/total_h:.0%})")
+                print(f"    Random control pass rate:          {random_passes}/{total_h} ({random_passes/total_h:.0%})")
+                print(f"    Failures rescued by signal:        {rescued}")
+                print(f"    Failures rescued by random:        {random_rescued}")
+                print(f"    Passes lost:                       {worsened}")
+                print(f"    Net change vs first sample:        {rescued - worsened:+d}")
+                print(f"    Tasks with at least one PASS:      {len(selectable)}")
+                print(f"    Signal picked a PASS among them:   {selected_passing}/{len(selectable)} ({rerank_precision:.0%})")
+                print(f"    Random picked a PASS among them:   {random_selected_passing}/{len(selectable)} ({random_precision:.0%})")
+                print(f"    Expected random (n_pass/n_total):  {expected_random:.0%}")
+
+                if rerank_precision > random_precision:
+                    print(f"\n  ✓ The signal-selected sample did better than random on demo tasks.")
+                    print(f"    Signal rescued {rescued} failure(s); random rescued {random_rescued}.")
+                    print(f"    This is evidence the calibration method can choose better")
+                    print(f"    answers on example tasks. The kit does this on your tasks.")
+                elif rerank_precision == random_precision:
+                    print(f"\n  ~ Signal and random performed equally. The signal did not "
+                          f"consistently identify the better sample on these demo tasks.")
+                else:
+                    print(f"\n  ✗ Signal did worse than random. The signal may be too noisy "
+                          f"at this threshold for reranking on these demo tasks.")
+            elif accuracy > baseline_acc:
                 print(f"\n  ✓ The signal generalized to unseen tasks near the cusp.")
                 print(f"    This is evidence the calibration has practical value:")
                 print(f"    it can predict failures before the test runs.")
@@ -1372,7 +1525,7 @@ The full calibration kit (170 signals, intervention routing, live proxy):
         print("   results to the public evidence corpus.)")
 
     # Save local results
-    outfile = f"probe_{model_label.replace('.', '_')}_results.json"
+    outfile = f"probe_{model_label}_results.json"
     with open(outfile, "w", encoding="utf-8") as f:
         json.dump({
             "model_label": model_label,

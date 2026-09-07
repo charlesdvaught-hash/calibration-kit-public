@@ -1,5 +1,5 @@
 {
-  "model_label": "Qwen3-8B-Q5_K_M.gguf",
+  "model_label": "Qwen3-8B-Q5_K_M",
   "preset": {
     "temp": 0.7,
     "top_p": 0.8,
