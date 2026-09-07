@@ -1,0 +1,12 @@
+name = "calibration-probe-collector"
+main = "src/worker.js"
+compatibility_date = "2024-09-23"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "probe-results"
+database_id = "REPLACE_WITH_YOUR_D1_ID"
+
+# Rate limiting: 10 submissions per IP per hour
+[limits]
+requests_per_hour = 10
