@@ -99,9 +99,20 @@ variance and produce some failures.
 ## Contributing your results
 
 After running the probe, you can share your results to help map which models
-have signals and which don't. Two options:
+have signals and which don't. Three options:
 
-### Option 1: HuggingFace Dataset (citable public artifact)
+### Option 1: GitHub PR (recommended — auto-syncs to HF dataset)
+
+```bash
+python contribute.py probe_your-model_results.json
+```
+
+Or manually: fork the [repo](https://github.com/charlesdvaught-hash/calibration-kit-public),
+add your JSON to `submissions/`, open a PR. When merged, GitHub Actions
+auto-syncs to the HuggingFace dataset via a trusted publisher. No HF account
+or token needed — just a GitHub account.
+
+### Option 2: HuggingFace PR (direct, needs HF account)
 
 ```bash
 pip install huggingface_hub
@@ -109,17 +120,9 @@ python upload_to_hf.py probe_your-model_results.json --token hf_YOUR_TOKEN
 ```
 
 Get a token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens).
-Your results become part of a public dataset that other researchers can load:
+This opens a PR directly on the HF dataset repo.
 
-```python
-from datasets import load_dataset
-ds = load_dataset("charlesdvaught-hash/calibration-probe-results")
-```
-
-### Option 2: Cloudflare Worker (faster, needs deployed worker)
-
-If the project maintainer has deployed the Cloudflare Worker (see
-`worker/README.md`), you can upload directly:
+### Option 3: Cloudflare Worker (fastest, needs deployed worker)
 
 ```bash
 python probe.py --model your-model.gguf \
@@ -129,7 +132,7 @@ python probe.py --model your-model.gguf \
 Or set `PROBE_UPLOAD_URL` as an environment variable. The probe will prompt
 you with `[y/N]` before uploading.
 
-**What gets shared (both options):**
+**What gets shared (all options):**
 - Model filename and quant label
 - Per-task 16-point downsampled entropy trajectory + pass/fail
 - Signal scan results (which signals survived, d values, p values)

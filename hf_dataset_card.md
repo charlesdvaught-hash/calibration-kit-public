@@ -73,8 +73,22 @@ pip install llama-cpp-python numpy
 python probe.py --model your-model.gguf
 ```
 
-Then upload your results as a pull request (you just need a free HuggingFace
-account — no write access required):
+Then contribute your results via GitHub PR (recommended — no HF account or
+token needed, auto-syncs to this dataset on merge):
+
+```bash
+python contribute.py probe_your-model_results.json
+```
+
+Or manually:
+1. Fork the [GitHub repo](https://github.com/charlesdvaught-hash/calibration-kit-public)
+2. Add your JSON to `submissions/`
+3. Open a pull request
+4. When merged, GitHub Actions auto-syncs to this HF dataset via a
+   [trusted publisher](https://huggingface.co/docs/hub/spaces-github-actions)
+
+Alternatively, you can open a PR directly on HuggingFace (requires a HF
+account and token):
 
 ```bash
 pip install huggingface_hub
@@ -82,14 +96,6 @@ python upload_to_hf.py probe_your-model_results.json --token hf_xxxxx
 ```
 
 Get a token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens).
-This opens a PR that the dataset owner reviews and merges. You don't need
-write access to the dataset — just a HF account.
-
-If you are the dataset owner and want to commit directly:
-
-```bash
-python upload_to_hf.py probe_your-model_results.json --token hf_xxxxx --direct
-```
 
 ## Methodology
 

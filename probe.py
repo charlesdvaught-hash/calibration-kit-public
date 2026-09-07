@@ -1205,13 +1205,15 @@ The full calibration kit (170 signals, intervention routing, live proxy):
     if not args.no_upload and args.upload_url:
         pass  # Already prompted above
     else:
-        print(f"  Two ways to share your results:")
-        print(f"\n  1. HuggingFace Dataset (opens a PR, owner reviews & merges):")
+        print(f"  Three ways to share your results:")
+        print(f"\n  1. GitHub PR (recommended — auto-syncs to HF dataset on merge):")
+        print(f"     python contribute.py {outfile}")
+        print(f"     # Or: fork the repo, add to submissions/, open a PR")
+        print(f"\n  2. HuggingFace PR (opens a PR directly on the HF dataset):")
         print(f"     pip install huggingface_hub")
         print(f"     python upload_to_hf.py {outfile} --token hf_YOUR_TOKEN")
         print(f"     # Get a token at huggingface.co/settings/tokens")
-        print(f"     # You just need a HF account — no write access required.")
-        print(f"\n  2. Cloudflare Worker (faster, but needs a deployed worker):")
+        print(f"\n  3. Cloudflare Worker (faster, but needs a deployed worker):")
         print(f"     Set PROBE_UPLOAD_URL or pass --upload-url")
         print(f"\n  What gets shared: entropy trajectories + pass/fail + signal scan.")
         print(f"  What does NOT: no code, no prompts, no identity, no IP.")
