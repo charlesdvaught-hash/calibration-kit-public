@@ -9,255 +9,656 @@
     "presence_penalty": 0.0
   },
   "thinking": false,
-  "n_ok": 35,
-  "n_fail": 25,
+  "n_ok": 20,
+  "n_fail": 20,
   "stopped_early": false,
-  "target_failures": 30,
+  "target_failures": 15,
   "scan_rows": [
     {
-      "signal": "kl_cent_f10_max",
-      "cohens_d": 0.631,
-      "direction": "high=good",
-      "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
-      "survives_correction": true,
-      "nominally_significant": true
-    },
-    {
       "signal": "kl_cent_f10_mean",
-      "cohens_d": 1.44,
+      "cohens_d": 1.557,
       "direction": "high=good",
       "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
-      "survives_correction": true,
-      "nominally_significant": true
-    },
-    {
-      "signal": "kl_cent_max",
-      "cohens_d": 0.328,
-      "direction": "high=good",
-      "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0085,
       "survives_correction": true,
       "nominally_significant": true
     },
     {
       "signal": "kl_cent_slope",
-      "cohens_d": 1.429,
+      "cohens_d": 1.474,
       "direction": "high=good",
       "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0085,
       "survives_correction": true,
       "nominally_significant": true
     },
     {
       "signal": "mass20_early_vs_rest",
-      "cohens_d": -1.047,
+      "cohens_d": -0.975,
       "direction": "high=bad",
-      "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
-      "survives_correction": true,
-      "nominally_significant": true
-    },
-    {
-      "signal": "mass20_f10_mean",
-      "cohens_d": -1.186,
-      "direction": "high=bad",
-      "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
-      "survives_correction": true,
-      "nominally_significant": true
-    },
-    {
-      "signal": "mass20_f5_mean",
-      "cohens_d": -1.186,
-      "direction": "high=bad",
-      "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
-      "survives_correction": true,
-      "nominally_significant": true
-    },
-    {
-      "signal": "mass20_first",
-      "cohens_d": 1.105,
-      "direction": "high=good",
-      "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
-      "survives_correction": true,
-      "nominally_significant": true
-    },
-    {
-      "signal": "mass20_slope",
-      "cohens_d": 1.163,
-      "direction": "high=good",
-      "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
-      "survives_correction": true,
-      "nominally_significant": true
-    },
-    {
-      "signal": "mass5_f10_mean",
-      "cohens_d": -1.136,
-      "direction": "high=bad",
-      "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
-      "survives_correction": true,
-      "nominally_significant": true
-    },
-    {
-      "signal": "mass5_f5_mean",
-      "cohens_d": -1.192,
-      "direction": "high=bad",
-      "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
-      "survives_correction": true,
-      "nominally_significant": true
-    },
-    {
-      "signal": "mass5_first",
-      "cohens_d": 0.982,
-      "direction": "high=good",
-      "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
-      "survives_correction": true,
-      "nominally_significant": true
-    },
-    {
-      "signal": "mass5_slope",
-      "cohens_d": 1.215,
-      "direction": "high=good",
-      "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
+      "p_raw": 0.0002,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0085,
       "survives_correction": true,
       "nominally_significant": true
     },
     {
       "signal": "tail_mass_early_vs_rest",
-      "cohens_d": 1.047,
+      "cohens_d": 0.975,
       "direction": "high=good",
-      "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
+      "p_raw": 0.0002,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0085,
       "survives_correction": true,
       "nominally_significant": true
     },
     {
-      "signal": "tail_mass_f10_max",
-      "cohens_d": 1.214,
-      "direction": "high=good",
-      "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
-      "survives_correction": true,
-      "nominally_significant": true
-    },
-    {
-      "signal": "tail_mass_f10_mean",
-      "cohens_d": 1.186,
-      "direction": "high=good",
-      "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
-      "survives_correction": true,
-      "nominally_significant": true
-    },
-    {
-      "signal": "tail_mass_f5_mean",
-      "cohens_d": 1.186,
-      "direction": "high=good",
-      "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
-      "survives_correction": true,
-      "nominally_significant": true
-    },
-    {
-      "signal": "tail_mass_first",
-      "cohens_d": -1.105,
+      "signal": "mono_down_frac",
+      "cohens_d": -1.33,
       "direction": "high=bad",
-      "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
+      "p_raw": 0.0005,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0169,
       "survives_correction": true,
       "nominally_significant": true
     },
     {
-      "signal": "tail_mass_slope",
-      "cohens_d": -1.163,
+      "signal": "kl_cent_f10_max",
+      "cohens_d": 0.604,
+      "direction": "high=good",
+      "p_raw": 0.0009,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0217,
+      "survives_correction": true,
+      "nominally_significant": true
+    },
+    {
+      "signal": "tail_entropy",
+      "cohens_d": -1.167,
       "direction": "high=bad",
-      "p_raw": 0.0001,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0009,
+      "p_raw": 0.0009,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0217,
+      "survives_correction": true,
+      "nominally_significant": true
+    },
+    {
+      "signal": "n_tokens_div_tail_mass_mean",
+      "cohens_d": -1.066,
+      "direction": "high=bad",
+      "p_raw": 0.0018,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0278,
       "survives_correction": true,
       "nominally_significant": true
     },
     {
       "signal": "n_tokens_x_full_ent_mean",
+      "cohens_d": -1.055,
+      "direction": "high=bad",
+      "p_raw": 0.0019,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0278,
+      "survives_correction": true,
+      "nominally_significant": true
+    },
+    {
+      "signal": "n_tokens_x_mean_entropy",
+      "cohens_d": -1.055,
+      "direction": "high=bad",
+      "p_raw": 0.0019,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0278,
+      "survives_correction": true,
+      "nominally_significant": true
+    },
+    {
+      "signal": "mass20_first",
+      "cohens_d": 1.029,
+      "direction": "high=good",
+      "p_raw": 0.0022,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0278,
+      "survives_correction": true,
+      "nominally_significant": true
+    },
+    {
+      "signal": "tail_mass_first",
       "cohens_d": -1.029,
       "direction": "high=bad",
-      "p_raw": 0.0002,
-      "n_ok": 35,
-      "n_fail": 25,
-      "p_adjusted": 0.0016,
+      "p_raw": 0.0022,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0278,
+      "survives_correction": true,
+      "nominally_significant": true
+    },
+    {
+      "signal": "n_semantic",
+      "cohens_d": -1.008,
+      "direction": "high=bad",
+      "p_raw": 0.0027,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0278,
+      "survives_correction": true,
+      "nominally_significant": true
+    },
+    {
+      "signal": "n_tokens",
+      "cohens_d": -1.008,
+      "direction": "high=bad",
+      "p_raw": 0.0027,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0278,
+      "survives_correction": true,
+      "nominally_significant": true
+    },
+    {
+      "signal": "n_tokens_div_kl_uniform_mean",
+      "cohens_d": -1.014,
+      "direction": "high=bad",
+      "p_raw": 0.0027,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0278,
+      "survives_correction": true,
+      "nominally_significant": true
+    },
+    {
+      "signal": "n_tokens_x_kl_uniform_mean",
+      "cohens_d": -1.002,
+      "direction": "high=bad",
+      "p_raw": 0.0027,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0278,
+      "survives_correction": true,
+      "nominally_significant": true
+    },
+    {
+      "signal": "mass5_slope",
+      "cohens_d": 1.034,
+      "direction": "high=good",
+      "p_raw": 0.003,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0278,
+      "survives_correction": true,
+      "nominally_significant": true
+    },
+    {
+      "signal": "kl_cent_max",
+      "cohens_d": 0.33,
+      "direction": "high=good",
+      "p_raw": 0.0031,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0278,
+      "survives_correction": true,
+      "nominally_significant": true
+    },
+    {
+      "signal": "tail_mass_f10_max",
+      "cohens_d": 1.023,
+      "direction": "high=good",
+      "p_raw": 0.0033,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0278,
+      "survives_correction": true,
+      "nominally_significant": true
+    },
+    {
+      "signal": "q4",
+      "cohens_d": -1.003,
+      "direction": "high=bad",
+      "p_raw": 0.0039,
+      "n_ok": 20,
+      "n_fail": 20,
+      "p_adjusted": 0.0278,
       "survives_correction": true,
       "nominally_significant": true
     }
   ],
   "best_signal": {
     "signal": "kl_cent_f10_mean",
-    "cohens_d": 1.44,
+    "cohens_d": 1.557,
     "direction": "high=good",
     "p_raw": 0.0001,
-    "n_ok": 35,
-    "n_fail": 25,
-    "p_adjusted": 0.0009,
+    "n_ok": 20,
+    "n_fail": 20,
+    "p_adjusted": 0.0085,
     "survives_correction": true,
     "nominally_significant": true
   },
   "structural_best": {
     "signal": "n_semantic",
-    "cohens_d": -0.798,
+    "cohens_d": -1.008,
     "direction": "high=bad",
-    "p_raw": 0.0038,
-    "n_ok": 35,
-    "n_fail": 25,
-    "p_adjusted": 0.0173,
+    "p_raw": 0.0027,
+    "n_ok": 20,
+    "n_fail": 20,
+    "p_adjusted": 0.0278,
     "survives_correction": true,
     "nominally_significant": true
   },
-  "holdout": null,
+  "holdout": [
+    {
+      "task_id": "next_permutation",
+      "ok": true,
+      "first_ok": true,
+      "ok_after_rerank": null,
+      "random_ok": true,
+      "random_idx": 0,
+      "signal_value": 17.77871119191189,
+      "first_signal_value": 17.77871119191189,
+      "predicted_pass": true,
+      "correct_prediction": true,
+      "n_samples": 1,
+      "sample_outcomes": [
+        true
+      ],
+      "sample_signals": [
+        17.77871119191189
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "binary_gap",
+      "ok": true,
+      "first_ok": true,
+      "ok_after_rerank": null,
+      "random_ok": true,
+      "random_idx": 0,
+      "signal_value": 17.3014328105616,
+      "first_signal_value": 17.3014328105616,
+      "predicted_pass": true,
+      "correct_prediction": true,
+      "n_samples": 1,
+      "sample_outcomes": [
+        true
+      ],
+      "sample_signals": [
+        17.3014328105616
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "caesar_cipher",
+      "ok": true,
+      "first_ok": true,
+      "ok_after_rerank": null,
+      "random_ok": true,
+      "random_idx": 0,
+      "signal_value": 17.66613517818987,
+      "first_signal_value": 17.66613517818987,
+      "predicted_pass": true,
+      "correct_prediction": true,
+      "n_samples": 1,
+      "sample_outcomes": [
+        true
+      ],
+      "sample_signals": [
+        17.66613517818987
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "interval_intersection",
+      "ok": true,
+      "first_ok": true,
+      "ok_after_rerank": null,
+      "random_ok": true,
+      "random_idx": 0,
+      "signal_value": 17.70729734564852,
+      "first_signal_value": 17.70729734564852,
+      "predicted_pass": true,
+      "correct_prediction": true,
+      "n_samples": 1,
+      "sample_outcomes": [
+        true
+      ],
+      "sample_signals": [
+        17.70729734564852
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "valid_ipv4",
+      "ok": true,
+      "first_ok": true,
+      "ok_after_rerank": null,
+      "random_ok": true,
+      "random_idx": 0,
+      "signal_value": 17.775227666308226,
+      "first_signal_value": 17.775227666308226,
+      "predicted_pass": true,
+      "correct_prediction": true,
+      "n_samples": 1,
+      "sample_outcomes": [
+        true
+      ],
+      "sample_signals": [
+        17.775227666308226
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "filter",
+      "ok": false,
+      "first_ok": false,
+      "ok_after_rerank": null,
+      "random_ok": false,
+      "random_idx": 0,
+      "signal_value": 15.41472364576217,
+      "first_signal_value": 15.41472364576217,
+      "predicted_pass": false,
+      "correct_prediction": true,
+      "n_samples": 1,
+      "sample_outcomes": [
+        false
+      ],
+      "sample_signals": [
+        15.41472364576217
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "int_to_roman",
+      "ok": true,
+      "first_ok": true,
+      "ok_after_rerank": null,
+      "random_ok": true,
+      "random_idx": 0,
+      "signal_value": 17.704907204051022,
+      "first_signal_value": 17.704907204051022,
+      "predicted_pass": true,
+      "correct_prediction": true,
+      "n_samples": 1,
+      "sample_outcomes": [
+        true
+      ],
+      "sample_signals": [
+        17.704907204051022
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "word_wrap",
+      "ok": true,
+      "first_ok": true,
+      "ok_after_rerank": null,
+      "random_ok": true,
+      "random_idx": 0,
+      "signal_value": 17.770539113497406,
+      "first_signal_value": 17.770539113497406,
+      "predicted_pass": true,
+      "correct_prediction": true,
+      "n_samples": 1,
+      "sample_outcomes": [
+        true
+      ],
+      "sample_signals": [
+        17.770539113497406
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "version_compare",
+      "ok": false,
+      "first_ok": false,
+      "ok_after_rerank": null,
+      "random_ok": false,
+      "random_idx": 0,
+      "signal_value": 17.739551811103233,
+      "first_signal_value": 17.739551811103233,
+      "predicted_pass": true,
+      "correct_prediction": false,
+      "n_samples": 1,
+      "sample_outcomes": [
+        false
+      ],
+      "sample_signals": [
+        17.739551811103233
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "expand_tabs",
+      "ok": false,
+      "first_ok": false,
+      "ok_after_rerank": null,
+      "random_ok": false,
+      "random_idx": 0,
+      "signal_value": 17.815060617925983,
+      "first_signal_value": 17.815060617925983,
+      "predicted_pass": true,
+      "correct_prediction": false,
+      "n_samples": 1,
+      "sample_outcomes": [
+        false
+      ],
+      "sample_signals": [
+        17.815060617925983
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "rle_encode",
+      "ok": true,
+      "first_ok": true,
+      "ok_after_rerank": null,
+      "random_ok": true,
+      "random_idx": 0,
+      "signal_value": 17.27240506466446,
+      "first_signal_value": 17.27240506466446,
+      "predicted_pass": true,
+      "correct_prediction": true,
+      "n_samples": 1,
+      "sample_outcomes": [
+        true
+      ],
+      "sample_signals": [
+        17.27240506466446
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "compress_ranges",
+      "ok": true,
+      "first_ok": true,
+      "ok_after_rerank": null,
+      "random_ok": true,
+      "random_idx": 0,
+      "signal_value": 17.79565132898813,
+      "first_signal_value": 17.79565132898813,
+      "predicted_pass": true,
+      "correct_prediction": true,
+      "n_samples": 1,
+      "sample_outcomes": [
+        true
+      ],
+      "sample_signals": [
+        17.79565132898813
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "my_atoi",
+      "ok": true,
+      "first_ok": true,
+      "ok_after_rerank": null,
+      "random_ok": true,
+      "random_idx": 0,
+      "signal_value": 17.754709260404148,
+      "first_signal_value": 17.754709260404148,
+      "predicted_pass": true,
+      "correct_prediction": true,
+      "n_samples": 1,
+      "sample_outcomes": [
+        true
+      ],
+      "sample_signals": [
+        17.754709260404148
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "min_jumps",
+      "ok": true,
+      "first_ok": true,
+      "ok_after_rerank": null,
+      "random_ok": true,
+      "random_idx": 0,
+      "signal_value": 17.750766988745923,
+      "first_signal_value": 17.750766988745923,
+      "predicted_pass": true,
+      "correct_prediction": true,
+      "n_samples": 1,
+      "sample_outcomes": [
+        true
+      ],
+      "sample_signals": [
+        17.750766988745923
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "eval_rpn",
+      "ok": true,
+      "first_ok": true,
+      "ok_after_rerank": null,
+      "random_ok": true,
+      "random_idx": 0,
+      "signal_value": 17.854876159704443,
+      "first_signal_value": 17.854876159704443,
+      "predicted_pass": true,
+      "correct_prediction": true,
+      "n_samples": 1,
+      "sample_outcomes": [
+        true
+      ],
+      "sample_signals": [
+        17.854876159704443
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "topo_sort",
+      "ok": true,
+      "first_ok": true,
+      "ok_after_rerank": null,
+      "random_ok": true,
+      "random_idx": 0,
+      "signal_value": 17.72930153233948,
+      "first_signal_value": 17.72930153233948,
+      "predicted_pass": true,
+      "correct_prediction": true,
+      "n_samples": 1,
+      "sample_outcomes": [
+        true
+      ],
+      "sample_signals": [
+        17.72930153233948
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "csv_split",
+      "ok": false,
+      "first_ok": false,
+      "ok_after_rerank": null,
+      "random_ok": false,
+      "random_idx": 0,
+      "signal_value": 17.704062345083802,
+      "first_signal_value": 17.704062345083802,
+      "predicted_pass": true,
+      "correct_prediction": false,
+      "n_samples": 1,
+      "sample_outcomes": [
+        false
+      ],
+      "sample_signals": [
+        17.704062345083802
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "spiral_order",
+      "ok": true,
+      "first_ok": true,
+      "ok_after_rerank": null,
+      "random_ok": true,
+      "random_idx": 0,
+      "signal_value": 17.72574121853752,
+      "first_signal_value": 17.72574121853752,
+      "predicted_pass": true,
+      "correct_prediction": true,
+      "n_samples": 1,
+      "sample_outcomes": [
+        true
+      ],
+      "sample_signals": [
+        17.72574121853752
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "count_islands",
+      "ok": true,
+      "first_ok": true,
+      "ok_after_rerank": null,
+      "random_ok": true,
+      "random_idx": 0,
+      "signal_value": 17.77365799281329,
+      "first_signal_value": 17.77365799281329,
+      "predicted_pass": true,
+      "correct_prediction": true,
+      "n_samples": 1,
+      "sample_outcomes": [
+        true
+      ],
+      "sample_signals": [
+        17.77365799281329
+      ],
+      "selected_idx": 0
+    },
+    {
+      "task_id": "justify_text",
+      "ok": false,
+      "first_ok": false,
+      "ok_after_rerank": null,
+      "random_ok": false,
+      "random_idx": 0,
+      "signal_value": 17.79190730861464,
+      "first_signal_value": 17.79190730861464,
+      "predicted_pass": true,
+      "correct_prediction": false,
+      "n_samples": 1,
+      "sample_outcomes": [
+        false
+      ],
+      "sample_signals": [
+        17.79190730861464
+      ],
+      "selected_idx": 0
+    }
+  ],
   "per_task": [
     {
       "task_id": "normalize_path",
@@ -482,9 +883,9 @@
       "total": 3,
       "error_type": "assertion",
       "failures": [
-        "set_get_roundtrip: Traceback (most recent call last):\n  File \"<string>\", line 7, in <module>\nAssertionError: set failed: C:\\Users\\charl\\AppData\\Local\\Programs\\Python\\Python312\\python.exe: can't open file 'C:\\\\Users\\\\charl\\\\AppData\\\\Local\\\\Temp\\\\tmpg1vyttv1\\\\run_cache.p",
+        "set_get_roundtrip: Traceback (most recent call last):\n  File \"<string>\", line 7, in <module>\nAssertionError: set failed: C:\\Users\\charl\\AppData\\Local\\Programs\\Python\\Python312\\python.exe: can't open file 'C:\\\\Users\\\\charl\\\\AppData\\\\Local\\\\Temp\\\\tmpmwavd874\\\\run_cache.p",
         "get_missing: Traceback (most recent call last):\n  File \"<string>\", line 6, in <module>\nAssertionError: expected exit 1, got 2",
-        "delete: Traceback (most recent call last):\n  File \"<string>\", line 5, in <module>\nAssertionError: set failed: C:\\Users\\charl\\AppData\\Local\\Programs\\Python\\Python312\\python.exe: can't open file 'C:\\\\Users\\\\charl\\\\AppData\\\\Local\\\\Temp\\\\tmpqtfe8lsd\\\\run_cache.p"
+        "delete: Traceback (most recent call last):\n  File \"<string>\", line 5, in <module>\nAssertionError: set failed: C:\\Users\\charl\\AppData\\Local\\Programs\\Python\\Python312\\python.exe: can't open file 'C:\\\\Users\\\\charl\\\\AppData\\\\Local\\\\Temp\\\\tmprxv2a3ha\\\\run_cache.p"
       ],
       "n_semantic": 330,
       "trajectory_ds": [
@@ -1449,582 +1850,6 @@
         0.0,
         0.0353,
         0.0
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "next_permutation",
-      "ok": true,
-      "passed": 5,
-      "total": 5,
-      "error_type": "logic",
-      "failures": [],
-      "n_semantic": 196,
-      "trajectory_ds": [
-        0.0,
-        0.0119,
-        0.0641,
-        0.0041,
-        0.0,
-        0.0,
-        0.0946,
-        0.0007,
-        0.0256,
-        0.0,
-        0.0044,
-        0.0027,
-        0.0007,
-        0.1061,
-        0.2009,
-        0.1048
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "binary_gap",
-      "ok": true,
-      "passed": 5,
-      "total": 5,
-      "error_type": "logic",
-      "failures": [],
-      "n_semantic": 94,
-      "trajectory_ds": [
-        0.0,
-        0.0,
-        0.0521,
-        -0.0,
-        0.1664,
-        0.008,
-        0.0001,
-        0.0,
-        0.0557,
-        0.0,
-        0.0097,
-        0.0,
-        0.0,
-        -0.0,
-        0.0,
-        0.0
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "caesar_cipher",
-      "ok": true,
-      "passed": 5,
-      "total": 5,
-      "error_type": "logic",
-      "failures": [],
-      "n_semantic": 129,
-      "trajectory_ds": [
-        0.0783,
-        0.0,
-        0.0585,
-        0.001,
-        0.1332,
-        0.0023,
-        0.2018,
-        0.0064,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "interval_intersection",
-      "ok": true,
-      "passed": 5,
-      "total": 5,
-      "error_type": "logic",
-      "failures": [],
-      "n_semantic": 163,
-      "trajectory_ds": [
-        0.0393,
-        0.0183,
-        0.0006,
-        0.0192,
-        0.263,
-        0.0548,
-        0.0034,
-        0.0821,
-        0.0,
-        0.068,
-        0.0104,
-        0.0,
-        0.1191,
-        0.0,
-        0.0,
-        0.005
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "valid_ipv4",
-      "ok": true,
-      "passed": 5,
-      "total": 5,
-      "error_type": "logic",
-      "failures": [],
-      "n_semantic": 100,
-      "trajectory_ds": [
-        0.0,
-        0.0044,
-        0.0001,
-        0.0,
-        0.0,
-        0.1456,
-        0.0002,
-        0.0032,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0003,
-        0.0002,
-        0.0,
-        0.0389
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "filter",
-      "ok": false,
-      "passed": 0,
-      "total": 4,
-      "error_type": "name_error",
-      "failures": [
-        "correct_filtering: Traceback (most recent call last):\n  File \"<string>\", line 12, in <module>\nNameError: name 'sys' is not defined. Did you forget to import 'sys'?",
-        "missing_file: Traceback (most recent call last):\n  File \"<string>\", line 4, in <module>\nNameError: name 'sys' is not defined. Did you forget to import 'sys'?",
-        "missing_column: Traceback (most recent call last):\n  File \"<string>\", line 9, in <module>\nNameError: name 'sys' is not defined. Did you forget to import 'sys'?",
-        "empty_result: Traceback (most recent call last):\n  File \"<string>\", line 10, in <module>\nNameError: name 'sys' is not defined. Did you forget to import 'sys'?"
-      ],
-      "n_semantic": 323,
-      "trajectory_ds": [
-        0.0386,
-        0.002,
-        0.0675,
-        0.0368,
-        0.0315,
-        0.0041,
-        0.0679,
-        0.0361,
-        0.1028,
-        0.1456,
-        0.0735,
-        0.0374,
-        0.025,
-        0.0185,
-        0.011,
-        0.0
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "int_to_roman",
-      "ok": true,
-      "passed": 5,
-      "total": 5,
-      "error_type": "logic",
-      "failures": [],
-      "n_semantic": 151,
-      "trajectory_ds": [
-        0.0614,
-        0.0775,
-        0.0668,
-        0.0,
-        0.0001,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        -0.0,
-        0.0,
-        0.014,
-        0.0049,
-        0.1953,
-        0.0,
-        0.0
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "word_wrap",
-      "ok": true,
-      "passed": 5,
-      "total": 5,
-      "error_type": "logic",
-      "failures": [],
-      "n_semantic": 124,
-      "trajectory_ds": [
-        0.0,
-        0.0816,
-        0.0065,
-        0.0252,
-        0.0201,
-        0.0,
-        0.0629,
-        0.0024,
-        0.0713,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0004,
-        0.0,
-        0.0
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "version_compare",
-      "ok": false,
-      "passed": 4,
-      "total": 5,
-      "error_type": "assertion",
-      "failures": [
-        "compare_versions('1.0', '1'): Traceback (most recent call last):\n  File \"<string>\", line 7, in <module>\nAssertionError: got 1, expected 0"
-      ],
-      "n_semantic": 134,
-      "trajectory_ds": [
-        0.0089,
-        0.1416,
-        0.0001,
-        0.0004,
-        0.1632,
-        0.0396,
-        0.0806,
-        0.0006,
-        0.0,
-        0.0003,
-        0.0566,
-        0.0304,
-        0.0,
-        0.0,
-        0.0001,
-        0.0
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "expand_tabs",
-      "ok": false,
-      "passed": 3,
-      "total": 5,
-      "error_type": "assertion",
-      "failures": [
-        "expand_tabs('\\t', 4): Traceback (most recent call last):\n  File \"<string>\", line 7, in <module>\nAssertionError: got '', expected '    '",
-        "expand_tabs('abcd\\te', 4): Traceback (most recent call last):\n  File \"<string>\", line 7, in <module>\nAssertionError: got 'abcde', expected 'abcd    e'"
-      ],
-      "n_semantic": 120,
-      "trajectory_ds": [
-        0.0,
-        0.0,
-        0.0,
-        0.0107,
-        0.0962,
-        0.0,
-        0.0092,
-        0.1311,
-        0.1186,
-        0.0011,
-        0.0001,
-        0.0,
-        0.0,
-        0.0,
-        -0.0,
-        0.0
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "rle_encode",
-      "ok": true,
-      "passed": 5,
-      "total": 5,
-      "error_type": "logic",
-      "failures": [],
-      "n_semantic": 120,
-      "trajectory_ds": [
-        0.0,
-        0.0,
-        0.0593,
-        0.0429,
-        0.0063,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0008,
-        0.051,
-        0.0,
-        0.0253,
-        0.0,
-        0.0006,
-        0.0474
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "compress_ranges",
-      "ok": true,
-      "passed": 5,
-      "total": 5,
-      "error_type": "logic",
-      "failures": [],
-      "n_semantic": 136,
-      "trajectory_ds": [
-        0.008,
-        0.0,
-        0.0008,
-        0.0861,
-        0.0101,
-        0.0,
-        0.0,
-        0.0001,
-        0.083,
-        0.0001,
-        0.0003,
-        0.0127,
-        0.0,
-        0.0,
-        0.0,
-        0.0
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "my_atoi",
-      "ok": true,
-      "passed": 5,
-      "total": 5,
-      "error_type": "logic",
-      "failures": [],
-      "n_semantic": 217,
-      "trajectory_ds": [
-        0.0029,
-        0.0902,
-        0.0411,
-        0.044,
-        0.0687,
-        0.0,
-        0.0132,
-        0.1198,
-        0.0,
-        0.0,
-        0.0713,
-        0.0368,
-        0.0,
-        0.0108,
-        0.0015,
-        0.0005
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "min_jumps",
-      "ok": true,
-      "passed": 5,
-      "total": 5,
-      "error_type": "logic",
-      "failures": [],
-      "n_semantic": 131,
-      "trajectory_ds": [
-        0.0009,
-        0.0685,
-        0.0178,
-        0.0643,
-        0.0002,
-        0.0008,
-        0.0,
-        0.0054,
-        0.0,
-        0.0,
-        0.0756,
-        0.0,
-        0.0,
-        0.0042,
-        0.0007,
-        0.0
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "eval_rpn",
-      "ok": true,
-      "passed": 5,
-      "total": 5,
-      "error_type": "logic",
-      "failures": [],
-      "n_semantic": 143,
-      "trajectory_ds": [
-        0.0,
-        0.0007,
-        0.0,
-        0.1131,
-        0.0,
-        0.0001,
-        0.0,
-        0.0,
-        0.0,
-        0.0121,
-        0.0562,
-        0.1,
-        0.0209,
-        0.0,
-        0.0,
-        0.0
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "topo_sort",
-      "ok": true,
-      "passed": 5,
-      "total": 5,
-      "error_type": "logic",
-      "failures": [],
-      "n_semantic": 213,
-      "trajectory_ds": [
-        0.0792,
-        0.0488,
-        0.0872,
-        0.0382,
-        0.0,
-        0.0003,
-        0.0365,
-        0.1892,
-        0.0286,
-        0.0,
-        0.0574,
-        0.073,
-        0.0002,
-        0.0,
-        0.0208,
-        0.0428
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "csv_split",
-      "ok": false,
-      "passed": 3,
-      "total": 5,
-      "error_type": "assertion",
-      "failures": [
-        "split_csv_line('a,\"b,c\",d'): Traceback (most recent call last):\n  File \"<string>\", line 7, in <module>\nAssertionError: got ['a', 'b,c', '', 'd'], expected ['a', 'b,c', 'd']",
-        "split_csv_line('\"say \"\"hi\"\"\",x'): Traceback (most recent call last):\n  File \"<string>\", line 7, in <module>\nAssertionError: got ['say ', 'hi', '', '', 'x'], expected ['say \"hi\"', 'x']"
-      ],
-      "n_semantic": 161,
-      "trajectory_ds": [
-        0.0589,
-        0.069,
-        0.0727,
-        0.1337,
-        0.0328,
-        0.0,
-        0.0448,
-        0.0003,
-        0.0401,
-        0.0087,
-        0.0373,
-        0.0122,
-        0.0,
-        0.0,
-        0.0254,
-        0.0
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "spiral_order",
-      "ok": true,
-      "passed": 5,
-      "total": 5,
-      "error_type": "logic",
-      "failures": [],
-      "n_semantic": 261,
-      "trajectory_ds": [
-        0.0,
-        0.0618,
-        0.0,
-        0.0396,
-        0.0936,
-        0.0,
-        0.0401,
-        0.0021,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "count_islands",
-      "ok": true,
-      "passed": 5,
-      "total": 5,
-      "error_type": "logic",
-      "failures": [],
-      "n_semantic": 179,
-      "trajectory_ds": [
-        0.0,
-        0.0222,
-        0.0348,
-        0.0554,
-        0.0415,
-        0.004,
-        0.0016,
-        0.0,
-        0.0049,
-        0.0303,
-        0.0,
-        0.0,
-        0.0001,
-        0.0,
-        0.0079,
-        0.0
-      ],
-      "think_frac": 0.0
-    },
-    {
-      "task_id": "justify_text",
-      "ok": false,
-      "passed": 3,
-      "total": 5,
-      "error_type": "assertion",
-      "failures": [
-        "justify(['This','is','an','example','of','text','justification.'], 16): Traceback (most recent call last):\n  File \"<string>\", line 7, in <module>\nAssertionError: got ['    This    is    an', '  example of text', 'justifica",
-        "justify(['ab','cd','ef'], 5): Traceback (most recent call last):\n  File \"<string>\", line 7, in <module>\nAssertionError: got ['ab   ', 'cd ef'], expected ['ab cd', 'ef   ']"
-      ],
-      "n_semantic": 309,
-      "trajectory_ds": [
-        0.0024,
-        0.0414,
-        0.0002,
-        0.0039,
-        0.0117,
-        0.0,
-        0.0001,
-        0.0283,
-        0.1919,
-        0.0416,
-        0.0467,
-        0.0001,
-        0.0198,
-        0.0001,
-        0.0,
-        0.0312
       ],
       "think_frac": 0.0
     }

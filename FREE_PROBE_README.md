@@ -1,20 +1,21 @@
 # Calibration Probe
 
 A free, standalone demo that tests whether your local GGUF coding model has a
-usable entropy-based wrongness signal on 150 example coding tasks. It runs the
-standard public task bank, captures per-token entropy trajectories, scans ~160
-candidate signals with permutation tests and Benjamini-Hochberg correction, and
-prints an honest verdict.
+usable entropy-based wrongness signal on 60 realistic coding tasks. The default
+bank mixes 14 small CLI/data-tool assembly tasks with 46 single-function tasks,
+which is closer to a single user's repeated asks than a broad HumanEval sweep. It
+captures per-token entropy trajectories, scans ~170 candidate signals with
+permutation tests and Benjamini-Hochberg correction, and prints an honest verdict.
 
 This is a **hobbyist science kit**, not a lab implementation. It proves the
 method can find a signal on example tasks. The full calibration kit learns the
 signal on your own tasks and turns it into a live gate:
   https://github.com/charlesdvaught-hash/calibration-kit-public
 
-The probe stops after it collects enough failures (default 15) to look for a
-signal, then runs up to 30 extra holdout tasks to test whether the discovered
-signal predicts out-of-sample outcomes at the cusp of the model's capability on
-the demo task distribution.
+The probe reserves the last 20 tasks as a holdout set. It trains on the first 40
+tasks, discovers a signal, and then tests that signal on the reserved 20 unseen
+tasks to see if it predicts out-of-sample outcomes at the cusp of the model's
+capability.
 
 ## Quick start
 
@@ -28,27 +29,38 @@ That's it. No API keys, no cloud, no accounts. Everything runs locally.
 ## What it does
 
 1. Loads your GGUF model via `llama-cpp-python`
-2. Generates code for 150 standard Python function tasks, sorted by difficulty
-   (easy → hard) on the demo task bank
+2. Generates code for the demo task bank, sorted by difficulty (easy → hard)
 3. Captures per-token entropy trajectories during generation (top-20 cropped
    softmax entropy, structural/semantic token split, plateau/spike detection,
    thinking-phase boundaries, and one-pass series summaries)
 4. Tests each generated solution against the task's test cases
-5. Scans ~160 candidate entropy signals for separation between passing and
+5. Scans ~170 candidate entropy signals for separation between passing and
    failing generations
 6. Corrects for multiple comparisons (Benjamini-Hochberg, alpha=0.05)
-7. Stops once `--target-failures` (default 15) failures are collected
-8. Runs `--holdout` (default 30) extra unseen tasks to test the signal
+7. Trains on the first 40 tasks (or stops early at `--target-failures`)
+8. Tests the discovered signal on the reserved 20 holdout tasks
 9. Optionally reranks predicted failures on the holdout with `--holdout-rerank N`
 10. Prints one of four honest verdicts:
-   - **SIGNAL FOUND** — a signal survived correction with |d| >= 0.2
-   - **NO SIGNAL FOUND** — nothing survived (honest null result)
-   - **UNDERPOWERED** — too few failures to detect anything
-   - **NO FAILURES** — your model passed everything
+    - **SIGNAL FOUND** — a signal survived correction with |d| >= 0.2
+    - **NO SIGNAL FOUND** — nothing survived (honest null result)
+    - **UNDERPOWERED** — too few failures to detect anything
+    - **NO FAILURES** — your model passed everything
+
+## Example result
+
+Qwen3-8B-Q5_K_M, with `--no-think` (disable Qwen3 thinking mode) and the default
+60-task realistic bank, finds:
+
+- **Training:** 20 pass, 20 fail
+- **Signal:** `kl_cent_f10_mean`, Cohen's d = +1.56, adjusted p = 0.0085
+- **Holdout:** 16/20 correct predictions (80% vs 75% majority baseline)
+
+This is a fingerprint on this model on these demo tasks, with some evidence it
+generalizes to the held-out tasks.
 
 ## What the verdict means
 
-**SIGNAL FOUND** means: on this specific model, on these 150 demo tasks, in
+**SIGNAL FOUND** means: on this specific model, on these 60 demo tasks, in
 this specific run, there is an entropy trajectory feature whose value
 systematically differs between correct and incorrect generations. This is a
 fingerprint on the demo bank, not a universal rule. It may not transfer to your
@@ -72,6 +84,9 @@ signal exists.
 python probe.py --model your-model.gguf [options]
 
   --model PATH          Path to GGUF model file
+  --bank {realistic,human,easy}
+                        Task bank: realistic (60 tasks, default), human
+                        (150 HumanEval tasks), easy (42 easy function tasks)
   --validate            Validate the task bank and exit (no model needed)
   --temp FLOAT          Temperature (default 0.7)
   --top-p FLOAT         Top-p (default 0.8)
@@ -82,9 +97,10 @@ python probe.py --model your-model.gguf [options]
   --thinking            Model is a thinking model (4096 max_tokens, strips <think> blocks)
   --repeats INT         Repeat each task N times (default 1; use 2+ for stochastic models)
   --target-failures INT Stop after this many failures (default 15)
-  --holdout INT         Run this many extra holdout tasks after early stop (default 30; 0 to disable)
+  --holdout INT         Reserve this many of the bank's hardest tasks as holdout
+                        (default 20; 0 to disable)
   --holdout-rerank INT  For predicted failures, generate 1 + N samples, keep best signal, compare to random (0 to disable; 2 for best-of-3)
-  --no-early-stop       Run all 150 tasks even after reaching target failures
+  --no-early-stop       Run all 60 tasks (or all of --bank) even after reaching target failures
   --n-gpu-layers INT    GPU layers for llama-cpp-python (default -1 = all)
   --upload-url URL      Opt-in upload endpoint (or set PROBE_UPLOAD_URL env var)
   --no-upload           Skip the upload prompt entirely
@@ -110,12 +126,13 @@ temp=1.0. Using the wrong temperature produces bad results.
 
 ## Repeats and early stop
 
-With `--repeats 1` (default), each task is run once. The probe stops after
-`--target-failures` (default 15) failures are collected, then runs `--holdout`
-(default 30) extra tasks to test the signal on unseen near-cusp work on the demo
-task bank. If your model passes all 150 tasks, you will get NO FAILURES and no
-signal can be detected. Use `--repeats 2` or `--repeats 3` with a higher temperature
-to generate more variance, or `--no-early-stop` to force a full sweep.
+With `--repeats 1` (default), each task is run once. The probe trains on the
+first 40 tasks of the 60-task bank and stops after `--target-failures` (default 15)
+failures unless `--no-early-stop` is passed. It then runs the reserved 20 holdout
+tasks to test the signal on unseen near-cusp work. If your model passes all 60
+tasks, you will get NO FAILURES and no signal can be detected. Use `--repeats 2`
+or `--repeats 3` with a higher temperature to generate more variance, or
+`--no-early-stop` to force a full sweep.
 
 ## Reranking with the signal
 
@@ -191,15 +208,15 @@ looks useful. The full kit turns it into a product.
 
 ## Validating the task bank
 
-The probe includes reference implementations for all 150 tasks. You can
-verify they all pass before running:
+The probe includes reference implementations for the 42 easy function tasks. You
+can verify they all pass before running:
 
 ```bash
 python probe.py --validate
 ```
 
-This runs each reference against its own test cases. If any fail, something
-is wrong with your Python environment.
+This runs each reference against its own test cases. Tasks without a reference
+implementation (assembly tasks and 4 new function tasks) are skipped in this demo.
 
 ## License
 

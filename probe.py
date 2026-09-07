@@ -1220,9 +1220,9 @@ The full calibration kit (170 signals, intervention routing, live proxy):
                         help=f"Stop after collecting this many failures (default {DEFAULT_TARGET_FAILURES}). "
                              f"Tasks are sorted easy→hard; strong models skip easy wins, "
                              f"weak models stop early once enough failures are collected.")
-    parser.add_argument("--holdout", type=int, default=30,
-                        help="After early stop, run up to N more tasks as holdout to test "
-                             "whether the discovered signal predicts out-of-sample (default 30). "
+    parser.add_argument("--holdout", type=int, default=20,
+                        help="Reserve the last N tasks of the bank as a holdout set "
+                             "to test whether the discovered signal generalizes (default 20). "
                              "Set to 0 to disable.")
     parser.add_argument("--holdout-rerank", type=int, default=0,
                         help="After the holdout prediction, generate up to N extra samples "
@@ -1265,6 +1265,16 @@ The full calibration kit (170 signals, intervention routing, live proxy):
             print("\nSome tasks FAILED validation. Check the output above.")
             sys.exit(1)
 
+    # Split the bank into train and holdout before the run.
+    # Holdout tasks are reserved and not seen during signal discovery.
+    holdout_n = max(0, args.holdout)
+    if holdout_n >= len(ALL_TASKS):
+        print(f"Warning: holdout size {holdout_n} >= bank size {len(ALL_TASKS)}; disabling holdout.")
+        holdout_n = 0
+    train_tasks = ALL_TASKS[:-holdout_n] if holdout_n else list(ALL_TASKS)
+    holdout_tasks = ALL_TASKS[-holdout_n:] if holdout_n else []
+    ALL_TASKS = train_tasks  # main loop trains on this subset
+
     if not args.model:
         parser.error("--model is required (or use --validate to check the task bank)")
 
@@ -1279,7 +1289,8 @@ The full calibration kit (170 signals, intervention routing, live proxy):
     print("CALIBRATION PROBE — Signal Discovery Tool")
     print("=" * 70)
     print(f"Model:  {model_label}")
-    print(f"Tasks:  {len(ALL_TASKS)} coding tasks (easy→hard)")
+    print(f"Tasks:  {len(train_tasks)} training + {len(holdout_tasks)} holdout "
+          f"= {len(train_tasks) + len(holdout_tasks)} total (easy→hard)")
     print(f"Repeats: {args.repeats}")
     if not args.no_early_stop:
         print(f"Early stop: after {args.target_failures} failures")
@@ -1474,22 +1485,18 @@ The full calibration kit (170 signals, intervention routing, live proxy):
         print(f"  still be useful even without a gate:")
         print(f"    https://github.com/charlesdvaught-hash/calibration-kit-public")
 
-    # ─── Holdout: test the signal on unseen tasks near the cusp ──────────────
+    # ─── Holdout: test the signal on the reserved holdout set ───────────────
     holdout_results = []
-    if best and args.holdout > 0 and stopped_early:
-        # The holdout tasks are the next N tasks in the bank after early stop.
-        # These are naturally near the model's difficulty cusp — harder than
-        # the tasks it breezed through, but not impossibly hard.
-        n_train = len(results)
-        holdout_start_idx = n_train  # next task in ALL_TASKS
-        holdout_tasks = ALL_TASKS[holdout_start_idx:holdout_start_idx + args.holdout]
+    if best and holdout_tasks:
+        # holdout_tasks was reserved before the run; the model has never seen them.
 
         if not holdout_tasks:
             print(f"\n{'=' * 70}")
             print("HOLDOUT")
             print(f"{'=' * 70}\n")
-            print("  No holdout tasks available (ran past end of bank).")
+            print("  No holdout tasks available.")
         else:
+            n_train = len(results)
             print(f"\n{'=' * 70}")
             print(f"HOLDOUT: testing signal '{best['signal']}' on {len(holdout_tasks)} unseen tasks")
             print(f"{'=' * 70}\n")
@@ -1714,11 +1721,8 @@ The full calibration kit (170 signals, intervention routing, live proxy):
                 print(f"\n  ✗ The signal did worse than baseline on holdout.")
                 print(f"    It may be overfit to the training tasks, or the effect")
                 print(f"    is too small to predict individual outcomes.")
-    elif args.holdout > 0 and not best:
-        print(f"\n  (Holdout skipped: no signal found to test.)")
-    elif args.holdout > 0 and not stopped_early:
-        print(f"\n  (Holdout skipped: early stop was not triggered. "
-              f"Use --target-failures to enable holdout testing.)")
+    elif holdout_n and not holdout_results:
+        print(f"\n  (Holdout skipped: no signal found to test on the reserved holdout set.)")
 
     # Upload
     if not args.no_upload and args.upload_url:
