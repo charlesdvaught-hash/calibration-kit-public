@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026.09.07 (audit) — probe fixes cross-checked against the full kit
+
+The probe's statistics were rewritten with stricter standards. Each fix was
+cross-checked against the full calibration kit to confirm the pro
+implementation didn't carry the same bug. Results are in
+`public_probe_audit_checklist.md`.
+
+### Fixes in the probe
+- **Cohen's d** — pooled within-group SD (was grand-mean, deflated all |d|)
+- **Quartile boundaries** — spike_quartile now matches quartile_entropies chunks
+- **Failure classification** — per-failure majority vote with explicit categories
+- **Unclosed thinking** — truncated thinking blocks return empty, not graded as code
+- **Structural-signal gating** — n_tokens/think_frac can't be the sole gate
+
+### Found in the pro kit during cross-check
+- Cohen's d had the same denominator bug (fixed in the pro kit)
+- spike_quartile/plateau_start_quartile had the same boundary bug (fixed)
+- test_function_code had no TimeoutExpired catch (fixed)
+- classify_error used first-match on joined text (upgraded to majority vote)
+- extract_code kept truncated thinking as code (fixed)
+
+### Added to both
+- Composite candidates (n_tokens/think_frac ×/÷ entropy) under BH correction
+- Structural-signal policy: reported as `structural_best`, never the sole gate
+- Failure-type histogram + all-same-type warning
+
+---
+
 ## 2026.09.07 — the product becomes a runtime calibration layer
 
 This release changes what the kit is *for*. It began as an offline profiler

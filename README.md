@@ -1,221 +1,146 @@
-# Local Model Calibration Kit
+# Calibration Probe
 
-A runtime calibration layer for local coding models. Install it, point your
-coding harness at the proxy, and it watches every generation, scores it with a
-model-specific entropy signal, and re-learns from your recent work every night.
+A free, standalone tool that tests whether your local GGUF coding model has a
+usable entropy-based wrongness signal. One command, 60 realistic coding tasks,
+~170 candidate signals scanned with permutation tests and Benjamini-Hochberg
+correction, and an honest verdict.
 
-It is not a new coding harness. It sits between your existing harness (Aider,
-Continue, Cline, LocalHarness, mini-swe-agent, or any OpenAI-compatible client)
-and your local inference server (llama-server, LM Studio, Ollama, vLLM). One
-URL change and the harness is calibrated.
+This is a **hobbyist science kit**, not a lab implementation. It proves the
+method can find a signal on example tasks. The full calibration kit learns
+the signal on your own tasks and turns it into a live gate — see
+[the upgrade path](#the-full-calibration-kit) below.
+
+## Quick start
+
+```bash
+pip install llama-cpp-python numpy
+python probe.py --model your-model.gguf
+```
+
+That's it. No API keys, no cloud, no accounts. Everything runs locally.
 
 ## What it does
 
-1. **Observes invisibly.** The proxy records token-level logprobs and outcomes
-   from every request. In `observe` mode it does not change behavior; it just
-   builds data.
-2. **Scores live generations.** For every response it returns a
-   `calibration` verdict — `probably_fine`, `likely_wrong`, `uncertain`,
-   `no_signal`, or `out_of_scope` — plus the signal value and the profile it
-   used.
-3. **Passes a plan.** The `intervention_plan` lists ranked recovery strategies
-   and conditional "if the signal reads this way, expect these failure modes,
-   try X first" rules from the model's profile.
-4. **Re-learns overnight.** `calibrate proxy --reanalyze-at 02:00
-   --window-tasks 200` re-runs the calibration pipeline on the last 200 unique
-   tasks every night and promotes a new profile only if it is no worse on
-   held-out data. The fingerprint drifts with your actual task pool.
-5. **Gates only when asked.** `gate` mode regenerates likely-wrong responses
-   with a different seed/temperature, bounded by `--max-regenerations`.
+1. Loads your GGUF model via `llama-cpp-python`
+2. Generates code for the 60-task demo bank (14 assembly + 46 function tasks)
+3. Captures per-token entropy trajectories during generation
+4. Tests each generated solution against the task's test cases
+5. Scans ~170 candidate entropy signals for pass/fail separation
+6. Corrects for multiple comparisons (Benjamini-Hochberg, alpha=0.05)
+7. Trains on the first 40 tasks, reserves the hardest 20 as holdout
+8. Tests the discovered signal on the unseen holdout tasks
+9. Prints one of four honest verdicts:
+   - **SIGNAL FOUND** — a signal survived correction with |d| >= 0.2
+   - **STRUCTURAL SIGNAL ONLY** — a length/budget signal separated pass/fail but can't be the sole gate
+   - **NO SIGNAL FOUND** — nothing survived (honest null result)
+   - **UNDERPOWERED** — too few failures to detect anything
 
-Everything is local: no API calls, no telemetry, no cloud.
+## Example result
 
-## Quickstart
+Qwen3-8B-Q5_K_M, with `--no-think` and the default 60-task bank:
+
+- **Training:** 20 pass, 20 fail
+- **Signal:** `kl_cent_f10_mean`, Cohen's d = +1.56, adjusted p = 0.0085
+- **Holdout:** 16/20 correct predictions (80% vs 75% majority baseline)
+
+This is a fingerprint on this model on these demo tasks, with some evidence it
+generalizes to the held-out tasks.
+
+## What the verdict means
+
+**SIGNAL FOUND** means: on this specific model, on these 60 demo tasks, in
+this specific run, there is an entropy trajectory feature whose value
+systematically differs between correct and incorrect generations. This is a
+fingerprint on the demo bank, not a universal rule. It may not transfer to your
+actual tasks, other models, or other task types.
+
+**STRUCTURAL SIGNAL ONLY** means: a length or thinking-budget signal (like
+`n_tokens` or `think_frac`) separated pass from fail, but such signals can
+reflect task shape or pipeline artifacts rather than wrongness — a generation
+cut off by the token budget scores high on think_frac *because* it was
+truncated, not because the model was uncertain. These are reported for
+transparency but never shipped as the sole gate. They may still appear inside
+composite signals (e.g. `think_frac × entropy`) that carry real entropy content.
+
+**NO SIGNAL FOUND** means: this run did not detect a usable signal on the demo
+tasks. This is an honest null result. Some models genuinely don't have a usable
+entropy signal on this task distribution, or need more failures.
+
+**UNDERPOWERED** means: there weren't enough failures to detect anything.
+Try `--repeats 2` or `--repeats 3` with a higher temperature to generate
+more variance. No signal found in an underpowered run does NOT mean no
+signal exists.
+
+## Command-line options
+
+```
+python probe.py --model your-model.gguf [options]
+
+  --model PATH          Path to GGUF model file
+  --bank {realistic,human,easy}
+                        Task bank: realistic (60 tasks, default), human
+                        (150 HumanEval tasks), easy (42 easy function tasks)
+  --validate            Validate the task bank and exit (no model needed)
+  --temp FLOAT          Temperature (default 0.7)
+  --top-p FLOAT         Top-p (default 0.8)
+  --top-k INT           Top-k (default 20)
+  --min-p FLOAT         Min-p (default 0 = off)
+  --repeat-penalty F    Repetition penalty (default 1.0 = off)
+  --presence-penalty F  Presence penalty (default 0)
+  --thinking            Model is a thinking model (4096 max_tokens, strips thinking blocks)
+  --no-think            Append /no_think to prompts (Qwen3 dual-mode soft switch)
+  --repeats INT         Repeat each task N times (default 1; use 2+ for stochastic models)
+  --target-failures INT Stop after this many failures during training (default 1000;
+                        effectively no early stop on the 60-bank; use 15 for quick stop)
+  --holdout INT         Reserve this many of the bank's hardest tasks as holdout
+                        (default 20; 0 to disable)
+  --holdout-rerank INT  For predicted failures, generate 1 + N samples, keep best signal, compare to random (0 to disable; 2 for best-of-3)
+  --no-early-stop       Run all 60 tasks (or all of --bank) even after reaching target failures
+  --n-gpu-layers INT    GPU layers for llama-cpp-python (default -1 = all)
+  --upload-url URL      Opt-in upload endpoint (or set PROBE_UPLOAD_URL env var)
+  --no-upload           Skip the upload prompt entirely
+```
+
+## Thinking models
+
+If your model generates reasoning blocks before its answer (e.g. Qwen3-Thinking,
+Qwen3.5), pass `--thinking`:
 
 ```bash
-# 1. One-time setup: auto-detect backend, match profile, write settings.
-calibrate setup --profiles-dir examples
-
-# 2. Start the proxy using the settings file it wrote.
-calibrate proxy --config /path/to/settings.json
-
-# 3. Point your harness at http://127.0.0.1:9090/v1 and use it normally.
+python probe.py --model qwen3-4b-thinking.gguf --thinking --temp 0.6 --top-p 0.95
 ```
 
-`calibrate setup` probes common local ports (`8080` llama-server, `1234` LM
-Studio, `11434` Ollama, `8000` vLLM), matches the loaded model to a profile in
-`examples/`, writes a settings file, and prints the exact command for Aider,
-Continue, Cline, or a generic start. See
-`examples/harness-integrations/README.md` for harness-specific configs.
+This increases `max_tokens` to 4096 (thinking tokens consume budget) and
+strips thinking blocks before extracting code. Without this flag, thinking
+models will silently produce no code output because the thinking tokens
+consume the entire 1200-token budget.
 
-### If you do not have a profile yet
+For Qwen3 dual-mode models, `--no-think` appends `/no_think` to prompts to
+explicitly ask the model not to reason. This is distinct from `--thinking`
+(which controls how output is handled) — without `--no-think`, a Qwen3 can
+still spontaneously reason and fill the token budget with thinking.
 
-The kit can still run in `observe` mode and record data. Once you have a log
-with outcomes, build a profile offline:
+**Important**: Check your model's HuggingFace card for the correct sampling
+parameters. Qwen3 thinking uses temp=0.6, but Qwen3.5 thinking uses
+temp=1.0. Using the wrong temperature produces bad results.
 
-```bash
-python calibrate.py learn --log proxy_YYYY-MM-DD.jsonl --output my_profile.json
-```
+## Contributing your results
 
-Or run a full calibration from a task bank to generate a profile from scratch:
+After running the probe, you can share your results to help map which models
+have signals and which don't. See `contribute.py` or the
+[submissions/](submissions/) directory. GitHub PRs auto-sync to the
+HuggingFace dataset — no HF account needed.
 
-```bash
-python calibrate.py run --model your-model.gguf
-python calibrate.py export --profile _calibration_<label>.json --output AgentAnalysis.md
-```
+**What gets shared:** model filename, quant label, per-task downsampled
+entropy trajectory + pass/fail, signal scan results, timestamp.
 
-The full calibration is the original offline path. It is still the right way to
-produce a robust profile when no example profile exists for your exact model and
-quantization.
-
-## Scope
-
-This is not a "know if your model is right about anything" tool. It calibrates
-against **benchmark-verifiable pass/fail tasks** — code with automated tests.
-Every entropy signal, threshold, and intervention rank comes from one question:
-did the generated code pass its tests, yes or no. It has not been tested on
-open-ended or subjective output (freeform Q&A, creative writing, anything
-without an automated correctness check) — the entropy signal there is unproven,
-not assumed to transfer. If your use case does not reduce to pass/fail, this is
-not calibrated for it.
-
-## The runtime proxy in detail
-
-### Response headers
-
-Non-streaming responses carry:
-
-- `X-Calibration-Verdict`
-- `X-Calibration-Profile`
-- `X-Calibration-Request-Id` — look up the full record later at
-  `/v1/calibration/request/{request_id}`
-- `X-Calibration-Regenerated` / `X-Calibration-Regeneration-Count` when in
-  gate mode
-
-Streaming clients get the same `request_id` in the final SSE chunk and can call
-the lookup endpoint after the stream.
-
-### The `calibration` payload
-
-When verbose mode is on, the response body includes a `calibration` object:
-
-```json
-{
-  "verdict": "likely_wrong",
-  "signal": {"name": "plateau_start_quartile", "value": 0.0, "threshold": -0.5, "direction": "high=bad"},
-  "predicted_failure_class": null,
-  "recommended_intervention": "test_retry",
-  "intervention_plan": [
-    {"intervention": "test_retry", "new_coverage": 7, "recovered": 7, "unique_recovered": 4},
-    {"intervention": "temp_retry", "new_coverage": 3, "recovered": 6, "unique_recovered": 1},
-    {"intervention": "test_retry", "when": "n_tokens below 3528.0541",
-     "predicted_error_types": ["assertion"], "recovered": 3, "attempted": 9, "recovery_rate": 0.33}
-  ],
-  "scope_note": "Profile for qwen3-4b-instruct calibrated 2026-09-05 on 108 generations."
-}
-```
-
-`intervention_plan` combines the greedy-set-cover escalation order with
-conditional rules from `signal_failure_routing`. That is the pre-test plan:
-before the tests run, the signal predicts which failure modes are likely and
-which repair strategy has the best recovery rate for them.
-
-### Nightly reanalysis
-
-The proxy can re-build the profile from recent records on a schedule:
-
-```bash
-calibrate proxy --reanalyze-at 02:00 --window-tasks 200 --window-hours 168
-```
-
-- `--window-tasks` keeps the N most recent unique tasks. Older tasks fall out of
-  the window.
-- `--window-hours` adds an age cutoff.
-- A candidate profile is promoted only if it is at least as good as the active
-  one on held-out data and not below chance. Older profiles are backed up to
-  `profiles.bak/`.
-
-This is the closed loop: today's work becomes tonight's training data; tomorrow
-uses the updated fingerprint.
-
-## What the full calibration still gives you
-
-A full `calibrate run` is the strongest way to build a profile when you do not
-have one. It:
-
-- Searches ~170 candidate statistics in a single generation pass.
-- Corrects for multiple comparisons.
-- Validates the winner on held-out records and held-out *tasks* (task-level
-  holdout is the check for "does this apply to new questions?").
-- Sweeps 7 recovery interventions and ranks them by coverage.
-- Exports `AgentAnalysis.md` that any agent reads as standing instructions.
-
-```bash
-python calibrate.py run --model your-model.gguf
-python calibrate.py report --profile _calibration_<label>.json
-python calibrate.py export --profile _calibration_<label>.json --output AgentAnalysis.md
-```
-
-`reanalyze` re-runs the analysis on saved raw data with no GPU time:
-
-```bash
-python calibrate.py reanalyze --raw _calibration_<label>_raw.jsonl
-```
-
-## Reproducibility
-
-Runs are reproducible by default: a fixed sampling seed means the same command
-produces the same generations. That is deliberate — a published result should be
-reproducible. It also means re-running the same command is not a second sample;
-change the seed to draw an independent sample:
-
-```bash
-python calibrate.py run --model your-model.gguf --repeats 10
-python calibrate.py run --model your-model.gguf --repeats 10 --seed 77
-```
-
-Interrupted runs resume themselves from checkpoint. Change any setting and the
-old checkpoint is set aside as `.stale`.
-
-## Requirements
-
-- Python 3.10+ (for the Python workflow), or the `dist/calibrate.exe` binary on
-  Windows.
-- `llama-cpp-python` and `numpy` (see `requirements.txt`) for full calibration.
-- A GGUF model (3-8B recommended).
-- A GPU is recommended but not required. Works on NVIDIA CUDA, AMD ROCm, Apple
-  Metal, or CPU-only.
-
-The runtime proxy itself only needs a local OpenAI-compatible inference server
-and a profile. It does not load the GGUF itself.
-
-## Known limitations
-
-- **The `__subclasses__` sandbox escape is open.** The threat model is
-  accidental damage from model output, not a determined adversary.
-- **Scope is benchmark-verifiable pass/fail code tasks.** The entropy signal is
-  not tested on open-ended or subjective output.
-- **Signals are distribution-level only.** No intermediate-layer hidden states.
-- **The evidence base is small.** See Examples.
-
-## Before you calibrate
-
-Check your model's config. The calibration sweeps sampling parameters around the
-model's recommended values — wrong starting values produce garbage data. Check
-`CORE_MODEL_CONFIGS.md` or the model's HuggingFace card.
-
-## Execution sandbox
-
-The calibrator includes a Python-level sandbox that blocks network access,
-process spawning, `ctypes`, and file writes outside the task temp directory.
-See `METHODOLOGY.md` for the threat model and what is not blocked.
+**What does NOT get shared:** no prompts, no generated code, no user identity,
+no IP address.
 
 ## Examples
 
-`examples/` holds every calibration run, with raw records. Read these before
-buying. They disagree with each other, and that is the point.
-
-### Verified signals
+`examples/` holds calibration runs with raw records. They disagree with each
+other, and that is the point.
 
 | model | bank | probes | failures | signal | transfer | recoverable |
 |---|---|---|---|---|---|---|
@@ -228,12 +153,25 @@ Two models have usable signals that transfer to unseen tasks; two do not. That
 is the honest number, and it is why you run this rather than copy someone else's
 config.
 
-On the same data, the statistics everyone reports find nothing: `max_entropy`
-d=+0.17, `mean_entropy` d=+0.15. A short opening spike plus a long calm tail
-averages to the same number as a flat middling trajectory. Averaging across a
-generation destroys the signal; pooling across models cancels what survives. One
-prominent measure advertises being "comparable across models and tasks without
-threshold recalibration" — that is the assumption these results contradict.
+## The full calibration kit
 
-See `CHANGELOG.md` for feature history and `METHODOLOGY.md` for the full
-statistical pipeline.
+This probe is a stripped-down discovery tool. The full calibration kit adds:
+
+- **Live proxy** — sits between your harness and your inference server, scores every generation in real time
+- **Intervention routing** — retry, repair, rephrase strategies ranked by coverage
+- **Nightly relearning** — the profile drifts with your actual task pool
+- **Custom tasks** — calibrate on your own pass/fail tasks, not just the demo bank
+- **HTML reports and AgentAnalysis.md** — agent-readable playbooks your coding assistant can follow
+- **Mode separation** — thinking and non-thinking profiles are never pooled
+
+The probe finds the signal, tests it on a small holdout, and reports whether it
+looks useful. The full kit turns it into a product.
+
+See `METHODOLOGY.md` for the full statistical pipeline, `CHANGELOG.md` for
+feature history, and `public_probe_audit_checklist.md` for the cross-check
+between the probe's fixes and the full kit.
+
+## License
+
+This probe is released under CC-BY-4.0 (see `LICENSE-CONTENT.md`). The full
+calibration kit is commercial software under a separate EULA.

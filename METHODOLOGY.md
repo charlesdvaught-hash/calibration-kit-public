@@ -301,6 +301,21 @@ model's documented direction flipped sign on a clean re-run.
    `reanalyze`) to restrict the scan to exactly those signals. A
    restricted scan is a confirmation, not a second search — it is how a
    candidate found in run 1 gets honestly re-tested on run 2.
+
+   **Signal classes.** Every candidate is one of three kinds: *entropy-based*
+   (computed from the logit distribution — the actual wrongness evidence),
+   *structural/behavioral* (`n_tokens`, `n_semantic`, `think_frac`,
+   `think_boundary` — how long or how "thought-through" the output was), and
+   *composite* (a product or ratio of a structural signal with an entropy
+   feature, e.g. `think_frac_x_kl_uniform_mean`). A structural signal can
+   separate pass from fail for the wrong reason: a generation cut off by the
+   token budget scores high on think_frac *because* it was truncated, not
+   because the model was uncertain. Structural signals therefore can never be
+   shipped as the sole gate — the scan reports the strongest one separately
+   as `structural_best` for transparency — while composites remain eligible
+   (they carry real entropy content), and structural signals stay available
+   for failure-type routing, where splitting failure *modes* is a
+   different job than gating on correctness.
 6. **Statistical power is reported.** "This model has no entropy signal"
    and "this run was too small to see one" are different answers. Each run
    reports the observed effect size, the smallest effect that sample could
