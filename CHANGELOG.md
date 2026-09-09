@@ -1,5 +1,37 @@
 # Changelog
 
+## 2026.09.09 — end-to-end gate validation experiment (full kit)
+
+The full kit ran an end-to-end experiment testing whether a learned fingerprint
+improves final coding accuracy when it triggers regeneration. The probe finds
+the signal; this experiment tests whether acting on it actually helps.
+
+**Setup:** 249 sanitized MBPP tasks, split 200 training / 49 holdout. Qwen3-8B
+Q5_K_M in thinking mode (temp=0.6, top_p=0.95, top_k=20). Gate learned on
+training split only, applied to holdout with task-level disjointness.
+
+**Result: PROMISING BUT NOT PROVEN.** The best transfer gate
+(`n_tokens_div_kl_uniform_mean`) caught 10 of 22 true failures with zero false
+positives. Fresh-generation retry at +0.2 temp rescued 3 of 10 caught failures.
+Net accuracy gain: +6.1% (55.1% to 61.2%). McNemar exact p=0.125 — not significant
+at n=49, but the direction is positive and no correct answers were worsened.
+
+**Key findings:**
+- The probe's original signal (`think_frac`) transfers across datasets
+  (HumanEval to MBPP, 0.682 holdout balanced accuracy, 0% FPR)
+- The pipeline's default selection (highest training |d|) picked the wrong gate
+  for transfer — `mass20_std` (d=0.614) transferred worse than
+  `n_tokens_div_kl_uniform_mean` (d=0.494)
+- `test_retry` (the probe's top-ranked intervention on HumanEval) rescued 0/10
+  on MBPP; `temp_retry` (2nd-ranked) rescued 3/10. The best intervention is
+  dataset-dependent.
+- Zero false positives means the gate can be deployed without degrading correct
+  outputs — the only cost is compute spent regenerating true failures.
+
+Full report: `research/OUTCOME_gate_validation_mbpp.md` in the full kit.
+
+---
+
 ## 2026.09.07 (audit) — probe fixes cross-checked against the full kit
 
 The probe's statistics were rewritten with stricter standards. Each fix was

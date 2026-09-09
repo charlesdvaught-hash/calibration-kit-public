@@ -58,6 +58,27 @@ Qwen3-8B-Q5_K_M, with `--no-think` (disable Qwen3 thinking mode) and the default
 This is a fingerprint on this model on these demo tasks, with some evidence it
 generalizes to the held-out tasks.
 
+## Does acting on the signal improve final accuracy?
+
+The full calibration kit ran an end-to-end experiment on 249 MBPP tasks
+(200 training / 49 holdout) with Qwen3-8B to test whether a learned gate
+plus regeneration actually improves final pass rate — not just whether the
+signal correlates with correctness.
+
+**Result: PROMISING BUT NOT PROVEN.** The best transfer gate caught 10 of 22
+true failures with zero false positives. Fresh-generation retry at a higher
+temperature rescued 3 of 10 caught failures. Net accuracy gain: +6.1%
+(55.1% to 61.2%). McNemar p=0.125 — not statistically significant at n=49,
+but the direction is positive and no correct answers were worsened.
+
+The probe's original signal (`think_frac`) transferred across datasets
+(HumanEval to MBPP, 0% false-positive rate). The best intervention was
+dataset-dependent: `temp_retry` worked on MBPP (where assertion failures
+dominate) while `test_retry` worked on HumanEval (where syntax failures
+dominate).
+
+Full report in the kit: `research/OUTCOME_gate_validation_mbpp.md`.
+
 ## What the verdict means
 
 **SIGNAL FOUND** means: on this specific model, on these 60 demo tasks, in
