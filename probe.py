@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-probe.py — Free signal discovery tool for local GGUF coding models.
+probe.py — Free signal discovery and validation tool for local GGUF coding models.
 
-Runs a standard 42-task coding bank against your local model, captures
-per-token entropy trajectories, scans ~15 candidate wrongness signals
-with permutation tests and Benjamini-Hochberg correction, and prints an
-honest verdict: does this model have a usable entropy signal that
-separates correct from incorrect code generation?
+Runs a coding task bank against your local model, captures per-token entropy
+trajectories, scans ~170 candidate wrongness signals with permutation tests
+and Benjamini-Hochberg correction, and then tests whether acting on the
+discovered signal improves final accuracy on held-out tasks.
 
-This is the stripped-down free version of the calibration kit. It finds
-the signal; the full kit (https://github.com/charlesdvaught-hash/calibration-kit-public)
-adds 170-candidate breadth, intervention routing, a live proxy, and
-nightly relearning.
+The probe answers two questions:
+  1. Does this model have a usable entropy signal? (signal scan)
+  2. Does acting on it improve accuracy? (end-to-end gate validation)
+
+This is the free version of the calibration kit. It finds and validates the
+signal; the full kit (https://github.com/charlesdvaught-hash/calibration-kit-public)
+adds architect-driven interventions, failure-type routing, two-sided rules,
+a live proxy, and nightly relearning.
 
 Requirements:
     pip install llama-cpp-python numpy
@@ -21,12 +24,14 @@ Usage:
     python probe.py --model your-model.gguf
     python probe.py --model your-model.gguf --temp 0.6 --top-p 0.95
     python probe.py --model your-model.gguf --thinking
+    python probe.py --model your-model.gguf --bank mbpp
     python probe.py --model your-model.gguf --repeats 2
 
 What gets sent if you opt in to upload:
     - Model filename and quant label (parsed from filename)
     - Per-task 16-point downsampled entropy trajectory + pass/fail
     - Signal scan results (which signals survived, d values, p values)
+    - Gate validation results (rescued, worsened, net gain, McNemar p)
     - Timestamp
     - NO prompts, NO generated code, NO user identity, NO IP address
 
@@ -96,6 +101,14 @@ try:
     _REALISTIC_AVAILABLE = True
 except ImportError:
     REALISTIC_TASKS = []
+
+# MBPP 249-task bank (sanitized MBPP, function-style) — harder, more failures.
+_MBPP_AVAILABLE = False
+try:
+    from _mbpp_tasks import MBPP_TASKS
+    _MBPP_AVAILABLE = True
+except ImportError:
+    MBPP_TASKS = []
 
 
 # ─── Task bank (42 single-function coding tasks) ──────────────────────────────
@@ -1092,6 +1105,373 @@ def build_prompt(task: Dict, no_think: bool = False) -> str:
             f"Output only the code in a ```python block.")
 
 
+# ─── Detection: thinking-tail and edge-case patterns ─────────────────────────
+
+_THINK_OPEN = "\u003cthink\u003e"
+_THINK_CLOSE = "\u003c\u002fthink\u003e"
+
+_UNCERTAINTY_MARKERS = [
+    "wait", "hmm", "not sure", "actually", "but", "unsure", "maybe",
+    "perhaps", "might", "could be wrong", "let me reconsider",
+    "on second thought", "i think", "i'm not confident",
+    "this might not", "i'm not sure", "not certain",
+]
+_CORRECTION_PATTERN = re.compile(
+    r'\b(wait|actually|hmm|but|no,|no wait|let me|on second thought)\b',
+    re.IGNORECASE)
+
+
+def analyze_thinking_tail(text: str, is_thinking: bool,
+                          tail_tokens: int = 400) -> Dict[str, Any]:
+    """Analyze the last N tokens of the thinking phase for uncertainty markers.
+
+    Thinking models that are uncertain often hedge, self-correct, or
+    second-guess in the tail of their reasoning. This extracts a simple
+    count of those markers from the last `tail_tokens` words of the
+    thinking block.
+    """
+    if not is_thinking:
+        return {"has_thinking": False, "tail_markers": 0,
+                "tail_corrections": 0, "tail_marker_density": 0.0}
+    # Extract thinking content
+    idx_open = text.find(_THINK_OPEN)
+    idx_close = text.find(_THINK_CLOSE)
+    if idx_open < 0 or idx_close < 0 or idx_close <= idx_open:
+        return {"has_thinking": False, "tail_markers": 0,
+                "tail_corrections": 0, "tail_marker_density": 0.0}
+    thinking = text[idx_open + len(_THINK_OPEN):idx_close]
+    words = thinking.split()
+    tail = words[-tail_tokens:] if len(words) > tail_tokens else words
+    tail_text = " ".join(tail)
+    marker_count = sum(tail_text.lower().count(m) for m in _UNCERTAINTY_MARKERS)
+    corrections = len(_CORRECTION_PATTERN.findall(tail_text))
+    return {
+        "has_thinking": True,
+        "n_think_words": len(words),
+        "tail_markers": marker_count,
+        "tail_corrections": corrections,
+        "tail_marker_density": marker_count / max(len(tail), 1),
+    }
+
+
+def detect_edge_cases(code: str, ok: bool, failures: List[str],
+                      task: Dict) -> List[str]:
+    """Flag generations with obvious edge-case problems.
+
+    Returns a list of edge-case flags. These are cheap detection patterns
+    that don't require the entropy trajectory — they look at the output
+    itself.
+    """
+    flags = []
+    if not code.strip():
+        flags.append("empty_output")
+    if code.strip():
+        try:
+            ast.parse(code)
+        except SyntaxError:
+            flags.append("syntax_error")
+    if len(code.strip().split("\n")) < 3:
+        flags.append("very_short")
+    func_name = task.get("func_name", "")
+    if func_name and func_name not in code:
+        flags.append("missing_function")
+    if ok and not flags:
+        pass  # correct and no edge cases — no flag
+    return flags
+
+
+# ─── Interventions ───────────────────────────────────────────────────────────
+
+def run_temp_retry(llm, task: Dict, preset: Dict, blacklist: frozenset,
+                    is_thinking: bool, think_marker_ids: set,
+                    no_think: bool) -> Tuple[str, Dict, float]:
+    """Fresh generation at a higher temperature."""
+    retry_preset = dict(preset)
+    retry_preset["temp"] = min(preset["temp"] + 0.2, 1.5)
+    prompt = build_prompt(task, no_think)
+    text, entropy, elapsed = generate(
+        llm, prompt, retry_preset, blacklist, is_thinking, think_marker_ids)
+    code = extract_code(text)
+    return code, entropy, elapsed
+
+
+def run_test_retry(llm, task: Dict, code: str, failures: List[str],
+                   preset: Dict, blacklist: frozenset,
+                   is_thinking: bool, think_marker_ids: set,
+                   no_think: bool) -> Tuple[str, Dict, float]:
+    """Show the model its failures and ask it to fix the code."""
+    fail_text = "\n".join(f"  - {f}" for f in failures[:5])
+    desc = task.get("desc", task.get("task_desc", ""))
+    filename = task.get("filename", "solution.py")
+    func_name = task.get("func_name", "solution")
+    suffix = "\n/no_think" if no_think else ""
+    prompt = (
+        f"Task: {desc}{suffix}\n\n"
+        f"Your previous code had these test failures:\n{fail_text}\n\n"
+        f"Your previous code:\n```python\n{code[:2000]}\n```\n\n"
+        f"Fix the code. Write {filename} with the function {func_name}. "
+        f"Output only the code in a ```python block."
+    )
+    text, entropy, elapsed = generate(
+        llm, prompt, preset, blacklist, is_thinking, think_marker_ids)
+    code = extract_code(text)
+    return code, entropy, elapsed
+
+
+def run_skip_retry(llm, task: Dict, preset: Dict, blacklist: frozenset,
+                   is_thinking: bool, think_marker_ids: set,
+                   no_think: bool, max_retries: int = 3
+                   ) -> Tuple[str, Dict, float, bool, int]:
+    """Discard and regenerate up to N times, keep the first that passes.
+
+    This is a cull intervention — it doesn't try to fix the code, it just
+    tries again from scratch. Returns (code, entropy, total_elapsed,
+    passed, n_attempts).
+    """
+    prompt = build_prompt(task, no_think)
+    total_elapsed = 0.0
+    for attempt in range(max_retries):
+        text, entropy, elapsed = generate(
+            llm, prompt, preset, blacklist, is_thinking, think_marker_ids)
+        code = extract_code(text)
+        total_elapsed += elapsed
+        with tempfile.TemporaryDirectory() as td:
+            passed, total, _ = test_function_code(code, task, td)
+        if passed == total:
+            return code, entropy, total_elapsed, True, attempt + 1
+    return code, entropy, total_elapsed, False, max_retries
+
+
+# ─── End-to-end gate validation ──────────────────────────────────────────────
+
+def _wilson_ci(k: int, n: int, z: float = 1.96) -> Tuple[float, float]:
+    """Wilson score confidence interval for a proportion."""
+    if n == 0:
+        return 0.0, 0.0
+    p = k / n
+    denom = 1 + z * z / n
+    center = (p + z * z / (2 * n)) / denom
+    spread = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / denom
+    return center - spread, center + spread
+
+
+def _mcnemar_exact_p(b: int, c: int) -> float:
+    """Exact McNemar test p-value (binomial, two-sided).
+
+    b = fail->pass (rescued), c = pass->fail (worsened).
+    Under the null, b and c are symmetric, so we test whether b is
+    extreme given b+c trials at p=0.5.
+    """
+    if b + c == 0:
+        return 1.0
+    n = b + c
+    # Two-sided: 2 * min(P(X >= max(b,c)), P(X <= min(b,c)))
+    from math import comb
+    lo = min(b, c)
+    hi = max(b, c)
+    p_lo = sum(comb(n, k) for k in range(lo + 1)) / 2 ** n
+    p_hi = sum(comb(n, k) for k in range(hi, n + 1)) / 2 ** n
+    p_one_sided = min(p_lo, p_hi)
+    return min(1.0, 2 * p_one_sided)
+
+
+def run_gate_validation(llm, holdout_results: List[Dict],
+                         holdout_tasks: List[Dict], best: Dict,
+                         threshold: float, high_is_good: bool,
+                         preset: Dict, blacklist: frozenset,
+                         is_thinking: bool, think_marker_ids: set,
+                         no_think: bool) -> Dict:
+    """Run end-to-end gate validation on holdout results.
+
+    1. Apply the gate to flag likely-wrong holdout answers.
+    2. Run interventions (temp_retry, test_retry, skip_retry) on flagged tasks.
+    3. Grade repaired outputs.
+    4. Report net accuracy gain with McNemar test.
+    """
+    # Flag likely-wrong holdout tasks using the entropy signal
+    flagged = []
+    for r in holdout_results:
+        e = dict(r.get("entropy", {}))
+        e.update(_shape_features(r.get("entropy", {})))
+        sig_val = e.get(best["signal"], 0.0)
+        if high_is_good:
+            predicted_fail = sig_val < threshold
+        else:
+            predicted_fail = sig_val > threshold
+        # Also check edge cases
+        edge_flags = detect_edge_cases(
+            r.get("code", ""), r["ok"], r.get("failures", []),
+            holdout_tasks[holdout_results.index(r)])
+        if predicted_fail or edge_flags:
+            flagged.append({
+                "result": r, "task": holdout_tasks[holdout_results.index(r)],
+                "signal_value": sig_val,
+                "predicted_fail": predicted_fail,
+                "edge_flags": edge_flags,
+            })
+
+    true_failures = [f for f in flagged if not f["result"]["ok"]]
+    false_positives = [f for f in flagged if f["result"]["ok"]]
+
+    print(f"\n  Gate flagged: {len(flagged)} holdout tasks")
+    print(f"    True failures caught:  {len(true_failures)}")
+    print(f"    False positives (correct, flagged): {len(false_positives)}")
+
+    if not flagged:
+        print("  No tasks flagged by gate. Nothing to repair.")
+        return {"flagged": 0, "rescued": 0, "worsened": 0,
+                "net_gain": 0.0, "mcnemar_p": 1.0}
+
+    # Run interventions on flagged tasks
+    interventions = ["temp_retry", "test_retry", "skip_retry"]
+    repair_results = []
+
+    print(f"\n  Running {len(interventions)} interventions on {len(flagged)} flagged tasks...")
+    for f in flagged:
+        r = f["result"]
+        task = f["task"]
+        print(f"    {task['id']:<28} baseline={'FAIL' if not r['ok'] else 'PASS'}",
+              end="", flush=True)
+        best_repair = None
+        for interv in interventions:
+            try:
+                if interv == "temp_retry":
+                    code, entropy, elapsed = run_temp_retry(
+                        llm, task, preset, blacklist, is_thinking,
+                        think_marker_ids, no_think)
+                elif interv == "test_retry":
+                    code, entropy, elapsed = run_test_retry(
+                        llm, task, r.get("code", ""),
+                        r.get("failures", []), preset, blacklist,
+                        is_thinking, think_marker_ids, no_think)
+                elif interv == "skip_retry":
+                    code, entropy, elapsed, passed, n_attempts = run_skip_retry(
+                        llm, task, preset, blacklist, is_thinking,
+                        think_marker_ids, no_think, max_retries=3)
+                else:
+                    continue
+                with tempfile.TemporaryDirectory() as td:
+                    passed, total, _ = test_function_code(code, task, td)
+                ok = (passed == total)
+                repair = {
+                    "intervention": interv, "ok": ok,
+                    "passed": passed, "total": total,
+                    "elapsed": elapsed,
+                    "task_id": task["id"],
+                    "baseline_ok": r["ok"],
+                }
+                repair_results.append(repair)
+                if ok and not r["ok"]:
+                    if best_repair is None:
+                        best_repair = interv
+                    print(f"  {interv}=RESCUED", end="", flush=True)
+                elif not ok and r["ok"]:
+                    print(f"  {interv}=WORSENED", end="", flush=True)
+                elif ok and r["ok"]:
+                    print(f"  {interv}=still_pass", end="", flush=True)
+                else:
+                    print(f"  {interv}=still_fail", end="", flush=True)
+            except Exception as e:
+                print(f"  {interv}=ERROR({e})", end="", flush=True)
+                repair_results.append({
+                    "intervention": interv, "ok": False,
+                    "task_id": task["id"], "baseline_ok": r["ok"],
+                    "error": str(e),
+                })
+        print()
+
+    # Compute best-of-interventions outcome per task
+    n_rescued = 0
+    n_worsened = 0
+    for f in flagged:
+        task_id = f["task"]["id"]
+        task_repairs = [r for r in repair_results
+                        if r["task_id"] == task_id and "error" not in r]
+        if f["result"]["ok"]:
+            # False positive — check if any intervention worsened it
+            worsened = any(not r["ok"] for r in task_repairs)
+            if worsened:
+                n_worsened += 1
+        else:
+            # True failure — check if any intervention rescued it
+            rescued = any(r["ok"] for r in task_repairs)
+            if rescued:
+                n_rescued += 1
+
+    # Compute net accuracy gain
+    baseline_pass = sum(1 for r in holdout_results if r["ok"])
+    gated_pass = baseline_pass + n_rescued - n_worsened
+    n_holdout = len(holdout_results)
+    baseline_rate = baseline_pass / n_holdout
+    gated_rate = gated_pass / n_holdout
+    net_gain = gated_rate - baseline_rate
+
+    # McNemar test
+    mcnemar_p = _mcnemar_exact_p(n_rescued, n_worsened)
+
+    # Wilson CIs
+    bl_lo, bl_hi = _wilson_ci(baseline_pass, n_holdout)
+    gd_lo, gd_hi = _wilson_ci(gated_pass, n_holdout)
+
+    # Per-intervention summary
+    print(f"\n  Intervention summary:")
+    for interv in interventions:
+        int_results = [r for r in repair_results
+                       if r["intervention"] == interv and "error" not in r]
+        rescued = sum(1 for r in int_results
+                      if r["ok"] and not r["baseline_ok"])
+        still_fail = sum(1 for r in int_results
+                         if not r["ok"] and not r["baseline_ok"])
+        still_pass = sum(1 for r in int_results
+                         if r["ok"] and r["baseline_ok"])
+        worsened = sum(1 for r in int_results
+                       if not r["ok"] and r["baseline_ok"])
+        print(f"    {interv}: rescued={rescued} still_fail={still_fail} "
+              f"still_pass={still_pass} worsened={worsened}")
+
+    print(f"\n  Baseline pass rate: {baseline_pass}/{n_holdout} = {baseline_rate:.1%}")
+    print(f"  Gated pass rate:     {gated_pass}/{n_holdout} = {gated_rate:.1%}")
+    print(f"  Net accuracy gain:   {net_gain:+.1%}")
+    print(f"  McNemar exact p:     {mcnemar_p:.4f}")
+    print(f"  Baseline 95% CI: {bl_lo:.1%} - {bl_hi:.1%}")
+    print(f"  Gated 95% CI:    {gd_lo:.1%} - {gd_hi:.1%}")
+
+    # Verdict
+    if net_gain > 0 and mcnemar_p < 0.05:
+        print(f"\n  VERDICT: PROVEN IMPROVEMENT")
+        print(f"  The gated pass rate exceeds baseline by {net_gain:+.1%}")
+        print(f"  with McNemar p={mcnemar_p:.4f} (significant at 0.05).")
+    elif net_gain > 0:
+        print(f"\n  VERDICT: PROMISING BUT NOT PROVEN")
+        print(f"  The gated pass rate exceeds baseline by {net_gain:+.1%}")
+        print(f"  but McNemar p={mcnemar_p:.4f} (not significant at 0.05).")
+        print(f"  More holdout tasks would settle it.")
+    elif net_gain == 0:
+        print(f"\n  VERDICT: NOT PROVEN")
+        print(f"  No net accuracy change.")
+    else:
+        print(f"\n  VERDICT: HARMFUL")
+        print(f"  The gated pass rate is {net_gain:+.1%} worse than baseline.")
+
+    return {
+        "flagged": len(flagged),
+        "true_failures_caught": len(true_failures),
+        "false_positives": len(false_positives),
+        "rescued": n_rescued,
+        "worsened": n_worsened,
+        "baseline_pass": baseline_pass,
+        "gated_pass": gated_pass,
+        "n_holdout": n_holdout,
+        "baseline_rate": baseline_rate,
+        "gated_rate": gated_rate,
+        "net_gain": net_gain,
+        "mcnemar_p": mcnemar_p,
+        "baseline_ci": [bl_lo, bl_hi],
+        "gated_ci": [gd_lo, gd_hi],
+        "repair_results": repair_results,
+    }
+
+
 # ─── Upload ───────────────────────────────────────────────────────────────────
 
 def try_upload(results: List[Dict], scan_rows: List[Dict],
@@ -1199,8 +1579,8 @@ The full calibration kit (170 signals, intervention routing, live proxy):
   https://github.com/charlesdvaught-hash/calibration-kit-public
 """)
     parser.add_argument("--model", required=False, help="Path to GGUF model file")
-    parser.add_argument("--bank", choices=["realistic", "human", "easy"], default="realistic",
-                        help="Task bank: realistic (60 tasks, default), human (150 HumanEval), easy (42 easy)")
+    parser.add_argument("--bank", choices=["realistic", "human", "easy", "mbpp"], default="realistic",
+                        help="Task bank: realistic (60 tasks, default), human (150 HumanEval), easy (42 easy), mbpp (249 MBPP)")
     parser.add_argument("--validate", action="store_true",
                         help="Validate the task bank (run references against tests) and exit")
     parser.add_argument("--temp", type=float, default=0.7, help="Temperature (default 0.7)")
@@ -1238,6 +1618,13 @@ The full calibration kit (170 signals, intervention routing, live proxy):
                         help="Opt-in upload endpoint (set PROBE_UPLOAD_URL env var or pass here)")
     parser.add_argument("--no-upload", action="store_true",
                         help="Skip the upload prompt entirely")
+    parser.add_argument("--validate-gate", action="store_true", default=True,
+                        help="Run end-to-end gate validation: flag likely-wrong holdout "
+                             "answers and try interventions (temp_retry, test_retry, "
+                             "skip_retry). Reports net accuracy gain with McNemar test. "
+                             "Enabled by default when a signal is found and holdout exists.")
+    parser.add_argument("--no-validate-gate", action="store_false", dest="validate_gate",
+                        help="Skip the end-to-end gate validation phase")
     args = parser.parse_args()
 
     global ALL_TASKS
@@ -1249,6 +1636,12 @@ The full calibration kit (170 signals, intervention routing, live proxy):
             sys.exit(1)
     elif args.bank == "easy":
         ALL_TASKS = list(FUNCTION_TASKS)
+    elif args.bank == "mbpp":
+        if _MBPP_AVAILABLE:
+            ALL_TASKS = sorted(MBPP_TASKS, key=_difficulty_score)
+        else:
+            print("ERROR: --bank mbpp requested but _mbpp_tasks.py is not available.")
+            sys.exit(1)
     else:
         if _REALISTIC_AVAILABLE:
             ALL_TASKS = sorted(REALISTIC_TASKS, key=_difficulty_score)
@@ -1628,6 +2021,11 @@ The full calibration kit (170 signals, intervention routing, live proxy):
                     "sample_outcomes": [s[3] for s in samples],
                     "sample_signals": [s[0] for s in samples],
                     "selected_idx": best_idx,
+                    # Store for gate validation:
+                    "code": code,
+                    "entropy": entropy,
+                    "failures": failures if not ok else [],
+                    "elapsed": elapsed,
                 })
 
                 mark = "✓" if hit else "✗"
@@ -1759,6 +2157,22 @@ The full calibration kit (170 signals, intervention routing, live proxy):
     elif holdout_n and not holdout_results:
         print(f"\n  (Holdout skipped: no signal found to test on the reserved holdout set.)")
 
+    # ─── End-to-end gate validation ───────────────────────────────────────
+    gate_report = None
+    if (args.validate_gate and best and holdout_results
+            and holdout_tasks):
+        print(f"\n{'=' * 70}")
+        print("END-TO-END GATE VALIDATION")
+        print(f"{'=' * 70}")
+        print(f"\n  Testing whether acting on the signal improves final accuracy.")
+        print(f"  Gate: {best['signal']} @ {threshold:.4f} ({best['direction']})")
+        print(f"  Interventions: temp_retry, test_retry, skip_retry (up to 3)")
+
+        gate_report = run_gate_validation(
+            llm, holdout_results, holdout_tasks, best, threshold,
+            high_is_good, preset, blacklist, args.thinking,
+            think_marker_ids, args.no_think)
+
     # Upload
     if not args.no_upload and args.upload_url:
         try_upload(results, scan_rows, best, structural_best, model_label, args.upload_url)
@@ -1780,6 +2194,7 @@ The full calibration kit (170 signals, intervention routing, live proxy):
             "best_signal": best,
             "structural_best": structural_best,
             "holdout": holdout_results if holdout_results else None,
+            "gate_validation": gate_report,
             "per_task": [
                 {"task_id": r["task_id"], "ok": r["ok"],
                  "passed": r["passed"], "total": r["total"],

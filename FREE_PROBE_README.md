@@ -29,7 +29,7 @@ That's it. No API keys, no cloud, no accounts. Everything runs locally.
 ## What it does
 
 1. Loads your GGUF model via `llama-cpp-python`
-2. Generates code for the demo task bank, sorted by difficulty (easy → hard)
+2. Generates code for the task bank, sorted by difficulty (easy → hard)
 3. Captures per-token entropy trajectories during generation (top-20 cropped
    softmax entropy, structural/semantic token split, plateau/spike detection,
    thinking-phase boundaries, and one-pass series summaries)
@@ -37,14 +37,30 @@ That's it. No API keys, no cloud, no accounts. Everything runs locally.
 5. Scans ~170 candidate entropy signals for separation between passing and
    failing generations
 6. Corrects for multiple comparisons (Benjamini-Hochberg, alpha=0.05)
-7. Trains on the first 40 tasks (default: full 40; stop early with `--target-failures N`)
-8. Tests the discovered signal on the reserved 20 holdout tasks
-9. Optionally reranks predicted failures on the holdout with `--holdout-rerank N`
-10. Prints one of four honest verdicts:
+7. Trains on the first N tasks (default: full bank; stop early with `--target-failures N`)
+8. Tests the discovered signal on the reserved holdout tasks
+9. **NEW: End-to-end gate validation** — flags likely-wrong holdout answers
+   and runs three interventions (temp_retry, test_retry, skip_retry) to test
+   whether acting on the signal improves final accuracy. Reports net accuracy
+   gain with McNemar exact test and Wilson confidence intervals.
+10. Optionally reranks predicted failures on the holdout with `--holdout-rerank N`
+11. Prints one of four honest verdicts:
     - **SIGNAL FOUND** — a signal survived correction with |d| >= 0.2
     - **NO SIGNAL FOUND** — nothing survived (honest null result)
     - **UNDERPOWERED** — too few failures to detect anything
     - **NO FAILURES** — your model passed everything
+
+## Task banks
+
+| Bank | Tasks | Description |
+|---|---|---|
+| `realistic` (default) | 60 | 14 assembly + 46 single-function, closer to real user asks |
+| `human` | 150 | HumanEval-derived with adversarial edge cases |
+| `easy` | 42 | Simple single-function tasks |
+| `mbpp` | 249 | Sanitized MBPP, harder, more failures on small models |
+
+Use `--bank mbpp` for models that pass the demo banks too easily. MBPP produces
+more failures, which gives the signal scan more data to work with.
 
 ## Example result
 
@@ -60,14 +76,28 @@ generalizes to the held-out tasks.
 
 ## Does acting on the signal improve final accuracy?
 
-The full calibration kit ran an end-to-end experiment on 249 MBPP tasks
-(200 training / 49 holdout) with Qwen3-8B to test whether a learned gate
-plus regeneration actually improves final pass rate — not just whether the
-signal correlates with correctness.
+The probe now answers this directly. After finding a signal and running the
+holdout, it applies the gate to flag likely-wrong holdout answers and runs
+three interventions on each flagged task:
 
-**Result: PROMISING BUT NOT PROVEN.** The best transfer gate caught 10 of 22
-true failures with zero false positives. Fresh-generation retry at a higher
-temperature rescued 3 of 10 caught failures. Net accuracy gain: +6.1%
+- **`temp_retry`** — fresh generation at +0.2 temperature (fix strategy)
+- **`test_retry`** — show the model its test failures and ask it to fix (fix strategy)
+- **`skip_retry`** — discard and regenerate up to 3 times, keep first pass (cull strategy)
+
+It then reports:
+- How many holdout tasks the gate flagged (true failures + false positives)
+- Per-intervention rescue/worsen counts
+- Baseline vs gated pass rate with 95% Wilson confidence intervals
+- Net accuracy gain
+- McNemar exact p-value (proper paired before/after test)
+- Verdict: PROVEN / PROMISING BUT NOT PROVEN / NOT PROVEN / HARMFUL
+
+### Full kit experiment result
+
+The full calibration kit ran this experiment on 249 MBPP tasks (200 training /
+49 holdout) with Qwen3-8B. **Result: PROMISING BUT NOT PROVEN.** The best
+transfer gate caught 10 of 22 true failures with zero false positives.
+`temp_retry` rescued 3 of 10 caught failures. Net accuracy gain: +6.1%
 (55.1% to 61.2%). McNemar p=0.125 — not statistically significant at n=49,
 but the direction is positive and no correct answers were worsened.
 

@@ -1,5 +1,61 @@
 # Changelog
 
+## 2026.09.09 — probe upgrade: end-to-end validation + MBPP + interventions
+
+The probe now answers two questions instead of one:
+1. **Does this model have a signal?** (already answered — signal scan)
+2. **Does acting on the signal improve accuracy?** (NEW — end-to-end gate validation)
+
+### New features
+
+- **`--bank mbpp`**: 249 sanitized MBPP tasks with executable tests. Harder
+  than the demo banks, produces more failures on small models (where signals
+  are detectable). All 249 tasks validated against reference implementations.
+
+- **End-to-end gate validation** (enabled by default): after finding a signal
+  and running the holdout, the probe applies the gate to flag likely-wrong
+  holdout answers, runs three interventions on each flagged task, and reports
+  net accuracy gain with a McNemar exact test and Wilson confidence intervals.
+  Use `--no-validate-gate` to skip.
+
+- **Three intervention strategies**:
+  - `temp_retry` — fresh generation at +0.2 temperature (fix)
+  - `test_retry` — show the model its test failures and ask it to fix (fix)
+  - `skip_retry` — discard and regenerate up to 3 times, keep first pass (cull)
+
+- **Thinking-tail detection**: analyzes the last 400 tokens of the thinking
+  phase for uncertainty markers and self-correction patterns. Available as
+  a detection signal alongside the entropy trajectory features.
+
+- **Edge-case detection**: flags generations with empty output, syntax errors,
+  very short code, or missing function names. These are cheap detection
+  patterns that don't require the entropy trajectory.
+
+- **McNemar exact test**: proper paired before/after statistical test for
+  the gate validation result. Reports p-value and Wilson CIs for baseline
+  and gated pass rates.
+
+### What the probe reports
+
+After the holdout prediction phase, the probe now prints:
+- How many holdout tasks the gate flagged (true failures + false positives)
+- Per-intervention rescue/worsen counts (temp_retry, test_retry, skip_retry)
+- Baseline vs gated pass rate with 95% CIs
+- Net accuracy gain
+- McNemar exact p-value
+- Verdict: PROVEN / PROMISING BUT NOT PROVEN / NOT PROVEN / HARMFUL
+
+### What stays in the full kit
+
+- Architect-driven interventions (arch_design, arch_trace, decompose)
+- Signal-based failure routing (which intervention per failure type)
+- Two-sided rules (bail/trust/band with cross-validation)
+- Live proxy mode with rolling-window nightly relearning
+- Self-setup wizard and backend auto-detection
+- Export playbook
+
+---
+
 ## 2026.09.09 — end-to-end gate validation experiment (full kit)
 
 The full kit ran an end-to-end experiment testing whether a learned fingerprint
