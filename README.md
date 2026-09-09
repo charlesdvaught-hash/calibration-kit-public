@@ -1,14 +1,19 @@
 # Calibration Probe
 
-A free, standalone tool that tests whether your local GGUF coding model has a
-usable entropy-based wrongness signal. One command, 60 realistic coding tasks,
-~170 candidate signals scanned with permutation tests and Benjamini-Hochberg
-correction, and an honest verdict.
+A free, standalone tool that tests whether a preconstructed selection of coding
+tasks can produce a confidence signal on held-out tasks for your local GGUF
+model. One command, 60 realistic coding tasks, ~170 candidate signals scanned
+with permutation tests and Benjamini-Hochberg correction, and an honest verdict.
 
-This is a **hobbyist science kit**, not a lab implementation. It proves the
-method can find a signal on example tasks. The full calibration kit learns
-the signal on your own tasks and turns it into a live gate — see
-[the upgrade path](#the-full-calibration-kit) below.
+**What this is:** a hobbyist science kit. It runs your model on a fixed task
+bank, captures per-token entropy trajectories, and checks whether any entropy
+feature separates correct from incorrect generations on a held-out set.
+
+**What this is not:** a tool that will help you gate your own tasks. The signal
+found on these demo tasks is a fingerprint of this model on this task
+distribution. It is unlikely to transfer to your actual tasks, other models, or
+other task types. This probe exists to show the method works, not to be
+deployed as-is.
 
 ## Quick start
 
@@ -153,23 +158,14 @@ Two models have usable signals that transfer to unseen tasks; two do not. That
 is the honest number, and it is why you run this rather than copy someone else's
 config.
 
-## The full calibration kit
+## Related work
 
-This probe is a stripped-down discovery tool. The full calibration kit adds:
-
-- **Live proxy** — sits between your harness and your inference server, scores every generation in real time
-- **Intervention routing** — retry, repair, rephrase strategies ranked by coverage
-- **Nightly relearning** — the profile drifts with your actual task pool
-- **Custom tasks** — calibrate on your own pass/fail tasks, not just the demo bank
-- **HTML reports and AgentAnalysis.md** — agent-readable playbooks your coding assistant can follow
-- **Mode separation** — thinking and non-thinking profiles are never pooled
-
-The probe finds the signal, tests it on a small holdout, and reports whether it
-looks useful. The full kit turns it into a product.
-
-See `METHODOLOGY.md` for the full statistical pipeline, `CHANGELOG.md` for
-feature history, and `public_probe_audit_checklist.md` for the cross-check
-between the probe's fixes and the full kit.
+A separate commercial calibration kit extends this method into a live proxy
+that learns the signal on your own tasks. This probe is the discovery tool
+that shows the underlying method works. See `METHODOLOGY.md` for the full
+statistical pipeline, `CHANGELOG.md` for feature history, and
+`public_probe_audit_checklist.md` for the cross-check between the probe's
+fixes and the full kit.
 
 ## License
 

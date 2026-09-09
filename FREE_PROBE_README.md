@@ -8,9 +8,9 @@ captures per-token entropy trajectories, scans ~170 candidate signals with
 permutation tests and Benjamini-Hochberg correction, and prints an honest verdict.
 
 This is a **hobbyist science kit**, not a lab implementation. It proves the
-method can find a signal on example tasks. The full calibration kit learns the
-signal on your own tasks and turns it into a live gate:
-  https://github.com/charlesdvaught-hash/calibration-kit-public
+method can find a signal on example tasks. The signal found here is a
+fingerprint of your model on this task distribution — it is unlikely to
+transfer to your own tasks, other models, or other task types.
 
 The probe reserves the last 20 tasks as a holdout set. It trains on the first 40
 tasks, discovers a signal, and then tests that signal on the reserved 20 unseen
@@ -64,14 +64,11 @@ generalizes to the held-out tasks.
 this specific run, there is an entropy trajectory feature whose value
 systematically differs between correct and incorrect generations. This is a
 fingerprint on the demo bank, not a universal rule. It may not transfer to your
-actual tasks, other models, or other task types. The full calibration kit
-learns the signal on your own tasks.
+actual tasks, other models, or other task types.
 
 **NO SIGNAL FOUND** means: this run did not detect a usable signal on the demo
 tasks. This is an honest null result. Some models genuinely don't have a usable
-entropy signal on this task distribution, or need more failures. The full
-calibration kit also checks for repair routing rules that may be useful even
-when no gating signal exists.
+entropy signal on this task distribution, or need more failures.
 
 **UNDERPOWERED** means: there weren't enough failures to detect anything.
 Try `--repeats 2` or `--repeats 3` with a higher temperature to generate
@@ -194,18 +191,11 @@ you with `[y/N]` before uploading.
 
 ## How this differs from the full calibration kit
 
-This probe is a stripped-down discovery tool. The full calibration kit adds:
-
-- 170-candidate signal scan (vs ~160 here)
-- Intervention routing (retry, repair, rephrase strategies)
-- Repair strategy sweeps (test_retry, rephrase, scaffold)
-- Live OpenAI-compatible proxy with real-time gating
-- Nightly relearning as your model distribution shifts
-- HTML reports and AgentAnalysis.md export
-- Custom task support
-
-The probe finds the signal, tests it on a small holdout, and reports whether it
-looks useful. The full kit turns it into a product.
+This probe is a discovery tool — it shows whether the method can find a signal
+on a fixed task bank. A separate commercial calibration kit extends this into a
+live proxy that learns the signal on your own tasks, with intervention routing,
+nightly relearning, and custom task support. This probe exists to demonstrate
+the underlying method, not to be deployed as-is.
 
 ## Validating the task bank
 
